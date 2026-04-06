@@ -387,9 +387,12 @@
           if (index + 1 < routingData.routing.length) {
             const nextDay = routingData.routing[index + 1];
             if (nextDay.type === 'SHOW' || nextDay.type === 'TRAVEL') {
+              const dest = nextDay.city || nextDay.to;
+              const dist = nextDay.distance || "Show Day";
+              const time = nextDay.drive_time || "";
               nextInfo = `
-                <div style="font-size:0.8rem; color:var(--dim); margin-top:0.25rem;">
-                  Next: ${nextDay.city || nextDay.to} • ${nextDay.distance || 'Show Day'}
+                <div style="font-size:0.8rem; color:var(--accent); margin-top:0.25rem; font-weight:600;">
+                  NEXT: ${dest} • ${dist} / ${time}
                 </div>
               `;
             }
