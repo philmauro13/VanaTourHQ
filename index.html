@@ -388,13 +388,15 @@
             const nextDay = routingData.routing[index + 1];
             if (nextDay.type === 'SHOW' || nextDay.type === 'TRAVEL') {
               const dest = nextDay.city || nextDay.to;
-              const dist = nextDay.distance || "Show Day";
+              const dist = nextDay.distance || "";
               const time = nextDay.drive_time || "";
-              nextInfo = `
-                <div style="font-size:0.8rem; color:var(--accent); margin-top:0.25rem; font-weight:600;">
-                  NEXT: ${dest} • ${dist} / ${time}
-                </div>
-              `;
+              if (dist && time) {
+                nextInfo = `
+                  <div style="font-size:0.8rem; color:var(--accent); margin-top:0.25rem; font-weight:600;">
+                    NEXT SHOW: ${dest} • ${dist}/${time}
+                  </div>
+                `;
+              }
             }
           }
 
@@ -405,7 +407,7 @@
                   <div style="font-weight:700; color: var(--accent)">${day.date}</div>
                   <div style="font-size:0.9rem">${day.venue}</div>
                   <div style="color:var(--dim); font-size:0.8rem">${day.city}</div>
-                  ${nextInfo}
+                  ${nextInfo ? nextInfo.replace('NEXT:', 'NEXT SHOW:').replace('•', '•') : ''}
                 </div>
                 <div style="text-align:right">
                   <div style="font-family:'Oswald'; font-size:0.9rem; color: var(--accent)">SHOW DAY</div>
