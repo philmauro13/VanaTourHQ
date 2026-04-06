@@ -1,21 +1,21 @@
 {
   "tour_name": "The Lady in Red Tour",
-  "artist": "Vana",
-  "last_updated": "2026-04-06T15:00:00Z",
+  "artist": "VANA",
+  "last_updated": "2026-04-06T15:45:00Z",
   "current_day": {
     "date": "2026-04-11",
     "day_of_week": "Saturday",
     "venue": {
-      "name": "The Summit",
+      "name": "Bluebird Theater",
       "city": "Denver",
       "state": "CO",
-      "address": "1902 Blake St, Denver, CO 80202",
-      "phone": "(303) 555-0199"
+      "address": "3317 E Colfax Ave, Denver, CO 80206",
+      "phone": "(303) 377-1666"
     },
     "itinerary": [
       { "time": "10:00 AM", "event": "Bus Call / Hotel Checkout", "notes": "Bags on bus by 9:45 AM" },
       { "time": "02:00 PM", "event": "Load-In", "notes": "Dock access via alley" },
-      { "time": "04:00 PM", "event": "Soundcheck", "notes": "Vana on stage first" },
+      { "time": "04:00 PM", "event": "Soundcheck", "notes": "VANA on stage first" },
       { "time": "07:00 PM", "event": "Doors Open", "notes": "" },
       { "time": "08:00 PM", "event": "Showtime", "notes": "Curfew 11:00 PM" }
     ],
@@ -27,30 +27,43 @@
       "confirmation": "MT-99283"
     },
     "contacts": [
-      { "role": "Promoter", "name": "J. Smith", "phone": "555-0199" },
-      { "role": "House AE", "name": "M. Jones", "phone": "555-0122" },
-      { "role": "Tour Manager", "name": "Phil Mauro", "phone": "555-0100" }
+      { "role": "Promoter", "name": "AEG Presents", "phone": "TBD" },
+      { "role": "House AE", "name": "Bluebird Tech", "phone": "TBD" },
+      { "role": "Tour Manager", "name": "Phil Mauro", "phone": "TBD" }
     ]
   },
   "crew": [
-    { "name": "Phil Mauro", "role": "Tour Manager / Lighting", "phone": "555-0100" },
-    { "name": "Sarah Jenkins", "role": "FOH Engineer", "phone": "555-0101" },
-    { "name": "Mike Ross", "role": "Monitor Engineer", "phone": "555-0102" }
+    { "name": "Phil Mauro", "role": "Tour Manager / Lighting", "phone": "TBD" },
+    { "name": "Sarah Jenkins", "role": "FOH Engineer", "phone": "TBD" },
+    { "name": "Mike Ross", "role": "Monitor Engineer", "phone": "TBD" }
   ],
   "upcoming_venues": [
-    {
-      "date": "2026-04-12",
-      "venue_name": "Aggie Theatre",
-      "city": "Fort Collins, CO",
-      "load_in": "01:00 PM",
-      "showtime": "08:00 PM"
-    },
-    {
-      "date": "2026-04-14",
-      "venue_name": "Cervantes' Masterpiece",
-      "city": "Denver, CO",
-      "load_in": "03:00 PM",
-      "showtime": "09:00 PM"
-    }
+    { "date": "APR 08", "venue_name": "Hell at The Masquerade", "city": "Atlanta, GA", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 09", "venue_name": "Conduit", "city": "Orlando, FL", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 10", "venue_name": "The Orpheum", "city": "Tampa, FL", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 11", "venue_name": "Bluebird Theater", "city": "Denver, CO", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 12", "venue_name": "Hangar 1819", "city": "Greensboro, NC", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 14", "venue_name": "The Fillmore", "city": "Philadelphia, PA", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 15", "venue_name": "The Atlantis", "city": "Washington, DC", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 16", "venue_name": "Gramercy Theatre", "city": "New York, NY", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 17", "venue_name": "The Sinclair", "city": "Cambridge, MA", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 18", "venue_name": "The Mod Club", "city": "Toronto, ON", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 19", "venue_name": "Mahall's", "city": "Lakewood, OH", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 21", "venue_name": "Bottom Lounge", "city": "Chicago, IL", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 22", "venue_name": "Fine Line", "city": "Minneapolis, MN", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 23", "venue_name": "Delmar Hall", "city": "Saint Louis, MO", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 24", "venue_name": "recordBar", "city": "Kansas City, MO", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 26", "venue_name": "The Grand @ The Complex", "city": "Salt Lake City, UT", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 27", "venue_name": "Shrine Social Club", "city": "Boise, ID", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 28", "venue_name": "The Crocodile", "city": "Seattle, WA", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "APR 29", "venue_name": "South Hawthorne Park", "city": "Portland, OR", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "MAY 01", "venue_name": "Goldfield Trading Post", "city": "Roseville, CA", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "MAY 02", "venue_name": "The Roxy Theatre", "city": "Los Angeles, CA", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "MAY 03", "venue_name": "House of Blues Parish", "city": "Anaheim, CA", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "MAY 05", "venue_name": "Crescent Ballroom", "city": "Phoenix, AZ", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "MAY 07", "venue_name": "Come and Take It Live", "city": "Austin, TX", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "MAY 08", "venue_name": "Bad Astronaut", "city": "Houston, TX", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "MAY 09", "venue_name": "Puzzles Deep Ellum", "city": "Dallas, TX", "load_in": "7:00 PM", "showtime": "7:00 PM" },
+    { "date": "MAY 11", "venue_name": "The Basement East", "city": "Nashville, TN", "load_in": "7:00 PM", "showtime": "7:00 PM" }
   ]
 }
