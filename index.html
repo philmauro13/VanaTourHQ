@@ -172,6 +172,7 @@
   <div class="tab-nav">
     <button class="tab-btn active" onclick="showTab('daysheet')">Day Sheet</button>
     <button class="tab-btn" onclick="showTab('tour')">Tour Dates</button>
+    <button class="tab-btn" onclick="showTab('admats')">Admats</button>
     <button class="tab-btn" onclick="showTab('crew')">Crew</button>
   </div>
 
@@ -221,6 +222,26 @@
   <div id="tour" class="section">
     <div class="card" id="tour-dates-list">
       <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- ADMATS TAB -->
+  <div id="admats" class="section">
+    <div class="card">
+      <div class="card-header">Tour Poster</div>
+      <div style="padding: 1rem; text-align: center;">
+        <img src="admats/vana-lady-in-red-tour-poster.jpg" alt="VANA Tour Poster" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1rem;">
+        <div style="margin-top: 0.5rem;">
+          <a href="admats/vana-lady-in-red-tour-poster.jpg" download style="display: inline-block; background: var(--accent); color: white; padding: 0.75rem 1.5rem; text-decoration: none; font-family: 'Oswald', sans-serif; font-weight: 600; letter-spacing: 0.05em; border-radius: 6px; text-transform: uppercase;">Download Poster</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">Support Acts</div>
+      <div class="info-row">
+        <span class="value" style="font-family: 'Oswald', sans-serif; font-size: 1.1rem;">DEADLANDS • CLOUDYFIELD • REDHOOK</span>
+      </div>
     </div>
   </div>
 
