@@ -172,6 +172,7 @@
   <div class="tab-nav">
     <button class="tab-btn active" onclick="showTab('daysheet')">Day Sheet</button>
     <button class="tab-btn" onclick="showTab('tour')">Tour Dates</button>
+    <button class="tab-btn" onclick="showTab('tech')">Tech Specs</button>
     <button class="tab-btn" onclick="showTab('admats')">Admats</button>
     <button class="tab-btn" onclick="showTab('crew')">Crew</button>
   </div>
@@ -222,6 +223,34 @@
   <div id="tour" class="section">
     <div class="card" id="tour-dates-list">
       <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- TECH SPECS TAB -->
+  <div id="tech" class="section">
+    <div class="card">
+      <div class="card-header">VANA - Lighting & Power</div>
+      <div style="padding: 1rem;">
+        <div class="info-row">
+          <span class="label">Lighting Plot</span>
+          <a href="tech-specs/vana-lighting-plot.jpg" download style="color: var(--accent); text-decoration: none; font-weight: 600;">Download JPG</a>
+        </div>
+        <div class="info-row">
+          <span class="label">Power Distro</span>
+          <a href="tech-specs/vana-power-distro.pdf" download style="color: var(--accent); text-decoration: none; font-weight: 600;">Download PDF</a>
+        </div>
+        <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--dim);">
+          <strong>Power Req:</strong> 100A Single Phase Lunch Box Distro<br>
+          <strong>Key Loads:</strong> Cryo (1800W), Hazer (530W), Towers (1000W each)
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Support Acts</div>
+      <div class="info-row"><span class="value">Cloudyfield</span><span class="label">Coming Soon</span></div>
+      <div class="info-row"><span class="value">Deadlands</span><span class="label">Coming Soon</span></div>
+      <div class="info-row"><span class="value">Redhook</span><span class="label">Coming Soon</span></div>
     </div>
   </div>
 
