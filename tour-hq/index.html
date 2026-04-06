@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phil Mauro | Lighting Operator & Special Effects Technician</title>
+  <meta name="description" content="Phil Mauro — professional lighting operator and special effects technician based in Denver, CO. 10+ year touring veteran. MA lighting, cryo jets, haze, fog, and more. Available for hire.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #e63946;
+      --red-glow: rgba(230, 57, 70, 0.3);
+      --cyan: #00d4ff;
+      --cyan-glow: rgba(0, 212, 255, 0.2);
+      --amber: #ffb347;
+      --bg: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a26;
+      --text: #f0f0f5;
+      --text-dim: #8888a0;
+      --text-muted: #555570;
+      --border: #2a2a3a;
+      --glass: rgba(18, 18, 26, 0.8);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── GRID BACKGROUND ── */
+    .grid-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(10, 10, 15, 0.85);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    nav .logo {
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    nav .logo span { color: var(--red); }
+    nav .nav-links { display: flex; gap: 2rem; list-style: none; }
+    nav .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    nav .nav-links a:hover { color: var(--text); }
+    nav .cta-btn {
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    nav .cta-btn:hover {
+      background: #d42f3c;
+      box-shadow: 0 0 20px var(--red-glow);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--red-glow) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 60%;
+      left: 30%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, var(--cyan-glow) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+    }
+    .hero .tag {
+      display: inline-block;
+      background: rgba(230, 57, 70, 0.1);
+      border: 1px solid rgba(230, 57, 70, 0.3);
+      color: var(--red);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+    }
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--red), var(--amber));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero .subtitle {
+      font-size: 1.25rem;
+      color: var(--text-dim);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      line-height: 1.7;
+    }
+    .hero .buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      background: #d42f3c;
+      box-shadow: 0 0 30px var(--red-glow);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      border-color: var(--text-dim);
+      background: var(--bg-card);
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .stats-bar .inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 2rem;
+      text-align: center;
+    }
+    .stat .number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--red);
+      line-height: 1;
+    }
+    .stat .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 0.5rem;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      position: relative;
+      z-index: 1;
+    }
+    .section-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+    }
+    .section-header {
+      margin-bottom: 3rem;
+    }
+    .section-header h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .section-header p {
+      color: var(--text-dim);
+      font-size: 1.05rem;
+      max-width: 600px;
+    }
+
+    /* ── SERVICES ── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .service-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      transition: all 0.3s;
+    }
+    .service-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--red);
+      box-shadow: 0 0 30px rgba(230, 57, 70, 0.08);
+      transform: translateY(-2px);
+    }
+    .service-card .icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .service-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .service-card p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* ── RIG / EQUIPMENT ── */
+    .rig-section {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .rig-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    .rig-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .rig-item h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .rig-item ul {
+      list-style: none;
+      padding: 0;
+    }
+    .rig-item li {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      padding: 0.3rem 0;
+      padding-left: 1.2rem;
+      position: relative;
+    }
+    .rig-item li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--red);
+    }
+
+    /* ── SPECIALTIES ── */
+    .specialties {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .specialty-tag {
+      background: rgba(0, 212, 255, 0.08);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      color: var(--cyan);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+    }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      background: linear-gradient(180deg, var(--bg) 0%, #1a0a0a 100%);
+    }
+    .cta-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--red-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-box h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .cta-box p {
+      color: var(--text-dim);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      position: relative;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .cta-box .buttons {
+      position: relative;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .cta-box .contact-info {
+      position: relative;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .cta-box .contact-info a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+    .cta-box .contact-info a:hover {
+      text-decoration: underline;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    footer a { color: var(--text-dim); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      nav .nav-links { display: none; }
+      nav .cta-btn { display: none; }
+      .hero h1 { font-size: 2.2rem; }
+      .hero .subtitle { font-size: 1rem; }
+      .section-inner { padding: 4rem 1.5rem; }
+      .cta-box { padding: 2.5rem 1.5rem; }
+      .stats-bar .inner { grid-template-columns: repeat(2, 1fr); }
+      .stat .number { font-size: 2rem; }
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate {
+      opacity: 0;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+    .animate:nth-child(2) { animation-delay: 0.1s; }
+    .animate:nth-child(3) { animation-delay: 0.2s; }
+    .animate:nth-child(4) { animation-delay: 0.3s; }
+    .animate:nth-child(5) { animation-delay: 0.4s; }
+    .animate:nth-child(6) { animation-delay: 0.5s; }
+
+    /* ── RESPONSIVE NAV ── */
+    .mobile-cta {
+      display: none;
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+    }
+    @media (max-width: 768px) {
+      .mobile-cta {
+        display: block;
+      }
+      .mobile-cta a {
+        background: var(--red);
+        color: white;
+        text-decoration: none;
+        padding: 1rem 2rem;
+        border-radius: 100px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 30px rgba(230, 57, 70, 0.4);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="inner">
+      <div class="logo">PHIL<span>.</span>MAURO</div>
+      <ul class="nav-links">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#rig">Rig & Gear</a></li>
+        <li><a href="#hire">Hire Me</a></li>
+      </ul>
+      <a href="#hire" class="cta-btn">Book a Gig</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <span class="tag animate">Denver, CO — Available for Tour & Contract</span>
+      <h1 class="animate">Lighting Operator &<br><span class="highlight">Special Effects Technician</span></h1>
+      <p class="subtitle animate">
+        10+ year touring veteran. Professional operation of MA lighting, cryo jets, haze, fog, and stage pyrotechnics.
+        I bring your show to life.
+      </p>
+      <div class="buttons animate">
+        <a href="#hire" class="btn-primary">Hire Me</a>
+        <a href="#services" class="btn-secondary">What I Do</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats-bar">
+    <div class="inner">
+      <div class="stat animate">
+        <div class="number">10+</div>
+        <div class="label">Years Touring</div>
+      </div>
+      <div class="stat animate">
+        <div class="number">500+</div>
+        <div class="label">Shows Operated</div>
+      </div>
+      <div class="stat animate">
+        <div class="number">2+</div>
+        <div class="label">Years SFX Specialist</div>
+      </div>
+      <div class="stat animate">
+        <div class="number">100%</div>
+        <div class="label">Insured</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2>What I Do</h2>
+        <p>Full-service lighting and special effects for tours, festivals, corporate events, and one-off shows.</p>
+      </div>
+      <div class="services-grid">
+        <div class="service-card animate">
+          <span class="icon">🔦</span>
+          <h3>Lighting Operation</h3>
+          <p>Full show operation on MA Lighting platforms (grandMA2 / grandMA3). Busking, timecode, or pre-programmed — I run your show the way you need it.</p>
+        </div>
+        <div class="service-card animate">
+          <span class="icon">❄️</span>
+          <h3>Cryo Jet Effects</h3>
+          <p>Club Cannon cryo jets available for rental. Professional CO2 jet effects for maximum impact. Full setup, operation, and teardown included.</p>
+        </div>
+        <div class="service-card animate">
+          <span class="icon">🌫️</span>
+          <h3>Haze & Fog</h3>
+          <p>Professional atmosphere control. Water-based haze, oil-based fog, low-lying fog, and CO2 effects for full venue coverage.</p>
+        </div>
+        <div class="service-card animate">
+          <span class="icon">⚡</span>
+          <h3>Special Effects Design</h3>
+          <p>Custom SFX packages for your show. Cryo jets, confetti, streamers, CO2, flame effects — designed for your setlist and stage plot.</p>
+        </div>
+        <div class="service-card animate">
+          <span class="icon">📋</span>
+          <h3>Tour Advancing</h3>
+          <p>Professional venue advance documents. Power distribution, stage plots, SFX requirements, CO2 tank coordination — all handled so your shows run smooth.</p>
+        </div>
+        <div class="service-card animate">
+          <span class="icon">🔧</span>
+          <h3>Equipment Rental</h3>
+          <p>MA onPC rig, cryo jets, and effects gear available for independent rental. Plug into my package or add to your existing production.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIG & GEAR -->
+  <section id="rig" class="rig-section">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2>Rig & Gear</h2>
+        <p>Tour-ready production package. Own gear, own control, own reliability.</p>
+      </div>
+      <div class="rig-grid">
+        <div class="rig-item animate">
+          <h4>Lighting Control</h4>
+          <ul>
+            <li>MA onPC Command Wing</li>
+            <li>grandMA3 software</li>
+            <li>Timecode capable</li>
+            <li>Busking & cue-stack</li>
+            <li>Art-Net / sACN output</li>
+          </ul>
+        </div>
+        <div class="rig-item animate">
+          <h4>Special Effects</h4>
+          <ul>
+            <li>2× Club Cannon Cryo Jets</li>
+            <li>Chauvet Dimmer Pack (1800W)</li>
+            <li>Water-based hazer</li>
+            <li>CO2 tank coordination</li>
+            <li>Confetti / streamer cannons</li>
+          </ul>
+        </div>
+        <div class="rig-item animate">
+          <h4>Power & Distribution</h4>
+          <ul>
+            <li>100A single-phase distro</li>
+            <li>Multiple 20A circuits</li>
+            <li>PowerDrop system</li>
+            <li>Full cable package</li>
+            <li>LED dimming capable</li>
+          </ul>
+        </div>
+        <div class="rig-item animate">
+          <h4>Software Proficiency</h4>
+          <ul>
+            <li>MA Lighting grandMA3</li>
+            <li>MA onPC (2 & 3)</li>
+            <li>Lightkey</li>
+            <li>Resolume (media)</li>
+            <li>MIDI / OSC integration</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="specialties" style="margin-top: 2rem;">
+        <span class="specialty-tag">Haze</span>
+        <span class="specialty-tag">Fog</span>
+        <span class="specialty-tag">Cryo</span>
+        <span class="specialty-tag">CO2 Jets</span>
+        <span class="specialty-tag">Confetti</span>
+        <span class="specialty-tag">Streamers</span>
+        <span class="specialty-tag">Low Fog</span>
+        <span class="specialty-tag">Timecode</span>
+        <span class="specialty-tag">Busking</span>
+        <span class="specialty-tag">Tour Lighting</span>
+        <span class="specialty-tag">Festival Op</span>
+        <span class="specialty-tag">Corporate</span>
+        <span class="specialty-tag">Insured</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="hire" class="cta-section">
+    <div class="section-inner">
+      <div class="cta-box">
+        <h2>Ready to Light Up Your Show?</h2>
+        <p>Available for touring, one-off shows, festival runs, and gear rental. Based in Denver — travel-ready anywhere.</p>
+        <div class="buttons">
+          <a href="mailto:philmauromusic@gmail.com?subject=Lighting/SFX%20Inquiry" class="btn-primary">Get in Touch</a>
+        </div>
+        <div class="contact-info">
+          <p style="margin-top: 1.5rem;">
+            📧 <a href="mailto:philmauromusic@gmail.com">philmauromusic@gmail.com</a>
+          </p>
+          <p>
+            📍 Denver, Colorado — Available Nationwide
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2026 Phil Mauro — Lighting Operator & Special Effects Technician — Denver, CO</p>
+  </footer>
+
+  <!-- MOBILE CTA -->
+  <div class="mobile-cta">
+    <a href="mailto:philmauromusic@gmail.com?subject=Lighting/SFX%20Inquiry">Book a Gig →</a>
+  </div>
+
+  <!-- INTERSECTION OBSERVER FOR ANIMATIONS -->
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.animate').forEach(el => {
+      el.style.animationPlayState = 'paused';
+      observer.observe(el);
+    });
+  </script>
+
+</body>
+</html>
