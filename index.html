@@ -384,20 +384,12 @@
         const routingHtml = routingData.routing.map((day, index) => {
           // Find the next day's info for travel stats
           let nextInfo = "";
-          if (index + 1 < routingData.routing.length) {
-            const nextDay = routingData.routing[index + 1];
-            if (nextDay.type === 'SHOW' || nextDay.type === 'TRAVEL') {
-              const dest = nextDay.city || nextDay.to;
-              const dist = nextDay.distance || "";
-              const time = nextDay.drive_time || "";
-              if (dist && time) {
-                nextInfo = `
-                  <div style="font-size:0.8rem; color:var(--accent); margin-top:0.25rem; font-weight:600;">
-                    NEXT SHOW: ${dest} • ${dist}/${time}
-                  </div>
-                `;
-              }
-            }
+          if (day.next_city && day.next_distance) {
+            nextInfo = `
+              <div style="font-size:0.8rem; color:var(--accent); margin-top:0.25rem; font-weight:600;">
+                NEXT SHOW: ${day.next_city} • ${day.next_distance}/${day.next_drive_time}
+              </div>
+            `;
           }
 
           if (day.type === 'SHOW') {

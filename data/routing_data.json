@@ -4,19 +4,28 @@
       "date": "2026-04-17",
       "type": "SHOW",
       "city": "Atlanta, GA",
-      "venue": "Hell at The Masquerade"
+      "venue": "Hell at The Masquerade",
+      "next_city": "Orlando, FL",
+      "next_distance": "439 miles",
+      "next_drive_time": "7h 59m"
     },
     {
       "date": "2026-04-18",
       "type": "SHOW",
       "city": "Orlando, FL",
-      "venue": "Conduit"
+      "venue": "Conduit",
+      "next_city": "Tampa, FL",
+      "next_distance": "85 miles",
+      "next_drive_time": "1h 24m"
     },
     {
       "date": "2026-04-19",
       "type": "SHOW",
       "city": "Tampa, FL",
-      "venue": "The Orpheum"
+      "venue": "The Orpheum",
+      "next_city": "Greensboro, NC",
+      "next_distance": "653 miles",
+      "next_drive_time": "11h 52m"
     },
     {
       "date": "2026-04-20",
@@ -24,25 +33,37 @@
       "from": "Tampa, FL",
       "to": "Greensboro, NC",
       "distance": "653 miles",
-      "drive_time": "11h 52m"
+      "drive_time": "11h 52m",
+      "next_city": "Greensboro, NC",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-04-21",
       "type": "SHOW",
       "city": "Greensboro, NC",
-      "venue": "Hangar 1819"
+      "venue": "Hangar 1819",
+      "next_city": "Philadelphia, PA",
+      "next_distance": "450 miles",
+      "next_drive_time": "7h 10m"
     },
     {
       "date": "2026-04-22",
       "type": "SHOW",
       "city": "Philadelphia, PA",
-      "venue": "The Foundry"
+      "venue": "The Foundry",
+      "next_city": "Washington, DC",
+      "next_distance": "142 miles",
+      "next_drive_time": "2h 30m"
     },
     {
       "date": "2026-04-23",
       "type": "SHOW",
       "city": "Washington, DC",
-      "venue": "The Atlantis"
+      "venue": "The Atlantis",
+      "next_city": "New York, NY",
+      "next_distance": "229 miles",
+      "next_drive_time": "4h 11m"
     },
     {
       "date": "2026-04-24",
@@ -50,19 +71,28 @@
       "from": "Washington, DC",
       "to": "New York, NY",
       "distance": "229 miles",
-      "drive_time": "4h 11m"
+      "drive_time": "4h 11m",
+      "next_city": "New York, NY",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-04-25",
       "type": "SHOW",
       "city": "New York, NY",
-      "venue": "Gramercy Theatre"
+      "venue": "Gramercy Theatre",
+      "next_city": "Cambridge, MA",
+      "next_distance": "212 miles",
+      "next_drive_time": "3h 44m"
     },
     {
       "date": "2026-04-26",
       "type": "SHOW",
       "city": "Cambridge, MA",
-      "venue": "The Sinclair"
+      "venue": "The Sinclair",
+      "next_city": "Toronto, ON",
+      "next_distance": "546 miles",
+      "next_drive_time": "9h 56m"
     },
     {
       "date": "2026-04-27",
@@ -70,19 +100,28 @@
       "from": "Cambridge, MA",
       "to": "Toronto, ON",
       "distance": "546 miles",
-      "drive_time": "9h 56m"
+      "drive_time": "9h 56m",
+      "next_city": "Toronto, ON",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-04-28",
       "type": "SHOW",
       "city": "Toronto, ON",
-      "venue": "The Mod Club"
+      "venue": "The Mod Club",
+      "next_city": "Lakewood, OH",
+      "next_distance": "290 miles",
+      "next_drive_time": "4h 47m"
     },
     {
       "date": "2026-04-29",
       "type": "SHOW",
       "city": "Lakewood, OH",
-      "venue": "Mahall's"
+      "venue": "Mahall's",
+      "next_city": "Chicago, IL",
+      "next_distance": "344 miles",
+      "next_drive_time": "6h 15m"
     },
     {
       "date": "2026-04-30",
@@ -90,25 +129,37 @@
       "from": "Lakewood, OH",
       "to": "Chicago, IL",
       "distance": "344 miles",
-      "drive_time": "6h 15m"
+      "drive_time": "6h 15m",
+      "next_city": "Chicago, IL",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-05-01",
       "type": "SHOW",
       "city": "Chicago, IL",
-      "venue": "Bottom Lounge"
+      "venue": "Bottom Lounge",
+      "next_city": "Minneapolis, MN",
+      "next_distance": "409 miles",
+      "next_drive_time": "6h 10m"
     },
     {
       "date": "2026-05-02",
       "type": "SHOW",
       "city": "Minneapolis, MN",
-      "venue": "Fine Line"
+      "venue": "Fine Line",
+      "next_city": "St. Louis, MO",
+      "next_distance": "561 miles",
+      "next_drive_time": "8h 31m"
     },
     {
       "date": "2026-05-03",
       "type": "SHOW",
       "city": "St. Louis, MO",
-      "venue": "Delmar Hall"
+      "venue": "Delmar Hall",
+      "next_city": "Kansas City, MO",
+      "next_distance": "248 miles",
+      "next_drive_time": "4h 31m"
     },
     {
       "date": "2026-05-04",
@@ -116,13 +167,19 @@
       "from": "St. Louis, MO",
       "to": "Kansas City, MO",
       "distance": "248 miles",
-      "drive_time": "4h 31m"
+      "drive_time": "4h 31m",
+      "next_city": "Kansas City, MO",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-05-05",
       "type": "SHOW",
       "city": "Kansas City, MO",
-      "venue": "recordBar"
+      "venue": "recordBar",
+      "next_city": "Denver, CO",
+      "next_distance": "604 miles",
+      "next_drive_time": "10h 59m"
     },
     {
       "date": "2026-05-06",
@@ -130,13 +187,19 @@
       "from": "Kansas City, MO",
       "to": "Denver, CO",
       "distance": "604 miles",
-      "drive_time": "10h 59m"
+      "drive_time": "10h 59m",
+      "next_city": "Denver, CO",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-05-07",
       "type": "SHOW",
       "city": "Denver, CO",
-      "venue": "Bluebird Theater"
+      "venue": "Bluebird Theater",
+      "next_city": "Salt Lake City, UT",
+      "next_distance": "521 miles",
+      "next_drive_time": "9h 29m"
     },
     {
       "date": "2026-05-08",
@@ -144,19 +207,28 @@
       "from": "Denver, CO",
       "to": "Salt Lake City, UT",
       "distance": "521 miles",
-      "drive_time": "9h 29m"
+      "drive_time": "9h 29m",
+      "next_city": "Salt Lake City, UT",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-05-09",
       "type": "SHOW",
       "city": "Salt Lake City, UT",
-      "venue": "The Grand @ The Complex"
+      "venue": "The Grand @ The Complex",
+      "next_city": "Boise, ID",
+      "next_distance": "344 miles",
+      "next_drive_time": "5h 1m"
     },
     {
       "date": "2026-05-10",
       "type": "SHOW",
       "city": "Boise, ID",
-      "venue": "Shrine Social Club"
+      "venue": "Shrine Social Club",
+      "next_city": "Seattle, WA",
+      "next_distance": "515 miles",
+      "next_drive_time": "9h 22m"
     },
     {
       "date": "2026-05-11",
@@ -164,19 +236,28 @@
       "from": "Boise, ID",
       "to": "Seattle, WA",
       "distance": "515 miles",
-      "drive_time": "9h 22m"
+      "drive_time": "9h 22m",
+      "next_city": "Seattle, WA",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-05-12",
       "type": "SHOW",
       "city": "Seattle, WA",
-      "venue": "The Crocodile"
+      "venue": "The Crocodile",
+      "next_city": "Portland, OR",
+      "next_distance": "173 miles",
+      "next_drive_time": "2h 48m"
     },
     {
       "date": "2026-05-13",
       "type": "SHOW",
       "city": "Portland, OR",
-      "venue": "Hawthorne Theatre"
+      "venue": "Hawthorne Theatre",
+      "next_city": "Roseville, CA",
+      "next_distance": "580 miles",
+      "next_drive_time": "10h 33m"
     },
     {
       "date": "2026-05-14",
@@ -184,25 +265,37 @@
       "from": "Portland, OR",
       "to": "Roseville, CA",
       "distance": "580 miles",
-      "drive_time": "10h 33m"
+      "drive_time": "10h 33m",
+      "next_city": "Roseville, CA",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-05-15",
       "type": "SHOW",
       "city": "Roseville, CA",
-      "venue": "Goldfield Trading Post"
+      "venue": "Goldfield Trading Post",
+      "next_city": "Los Angeles, CA",
+      "next_distance": "405 miles",
+      "next_drive_time": "6h 6m"
     },
     {
       "date": "2026-05-16",
       "type": "SHOW",
       "city": "Los Angeles, CA",
-      "venue": "The Roxy Theatre"
+      "venue": "The Roxy Theatre",
+      "next_city": "Anaheim, CA",
+      "next_distance": "26 miles",
+      "next_drive_time": "37m"
     },
     {
       "date": "2026-05-17",
       "type": "SHOW",
       "city": "Anaheim, CA",
-      "venue": "House of Blues Parish"
+      "venue": "House of Blues Parish",
+      "next_city": "Phoenix, AZ",
+      "next_distance": "373 miles",
+      "next_drive_time": "6h 47m"
     },
     {
       "date": "2026-05-18",
@@ -210,13 +303,19 @@
       "from": "Anaheim, CA",
       "to": "Phoenix, AZ",
       "distance": "373 miles",
-      "drive_time": "6h 47m"
+      "drive_time": "6h 47m",
+      "next_city": "Phoenix, AZ",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-05-19",
       "type": "SHOW",
       "city": "Phoenix, AZ",
-      "venue": "Crescent Ballroom"
+      "venue": "Crescent Ballroom",
+      "next_city": "Austin, TX",
+      "next_distance": "880 miles",
+      "next_drive_time": "16h 0m"
     },
     {
       "date": "2026-05-20",
@@ -224,25 +323,37 @@
       "from": "Phoenix, AZ",
       "to": "Austin, TX",
       "distance": "880 miles",
-      "drive_time": "16h 00m"
+      "drive_time": "16h 0m",
+      "next_city": "Austin, TX",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-05-21",
       "type": "SHOW",
       "city": "Austin, TX",
-      "venue": "Come and Take It Live"
+      "venue": "Come and Take It Live",
+      "next_city": "Houston, TX",
+      "next_distance": "165 miles",
+      "next_drive_time": "2h 32m"
     },
     {
       "date": "2026-05-22",
       "type": "SHOW",
       "city": "Houston, TX",
-      "venue": "Bad Astronaut"
+      "venue": "Bad Astronaut",
+      "next_city": "Dallas, TX",
+      "next_distance": "239 miles",
+      "next_drive_time": "3h 29m"
     },
     {
       "date": "2026-05-23",
       "type": "SHOW",
       "city": "Dallas, TX",
-      "venue": "Puzzles Deep Ellum"
+      "venue": "Puzzles Deep Ellum",
+      "next_city": "Shreveport, LA",
+      "next_distance": "189 miles",
+      "next_drive_time": "3h 26m"
     },
     {
       "date": "2026-05-24",
@@ -250,7 +361,10 @@
       "from": "Dallas, TX",
       "to": "Shreveport, LA",
       "distance": "189 miles",
-      "drive_time": "3h 26m"
+      "drive_time": "3h 26m",
+      "next_city": "Nashville, TN",
+      "next_distance": "475 miles",
+      "next_drive_time": "8h 38m"
     },
     {
       "date": "2026-05-25",
@@ -258,13 +372,19 @@
       "from": "Shreveport, LA",
       "to": "Nashville, TN",
       "distance": "475 miles",
-      "drive_time": "8h 38m"
+      "drive_time": "8h 38m",
+      "next_city": "Nashville, TN",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-05-26",
       "type": "SHOW",
       "city": "Nashville, TN",
-      "venue": "The Basement East"
+      "venue": "The Basement East",
+      "next_city": "Allentown, PA",
+      "next_distance": "655 miles",
+      "next_drive_time": "11h 55m"
     },
     {
       "date": "2026-05-27",
@@ -272,25 +392,37 @@
       "from": "Nashville, TN",
       "to": "Allentown, PA",
       "distance": "655 miles",
-      "drive_time": "11h 55m"
+      "drive_time": "11h 55m",
+      "next_city": "Allentown, PA",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-05-28",
       "type": "SHOW",
       "city": "Allentown, PA",
-      "venue": "Arrow"
+      "venue": "Arrow",
+      "next_city": "Pittsburgh, PA",
+      "next_distance": "282 miles",
+      "next_drive_time": "4h 27m"
     },
     {
       "date": "2026-05-29",
       "type": "SHOW",
       "city": "Pittsburgh, PA",
-      "venue": "Thunderbird Café"
+      "venue": "Thunderbird Café",
+      "next_city": "Lansing, MI",
+      "next_distance": "350 miles",
+      "next_drive_time": "5h 32m"
     },
     {
       "date": "2026-05-30",
       "type": "SHOW",
       "city": "Lansing, MI",
-      "venue": "Grewal Hall"
+      "venue": "Grewal Hall",
+      "next_city": "Louisville, KY",
+      "next_distance": "410 miles",
+      "next_drive_time": "7h 27m"
     },
     {
       "date": "2026-05-31",
@@ -298,13 +430,19 @@
       "from": "Lansing, MI",
       "to": "Louisville, KY",
       "distance": "410 miles",
-      "drive_time": "7h 27m"
+      "drive_time": "7h 27m",
+      "next_city": "Louisville, KY",
+      "next_distance": "0 miles",
+      "next_drive_time": "0h 0m"
     },
     {
       "date": "2026-06-01",
       "type": "SHOW",
       "city": "Louisville, KY",
-      "venue": "Headliners Music Hall"
+      "venue": "Headliners Music Hall",
+      "next_city": "End of Tour",
+      "next_distance": "End of Tour",
+      "next_drive_time": "End of Tour"
     }
   ]
 }
