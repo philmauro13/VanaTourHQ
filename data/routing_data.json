@@ -24,7 +24,7 @@
       "from": "Tampa, FL",
       "to": "Greensboro, NC",
       "distance": "653 miles",
-      "drive_time": "11h 50m"
+      "drive_time": "11h 52m"
     },
     {
       "date": "2026-04-21",
@@ -50,7 +50,7 @@
       "from": "Washington, DC",
       "to": "New York, NY",
       "distance": "229 miles",
-      "drive_time": "4h 10m"
+      "drive_time": "4h 11m"
     },
     {
       "date": "2026-04-25",
@@ -70,7 +70,7 @@
       "from": "Cambridge, MA",
       "to": "Toronto, ON",
       "distance": "546 miles",
-      "drive_time": "9h 50m"
+      "drive_time": "9h 56m"
     },
     {
       "date": "2026-04-28",
@@ -89,8 +89,8 @@
       "type": "TRAVEL",
       "from": "Lakewood, OH",
       "to": "Chicago, IL",
-      "distance": "338 miles",
-      "drive_time": "6h 10m"
+      "distance": "344 miles",
+      "drive_time": "6h 15m"
     },
     {
       "date": "2026-05-01",
@@ -116,7 +116,7 @@
       "from": "St. Louis, MO",
       "to": "Kansas City, MO",
       "distance": "248 miles",
-      "drive_time": "4h 30m"
+      "drive_time": "4h 31m"
     },
     {
       "date": "2026-05-05",
@@ -129,8 +129,8 @@
       "type": "TRAVEL",
       "from": "Kansas City, MO",
       "to": "Denver, CO",
-      "distance": "600 miles",
-      "drive_time": "10h 55m"
+      "distance": "604 miles",
+      "drive_time": "10h 59m"
     },
     {
       "date": "2026-05-07",
@@ -143,8 +143,8 @@
       "type": "TRAVEL",
       "from": "Denver, CO",
       "to": "Salt Lake City, UT",
-      "distance": "525 miles",
-      "drive_time": "9h 30m"
+      "distance": "521 miles",
+      "drive_time": "9h 29m"
     },
     {
       "date": "2026-05-09",
@@ -164,7 +164,7 @@
       "from": "Boise, ID",
       "to": "Seattle, WA",
       "distance": "515 miles",
-      "drive_time": "9h 20m"
+      "drive_time": "9h 22m"
     },
     {
       "date": "2026-05-12",
@@ -184,7 +184,7 @@
       "from": "Portland, OR",
       "to": "Roseville, CA",
       "distance": "580 miles",
-      "drive_time": "10h 30m"
+      "drive_time": "10h 33m"
     },
     {
       "date": "2026-05-15",
@@ -209,8 +209,8 @@
       "type": "TRAVEL",
       "from": "Anaheim, CA",
       "to": "Phoenix, AZ",
-      "distance": "370 miles",
-      "drive_time": "6h 45m"
+      "distance": "373 miles",
+      "drive_time": "6h 47m"
     },
     {
       "date": "2026-05-19",
@@ -249,16 +249,16 @@
       "type": "TRAVEL",
       "from": "Dallas, TX",
       "to": "Shreveport, LA",
-      "distance": "190 miles",
-      "drive_time": "3h 30m"
+      "distance": "189 miles",
+      "drive_time": "3h 26m"
     },
     {
       "date": "2026-05-25",
       "type": "TRAVEL",
       "from": "Shreveport, LA",
       "to": "Nashville, TN",
-      "distance": "470 miles",
-      "drive_time": "8h 30m"
+      "distance": "475 miles",
+      "drive_time": "8h 38m"
     },
     {
       "date": "2026-05-26",
@@ -271,8 +271,8 @@
       "type": "TRAVEL",
       "from": "Nashville, TN",
       "to": "Allentown, PA",
-      "distance": "650 miles",
-      "drive_time": "11h 50m"
+      "distance": "655 miles",
+      "drive_time": "11h 55m"
     },
     {
       "date": "2026-05-28",
@@ -298,7 +298,7 @@
       "from": "Lansing, MI",
       "to": "Louisville, KY",
       "distance": "410 miles",
-      "drive_time": "7h 30m"
+      "drive_time": "7h 27m"
     },
     {
       "date": "2026-06-01",
