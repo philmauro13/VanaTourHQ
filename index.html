@@ -307,13 +307,19 @@
           document.getElementById('next-venue').textContent = nextShow.venue_name;
           document.getElementById('next-city').textContent = nextShow.city;
 
-          fetch('data/travel_data.json')
+          // Use travel data if available in the venue object, otherwise fetch from file
+          if (nextShow.travel) {
+             document.getElementById('next-distance').textContent = nextShow.travel.miles;
+             document.getElementById('next-drive-time').textContent = nextShow.travel.time;
+          } else {
+             fetch('data/travel_data.json')
             .then(res => res.json())
             .then(travel => {
               const travelInfo = travel[nextShow.city] || { miles: "TBD", time: "TBD" };
               document.getElementById('next-distance').textContent = travelInfo.miles;
               document.getElementById('next-drive-time').textContent = travelInfo.time;
             });
+          }
         }
       });
   </script>
