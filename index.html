@@ -300,51 +300,20 @@
         `).join('');
         document.getElementById('crew-list').innerHTML = crewHtml;
 
-        // Populate Next Show Info
+        // Populate Next Show Info with Real Travel Data
         if (data.upcoming_venues && data.upcoming_venues.length > 0) {
           const nextShow = data.upcoming_venues[0];
           document.getElementById('next-show-date').textContent = nextShow.date;
           document.getElementById('next-venue').textContent = nextShow.venue_name;
           document.getElementById('next-city').textContent = nextShow.city;
-          
-          // Sample travel data (in a real app, this would come from a mapping API)
-          const distances = {
-            "Atlanta, GA": { miles: 450, time: "6h 30m" },
-            "Orlando, FL": { miles: 500, time: "7h 15m" },
-            "Tampa, FL": { miles: 135, time: "2h 10m" },
-            "Greensboro, NC": { miles: 520, time: "7h 45m" },
-            "Philadelphia, PA": { miles: 650, time: "9h 30m" },
-            "Washington, DC": { miles: 140, time: "2h 20m" },
-            "New York, NY": { miles: 225, time: "3h 45m" },
-            "Cambridge, MA": { miles: 215, time: "3h 30m" },
-            "Toronto, ON": { miles: 550, time: "8h 15m" },
-            "Lakewood, OH": { miles: 165, time: "2h 40m" },
-            "Chicago, IL": { miles: 350, time: "5h 20m" },
-            "Minneapolis, MN": { miles: 410, time: "6h 10m" },
-            "St. Louis, MO": { miles: 300, time: "4h 35m" },
-            "Kansas City, MO": { miles: 250, time: "3h 50m" },
-            "Denver, CO": { miles: 600, time: "8h 45m" },
-            "Salt Lake City, UT": { miles: 525, time: "7h 50m" },
-            "Boise, ID": { miles: 340, time: "5h 10m" },
-            "Seattle, WA": { miles: 470, time: "7h 05m" },
-            "Portland, OR": { miles: 175, time: "2h 45m" },
-            "Roseville, CA": { miles: 580, time: "8h 30m" },
-            "Los Angeles, CA": { miles: 380, time: "5h 40m" },
-            "Anaheim, CA": { miles: 35, time: "45m" },
-            "Phoenix, AZ": { miles: 375, time: "5h 30m" },
-            "Austin, TX": { miles: 870, time: "12h 45m" },
-            "Houston, TX": { miles: 165, time: "2h 30m" },
-            "Dallas, TX": { miles: 240, time: "3h 35m" },
-            "Nashville, TN": { miles: 920, time: "13h 30m" },
-            "Allentown, PA": { miles: 880, time: "13h 10m" },
-            "Pittsburgh, PA": { miles: 250, time: "3h 50m" },
-            "Lansing, MI": { miles: 285, time: "4h 20m" },
-            "Louisville, KY": { miles: 350, time: "5h 15m" }
-          };
 
-          const travelInfo = distances[nextShow.city] || { miles: "TBD", time: "TBD" };
-          document.getElementById('next-distance').textContent = travelInfo.miles;
-          document.getElementById('next-drive-time').textContent = travelInfo.time;
+          fetch('data/travel_data.json')
+            .then(res => res.json())
+            .then(travel => {
+              const travelInfo = travel[nextShow.city] || { miles: "TBD", time: "TBD" };
+              document.getElementById('next-distance').textContent = travelInfo.miles;
+              document.getElementById('next-drive-time').textContent = travelInfo.time;
+            });
         }
       });
   </script>
