@@ -1,0 +1,56 @@
+{
+  "tour_name": "The Lady in Red Tour",
+  "artist": "Vana",
+  "last_updated": "2026-04-06T15:00:00Z",
+  "current_day": {
+    "date": "2026-04-11",
+    "day_of_week": "Saturday",
+    "venue": {
+      "name": "The Summit",
+      "city": "Denver",
+      "state": "CO",
+      "address": "1902 Blake St, Denver, CO 80202",
+      "phone": "(303) 555-0199"
+    },
+    "itinerary": [
+      { "time": "10:00 AM", "event": "Bus Call / Hotel Checkout", "notes": "Bags on bus by 9:45 AM" },
+      { "time": "02:00 PM", "event": "Load-In", "notes": "Dock access via alley" },
+      { "time": "04:00 PM", "event": "Soundcheck", "notes": "Vana on stage first" },
+      { "time": "07:00 PM", "event": "Doors Open", "notes": "" },
+      { "time": "08:00 PM", "event": "Showtime", "notes": "Curfew 11:00 PM" }
+    ],
+    "hotel": {
+      "name": "Hyatt Regency Denver",
+      "address": "1750 Welton St, Denver, CO",
+      "check_in": "3:00 PM",
+      "check_out": "11:00 AM",
+      "confirmation": "MT-99283"
+    },
+    "contacts": [
+      { "role": "Promoter", "name": "J. Smith", "phone": "555-0199" },
+      { "role": "House AE", "name": "M. Jones", "phone": "555-0122" },
+      { "role": "Tour Manager", "name": "Phil Mauro", "phone": "555-0100" }
+    ]
+  },
+  "crew": [
+    { "name": "Phil Mauro", "role": "Tour Manager / Lighting", "phone": "555-0100" },
+    { "name": "Sarah Jenkins", "role": "FOH Engineer", "phone": "555-0101" },
+    { "name": "Mike Ross", "role": "Monitor Engineer", "phone": "555-0102" }
+  ],
+  "upcoming_venues": [
+    {
+      "date": "2026-04-12",
+      "venue_name": "Aggie Theatre",
+      "city": "Fort Collins, CO",
+      "load_in": "01:00 PM",
+      "showtime": "08:00 PM"
+    },
+    {
+      "date": "2026-04-14",
+      "venue_name": "Cervantes' Masterpiece",
+      "city": "Denver, CO",
+      "load_in": "03:00 PM",
+      "showtime": "09:00 PM"
+    }
+  ]
+}
