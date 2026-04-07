@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VANA — Tour HQ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <title>VANA Tour Ops</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #050505;
-      --card: #111111;
-      --accent: #d90429; /* VANA Red */
+      --card: #141414;
+      --vana-red: #d90429;
+      --support-blue: #0077b6;
+      --logistics-grey: #6c757d;
       --text: #ffffff;
-      --dim: #666666;
-      --border: #222222;
+      --dim: #888888;
+      --border: #2a2a2a;
     }
     * { box-sizing: border-box; }
     body {
@@ -21,485 +23,218 @@
       font-family: 'Inter', sans-serif;
       margin: 0;
       padding: 0;
+      padding-bottom: 80px;
       max-width: 480px;
       margin: 0 auto;
     }
     .header {
+      padding: 1.5rem;
       text-align: center;
-      padding: 2rem 1rem;
       border-bottom: 1px solid var(--border);
-      background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
     }
-    .logo-img {
-      max-width: 200px;
-      height: auto;
+    .date-badge {
+      background: var(--vana-red);
+      color: white;
+      font-family: 'Oswald', sans-serif;
+      padding: 0.5rem 1rem;
+      border-radius: 100px;
+      display: inline-block;
       margin-bottom: 0.5rem;
-    }
-    .tour-title {
-      font-family: 'Oswald', sans-serif;
-      font-size: 1rem;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-    .tab-nav {
-      display: flex;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .tab-btn {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: var(--dim);
-      padding: 1rem;
-      font-family: 'Oswald', sans-serif;
       font-size: 0.9rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-      border-bottom: 2px solid transparent;
+      letter-spacing: 0.1em;
     }
-    .tab-btn.active {
-      color: var(--text);
-      border-bottom: 2px solid var(--accent);
+    .pulse-bar {
+      height: 6px;
+      background: var(--card);
+      border-radius: 3px;
+      margin: 1rem 1.5rem;
+      overflow: hidden;
     }
-    .section { display: none; padding: 1rem; }
+    .pulse-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--vana-red), #ff6b6b);
+      width: 65%;
+    }
+    .time-block {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .icon-box {
+      width: 50px;
+      height: 50px;
+      background: var(--card);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .info { flex-grow: 1; }
+    .time {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 0.25rem;
+    }
+    .event { font-size: 0.95rem; font-weight: 600; }
+    .status {
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .status.vana { background: rgba(217, 4, 41, 0.2); color: var(--vana-red); }
+    .status.support { background: rgba(0, 119, 182, 0.2); color: var(--support-blue); }
+    .status.logistics { background: rgba(108, 117, 125, 0.2); color: var(--logistics-grey); }
+    
+    .nav-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 1rem;
+      max-width: 480px;
+      margin: 0 auto;
+      z-index: 100;
+    }
+    .nav-item { font-size: 1.5rem; opacity: 0.5; cursor: pointer; transition: all 0.2s; }
+    .nav-item.active { opacity: 1; transform: scale(1.1); }
+    
+    .section { display: none; }
     .section.active { display: block; }
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      margin-bottom: 1rem;
+      margin: 1rem;
+      border-radius: 12px;
+      overflow: hidden;
     }
     .card-header {
-      padding: 1rem;
-      font-family: 'Oswald', sans-serif;
-      font-size: 0.8rem;
-      color: var(--dim);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-    }
-    .timeline-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .timeline-item:last-child { border-bottom: none; }
-    .time { 
-      font-family: 'Oswald', sans-serif; 
-      color: var(--accent); 
-      font-weight: 600; 
-      font-size: 1.1rem;
-    }
-    .event { 
-      font-weight: 600; 
-      text-align: right; 
-      font-size: 0.95rem;
-    }
-    .info-row { 
-      display: flex; 
-      justify-content: space-between; 
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.9rem; 
-    }
-    .info-row:last-child { border-bottom: none; }
-    .label { color: var(--dim); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
-    .value { font-weight: 600; text-align: right; }
-    .date-badge {
-      background: var(--accent);
-      color: white;
-      font-family: 'Oswald', sans-serif;
-      padding: 0.5rem 1rem;
-      text-align: center;
-      font-size: 1.2rem;
-      letter-spacing: 0.1em;
-    }
-    .next-show-header {
       background: #1a1a1a;
       padding: 1rem;
       font-family: 'Oswald', sans-serif;
-      font-size: 0.8rem;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .travel-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      padding: 1rem;
-      text-align: center;
-    }
-    .stat-box {
-      background: #0a0a0a;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-    .stat-value {
-      font-family: 'Oswald', sans-serif;
-      font-size: 1.2rem;
-      color: var(--text);
-      margin-bottom: 0.25rem;
-    }
-    .stat-label {
-      font-size: 0.7rem;
-      color: var(--dim);
-      text-transform: uppercase;
+      font-size: 1rem;
       letter-spacing: 0.05em;
+      color: var(--dim);
+      border-bottom: 1px solid var(--border);
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <img src="vana-logo.webp" alt="VANA Logo" class="logo-img">
-    <div class="tour-title">The Lady in Red Tour</div>
-  </div>
-
-  <div class="tab-nav">
-    <button class="tab-btn active" onclick="showTab('daysheet')">Day Sheet</button>
-    <button class="tab-btn" onclick="showTab('mastersheet')">Master Schedule</button>
-    <button class="tab-btn" onclick="showTab('routing')">Tour Routing</button>
-    <button class="tab-btn" onclick="showTab('settle')">Settle & Advance</button>
-    <button class="tab-btn" onclick="showTab('tour')">Tour Dates</button>
-    <button class="tab-btn" onclick="showTab('tech')">Tech Specs</button>
-    <button class="tab-btn" onclick="showTab('admats')">Admats</button>
-    <button class="tab-btn" onclick="showTab('crew')">Crew</button>
-  </div>
-
-  <!-- DAY SHEET TAB -->
-  <div id="daysheet" class="section active">
-    <div class="date-badge" id="current-date">APRIL 11, 2026</div>
-    
-    <div class="card">
-      <div class="card-header">Itinerary</div>
-      <div id="itinerary-list"></div>
+  <!-- MASTER SCHEDULE SECTION -->
+  <div id="schedule" class="section active">
+    <div class="header">
+      <div class="date-badge">FRIDAY, APRIL 17</div>
+      <div style="font-family: 'Oswald'; font-size: 1.5rem; letter-spacing: 0.05em;">ATLANTA, GA</div>
+      <div style="color: var(--dim); font-size: 0.9rem;">Hell at The Masquerade</div>
     </div>
+    <div class="pulse-bar"><div class="pulse-fill"></div></div>
 
-    <div class="card">
-      <div class="card-header">Venue</div>
-      <div class="info-row"><span class="label">Location</span><span class="value" id="venue-name">---</span></div>
-      <div class="info-row"><span class="label">City</span><span class="value" id="venue-city">---</span></div>
-      <div class="info-row"><span class="label">Promoter</span><span class="value" id="venue-contact">---</span></div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">Hotel</div>
-      <div class="info-row"><span class="label">Hotel</span><span class="value" id="hotel-name">---</span></div>
-      <div class="info-row"><span class="label">Checkout</span><span class="value" id="hotel-checkout">---</span></div>
-    </div>
-
-    <div class="card">
-      <div class="next-show-header">
-        <span>NEXT SHOW</span>
-        <span id="next-show-date" style="color: var(--text)">---</span>
-      </div>
-      <div class="info-row"><span class="label">Venue</span><span class="value" id="next-venue">---</span></div>
-      <div class="info-row"><span class="label">City</span><span class="value" id="next-city">---</span></div>
-      <div class="travel-stats">
-        <div class="stat-box">
-          <div class="stat-value" id="next-distance">---</div>
-          <div class="stat-label">Miles</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value" id="next-drive-time">---</div>
-          <div class="stat-label">Drive Time</div>
-        </div>
+    <div class="time-block">
+      <div class="icon-box">🚛</div>
+      <div class="info">
+        <div class="time">12:00 PM</div>
+        <div class="event">Load-In / Venue Access</div>
+        <div class="status logistics">LOGISTICS</div>
       </div>
     </div>
+    <div class="time-block">
+      <div class="icon-box">🎛️</div>
+      <div class="info">
+        <div class="time">04:00 PM</div>
+        <div class="event">Soundcheck: Deadlands</div>
+        <div class="status support">SUPPORT</div>
+      </div>
+    </div>
+    <div class="time-block">
+      <div class="icon-box">🎤</div>
+      <div class="info">
+        <div class="time">06:00 PM</div>
+        <div class="event">Soundcheck: VANA</div>
+        <div class="status vana">HEADLINER</div>
+      </div>
+    </div>
+    <div class="time-block">
+      <div class="icon-box">🤝</div>
+      <div class="info">
+        <div class="time">06:30 PM</div>
+        <div class="event">VIP Meet & Greet</div>
+        <div class="status vana">HEADLINER</div>
+      </div>
+    </div>
+    <div class="time-block">
+      <div class="icon-box">🚪</div>
+      <div class="info">
+        <div class="time">07:00 PM</div>
+        <div class="event">Doors Open</div>
+        <div class="status logistics">LOGISTICS</div>
+      </div>
+    </div>
+    <div class="time-block">
+      <div class="icon-box">🎸</div>
+      <div class="info">
+        <div class="time">09:00 PM</div>
+        <div class="event">VANA Set Time</div>
+        <div class="status vana">HEADLINER</div>
+      </div>
+    </div>
+    <div class="time-block">
+      <div class="icon-box">🛑</div>
+      <div class="info">
+        <div class="time">11:00 PM</div>
+        <div class="event">Curfew / Hard Stop</div>
+        <div class="status logistics">LOGISTICS</div>
+      </div>
+    </div>
+    <div class="time-block">
+      <div class="icon-box">🚌</div>
+      <div class="info">
+        <div class="time">01:30 AM</div>
+        <div class="event">Bus Call / Wheels Up</div>
+        <div class="status logistics">TRAVEL</div>
+      </div>
+    </div>
   </div>
 
-  <!-- TOUR ROUTING TAB -->
+  <!-- ROUTING SECTION (Placeholder for now) -->
   <div id="routing" class="section">
-    <div class="card" id="routing-list">
-      <!-- Populated by JS -->
+    <div class="header">
+      <div style="font-family: 'Oswald'; font-size: 1.5rem;">TOUR ROUTING</div>
     </div>
-  </div>
-
-  <!-- MASTER SCHEDULE TAB -->
-  <div id="mastersheet" class="section">
     <div class="card">
-      <div class="card-header">Standard Show Day Timeline</div>
-      <div class="timeline-item">
-        <span class="time">12:00 PM</span>
-        <span class="event">Load-In / Venue Access</span>
-      </div>
-      <div class="timeline-item">
-        <span class="time">04:00 PM</span>
-        <span class="event">Soundcheck (Support Acts)</span>
-      </div>
-      <div class="timeline-item">
-        <span class="time">06:00 PM</span>
-        <span class="event">Soundcheck (VANA)</span>
-      </div>
-      <div class="timeline-item">
-        <span class="time">06:30 PM</span>
-        <span class="event">VIP Meet & Greet</span>
-      </div>
-      <div class="timeline-item">
-        <span class="time">07:00 PM</span>
-        <span class="event">Doors Open</span>
-      </div>
-      <div class="timeline-item">
-        <span class="time">08:00 PM</span>
-        <span class="event">Support Sets (Deadlands / Cloudyfield / Redhook)</span>
-      </div>
-      <div class="timeline-item">
-        <span class="time">09:00 PM</span>
-        <span class="event" style="color:var(--accent)">VANA Headline Set</span>
-      </div>
-      <div class="timeline-item">
-        <span class="time">11:00 PM</span>
-        <span class="event">Curfew / Hard Stop</span>
-      </div>
-      <div class="timeline-item">
-        <span class="time">01:30 AM</span>
-        <span class="event">Bus Call / Wheels Up</span>
+      <div class="card-header">🗺️ ROUTING MAP</div>
+      <div style="padding: 2rem; text-align: center; color: var(--dim);">
+        Full Routing View Coming Soon
       </div>
     </div>
   </div>
 
-  <!-- SETTLEMENT & ADVANCE TAB -->
-  <div id="settle" class="section">
-    <div class="card">
-      <div class="card-header">Settlement Checker</div>
-      <div style="padding: 1rem; text-align: center;">
-        <div class="label" style="margin-bottom: 1rem;">Upload Settlement Sheet Photo</div>
-        <div style="border: 2px dashed var(--border); padding: 2rem; border-radius: 8px; color: var(--dim);">
-          Camera/Upload Interface Coming Soon
-        </div>
-        <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--dim);">
-          The AI will compare this against the contract terms and flag any discrepancies in the promoter's math.
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">Advance Checklist</div>
-      <div class="info-row">
-        <span class="value">Power Distro Confirmed (100A 1-Phase)</span>
-        <span class="label" style="color:var(--accent)">PENDING</span>
-      </div>
-      <div class="info-row">
-        <span class="value">Hotel Rooms Assigned</span>
-        <span class="label" style="color:var(--accent)">PENDING</span>
-      </div>
-      <div class="info-row">
-        <span class="value">Local Crew Contacted</span>
-        <span class="label" style="color:var(--accent)">PENDING</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOUR DATES TAB -->
-  <div id="tour" class="section">
-    <div class="card" id="tour-dates-list">
-      <!-- Populated by JS -->
-    </div>
-  </div>
-
-  <!-- TECH SPECS TAB -->
-  <div id="tech" class="section">
-    <div class="card">
-      <div class="card-header">VANA - Lighting & Power</div>
-      <div style="padding: 1rem;">
-        <div class="info-row">
-          <span class="label">Lighting Plot</span>
-          <a href="tech-specs/vana-lighting-plot.jpg" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">View Image</a>
-        </div>
-        <div class="info-row">
-          <span class="label">Power Distro</span>
-          <a href="tech-specs/vana-power-distro.pdf" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">View PDF</a>
-        </div>
-        <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--dim);">
-          <strong>Power Req:</strong> 100A Single Phase Lunch Box Distro<br>
-          <strong>Key Loads:</strong> Cryo (1800W), Hazer (530W), Towers (1000W each)
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">Deadlands</div>
-      <div style="padding: 1rem;">
-        <div class="info-row">
-          <span class="label">Tech Rider & Stage Plot</span>
-          <a href="tech-specs/deadlands/DEADLANDS TECH RIDER, STAGE PLOT, AND WIRELESS 2026.pdf" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">View PDF</a>
-        </div>
-        <div class="info-row">
-          <span class="label">Input List</span>
-          <a href="tech-specs/deadlands/DEADLANDS INPUT LIST 2026.pdf" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">View PDF</a>
-        </div>
-        <div class="info-row">
-          <span class="label">Hospitality Rider</span>
-          <a href="tech-specs/deadlands/DEADLANDS HOSPITALITY 2026.pdf" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">View PDF</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">Other Support Acts</div>
-      <div class="info-row"><span class="value">Cloudyfield</span><span class="label">Coming Soon</span></div>
-      <div class="info-row"><span class="value">Redhook</span><span class="label">Coming Soon</span></div>
-    </div>
-  </div>
-
-  <!-- ADMATS TAB -->
-  <div id="admats" class="section">
-    <div class="card">
-      <div class="card-header">Tour Poster</div>
-      <div style="padding: 1rem; text-align: center;">
-        <img src="admats/vana-lady-in-red-tour-poster.jpg" alt="VANA Tour Poster" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1rem;">
-        <div style="margin-top: 0.5rem;">
-          <a href="admats/vana-lady-in-red-tour-poster.jpg" download style="display: inline-block; background: var(--accent); color: white; padding: 0.75rem 1.5rem; text-decoration: none; font-family: 'Oswald', sans-serif; font-weight: 600; letter-spacing: 0.05em; border-radius: 6px; text-transform: uppercase;">Download Poster</a>
-        </div>
-      </div>
-    </div>
-    
-    <div class="card">
-      <div class="card-header">Support Acts</div>
-      <div class="info-row">
-        <span class="value" style="font-family: 'Oswald', sans-serif; font-size: 1.1rem;">DEADLANDS • CLOUDYFIELD • REDHOOK</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- CREW TAB -->
-  <div id="crew" class="section">
-    <div class="card">
-      <div class="card-header">Tour Roster</div>
-      <div id="crew-list"></div>
-    </div>
+  <!-- BOTTOM NAVIGATION -->
+  <div class="nav-bar">
+    <div class="nav-item active" onclick="switchTab('schedule')">⏱️</div>
+    <div class="nav-item" onclick="switchTab('routing')">🗺️</div>
+    <div class="nav-item">🎛️</div>
+    <div class="nav-item">💰</div>
   </div>
 
   <script>
-    function showTab(tabId) {
-      document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    function switchTab(tabId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
-      event.target.classList.add('active');
+      // Simple logic to highlight the correct icon (for prototype purposes)
+      if(tabId === 'schedule') document.querySelectorAll('.nav-item')[0].classList.add('active');
+      if(tabId === 'routing') document.querySelectorAll('.nav-item')[1].classList.add('active');
     }
-
-    fetch('data/tour_data.json')
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('current-date').textContent = data.current_day.date.toUpperCase();
-        document.getElementById('venue-name').textContent = data.current_day.venue.name;
-        document.getElementById('venue-city').textContent = `${data.current_day.venue.city}, ${data.current_day.venue.state}`;
-        document.getElementById('hotel-name').textContent = data.current_day.hotel.name;
-        document.getElementById('hotel-checkout').textContent = data.current_day.hotel.check_out;
-
-        const itineraryHtml = data.current_day.itinerary.map(item => `
-          <div class="timeline-item">
-            <span class="time">${item.time}</span>
-            <span class="event">${item.event}</span>
-          </div>
-        `).join('');
-        document.getElementById('itinerary-list').innerHTML = itineraryHtml;
-
-        const tourHtml = data.upcoming_venues.map(venue => `
-          <div class="info-row">
-            <div>
-              <div style="font-weight:700">${venue.venue_name}</div>
-              <div style="color:var(--dim); font-size:0.8rem">${venue.city}</div>
-            </div>
-            <div style="text-align:right">
-              <div style="color:var(--accent); font-family:'Oswald'">${venue.date}</div>
-              <div style="font-size:0.8rem">DOORS ${venue.load_in}</div>
-            </div>
-          </div>
-        `).join('');
-        document.getElementById('tour-dates-list').innerHTML = tourHtml;
-
-        const crewHtml = data.crew.map(member => `
-          <div class="info-row">
-            <span class="value">${member.name}</span>
-            <span class="label">${member.role}</span>
-          </div>
-        `).join('');
-        document.getElementById('crew-list').innerHTML = crewHtml;
-
-        // Populate Next Show Info with Real Travel Data
-        if (data.upcoming_venues && data.upcoming_venues.length > 0) {
-          const nextShow = data.upcoming_venues[0];
-          document.getElementById('next-show-date').textContent = nextShow.date;
-          document.getElementById('next-venue').textContent = nextShow.venue_name;
-          document.getElementById('next-city').textContent = nextShow.city;
-
-          // Use travel data if available in the venue object, otherwise fetch from file
-          if (nextShow.travel) {
-             document.getElementById('next-distance').textContent = nextShow.travel.miles;
-             document.getElementById('next-drive-time').textContent = nextShow.travel.time;
-          } else {
-             fetch('data/travel_data.json')
-            .then(res => res.json())
-            .then(travel => {
-              const travelInfo = travel[nextShow.city] || { miles: "TBD", time: "TBD" };
-              document.getElementById('next-distance').textContent = travelInfo.miles;
-              document.getElementById('next-drive-time').textContent = travelInfo.time;
-            });
-          }
-        }
-      });
-
-    // Populate Routing Tab
-    fetch('data/routing_data.json')
-      .then(res => res.json())
-      .then(routingData => {
-        const routingHtml = routingData.routing.map((day, index) => {
-          // Find the next day's info for travel stats
-          let nextInfo = "";
-          if (day.next_city && day.next_distance) {
-            nextInfo = `
-              <div style="font-size:0.8rem; color:var(--accent); margin-top:0.25rem; font-weight:600;">
-                NEXT SHOW: ${day.next_city} • ${day.next_distance}/${day.next_drive_time}
-              </div>
-            `;
-          }
-
-          if (day.type === 'SHOW') {
-            return `
-              <div class="info-row" style="border-left: 3px solid var(--accent); padding-left: 1rem;">
-                <div>
-                  <div style="font-weight:700; color: var(--accent)">${day.date}</div>
-                  <div style="font-size:0.9rem">${day.venue}</div>
-                  <div style="color:var(--dim); font-size:0.8rem">${day.city}</div>
-                  ${nextInfo}
-                </div>
-                <div style="text-align:right">
-                  <div style="font-family:'Oswald'; font-size:0.9rem; color: var(--accent)">SHOW DAY</div>
-                </div>
-              </div>
-            `;
-          } else {
-            return `
-              <div class="info-row" style="border-left: 3px solid var(--dim); padding-left: 1rem;">
-                <div>
-                  <div style="font-weight:700">${day.date}</div>
-                  <div style="font-size:0.9rem">${day.from} → ${day.to}</div>
-                </div>
-                <div style="text-align:right">
-                  <div style="font-family:'Oswald'; font-size:0.9rem; color: var(--dim)">OFF DAY</div>
-                  <div style="font-size:0.8rem; color: var(--dim)">${day.distance} / ${day.drive_time}</div>
-                </div>
-              </div>
-            `;
-          }
-        }).join('');
-        document.getElementById('routing-list').innerHTML = routingHtml;
-      });
   </script>
 </body>
 </html>
