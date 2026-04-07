@@ -126,6 +126,21 @@
       color: var(--dim);
       border-bottom: 1px solid var(--border);
     }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .label { color: var(--dim); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .value { font-weight: 600; text-align: right; }
+    .btn-link {
+      color: var(--vana-red);
+      text-decoration: none;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -205,36 +220,109 @@
     </div>
   </div>
 
-  <!-- ROUTING SECTION (Placeholder for now) -->
+  <!-- ROUTING SECTION -->
   <div id="routing" class="section">
     <div class="header">
       <div style="font-family: 'Oswald'; font-size: 1.5rem;">TOUR ROUTING</div>
     </div>
     <div class="card">
       <div class="card-header">🗺️ ROUTING MAP</div>
-      <div style="padding: 2rem; text-align: center; color: var(--dim);">
-        Full Routing View Coming Soon
+      <div id="routing-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TECH SPECS SECTION -->
+  <div id="tech" class="section">
+    <div class="header">
+      <div style="font-family: 'Oswald'; font-size: 1.5rem;">TECH SPECS</div>
+    </div>
+    <div class="card">
+      <div class="card-header">🎛️ VANA - Lighting & Power</div>
+      <div style="padding: 1rem;">
+        <div class="info-row">
+          <span class="label">Lighting Plot</span>
+          <a href="tech-specs/vana-lighting-plot.jpg" target="_blank" class="btn-link">View Image</a>
+        </div>
+        <div class="info-row">
+          <span class="label">Power Distro</span>
+          <a href="tech-specs/vana-power-distro.pdf" target="_blank" class="btn-link">View PDF</a>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">🎸 DEADLANDS</div>
+      <div style="padding: 1rem;">
+        <div class="info-row">
+          <span class="label">Tech Rider & Stage Plot</span>
+          <a href="tech-specs/deadlands/DEADLANDS TECH RIDER, STAGE PLOT, AND WIRELESS 2026.pdf" target="_blank" class="btn-link">View PDF</a>
+        </div>
+        <div class="info-row">
+          <span class="label">Input List</span>
+          <a href="tech-specs/deadlands/DEADLANDS INPUT LIST 2026.pdf" target="_blank" class="btn-link">View PDF</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTLEMENT SECTION -->
+  <div id="settle" class="section">
+    <div class="header">
+      <div style="font-family: 'Oswald'; font-size: 1.5rem;">SETTLE & ADVANCE</div>
+    </div>
+    <div class="card">
+      <div class="card-header">💰 Settlement Checker</div>
+      <div style="padding: 1rem; text-align: center; color: var(--dim);">
+        📸 Upload Settlement Sheet (Coming Soon)
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">✅ Advance Checklist</div>
+      <div class="info-row">
+        <span class="value">Power Distro Confirmed</span>
+        <span class="label" style="color:var(--vana-red)">PENDING</span>
+      </div>
+      <div class="info-row">
+        <span class="value">Hotel Rooms Assigned</span>
+        <span class="label" style="color:var(--vana-red)">PENDING</span>
       </div>
     </div>
   </div>
 
   <!-- BOTTOM NAVIGATION -->
   <div class="nav-bar">
-    <div class="nav-item active" onclick="switchTab('schedule')">⏱️</div>
-    <div class="nav-item" onclick="switchTab('routing')">🗺️</div>
-    <div class="nav-item">🎛️</div>
-    <div class="nav-item">💰</div>
+    <div class="nav-item active" onclick="switchTab('schedule', 0)">⏱️</div>
+    <div class="nav-item" onclick="switchTab('routing', 1)">🗺️</div>
+    <div class="nav-item" onclick="switchTab('tech', 2)">🎛️</div>
+    <div class="nav-item" onclick="switchTab('settle', 3)">💰</div>
   </div>
 
   <script>
-    function switchTab(tabId) {
+    function switchTab(tabId, index) {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
-      // Simple logic to highlight the correct icon (for prototype purposes)
-      if(tabId === 'schedule') document.querySelectorAll('.nav-item')[0].classList.add('active');
-      if(tabId === 'routing') document.querySelectorAll('.nav-item')[1].classList.add('active');
+      document.querySelectorAll('.nav-item')[index].classList.add('active');
     }
+
+    // Populate Routing
+    fetch('data/routing_data.json')
+      .then(res => res.json())
+      .then(data => {
+        const html = data.routing.slice(0, 5).map(day => `
+          <div class="info-row">
+            <div>
+              <div style="font-weight:700">${day.date}</div>
+              <div style="color:var(--dim); font-size:0.8rem">${day.city || day.from}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:'Oswald'; color:${day.type === 'SHOW' ? 'var(--vana-red)' : 'var(--dim)'}">${day.type}</div>
+            </div>
+          </div>
+        `).join('');
+        document.getElementById('routing-list').innerHTML = html;
+      });
   </script>
 </body>
 </html>
