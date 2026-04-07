@@ -1,4 +1,4 @@
-{
+﻿{
   "routing": [
     {
       "date": "2026-04-17",
@@ -25,7 +25,11 @@
       "venue": "The Orpheum",
       "next_city": "Greensboro, NC",
       "next_distance": "653 miles",
-      "next_drive_time": "11h 52m"
+      "next_drive_time": "11h 52m",
+      "stopover": {
+        "city": "Savannah, GA",
+        "highlights": ["Oglethorpe Mall", "Savannah Mall", "City Market Historic District", "River Street", "Historic Downtown Squares"]
+      }
     },
     {
       "date": "2026-04-20",
@@ -179,7 +183,11 @@
       "venue": "recordBar",
       "next_city": "Denver, CO",
       "next_distance": "604 miles",
-      "next_drive_time": "10h 59m"
+      "next_drive_time": "10h 59m",
+      "stopover": {
+        "city": "Hays, KS",
+        "highlights": ["Big Creek Crossing Mall", "The Bricks Historic District", "Sternberg Museum", "AMC Hays 8", "Downtown Dining District"]
+      }
     },
     {
       "date": "2026-05-06",
@@ -315,7 +323,11 @@
       "venue": "Crescent Ballroom",
       "next_city": "Austin, TX",
       "next_distance": "880 miles",
-      "next_drive_time": "16h 0m"
+      "next_drive_time": "16h 0m",
+      "stopover": {
+        "city": "El Paso, TX",
+        "highlights": ["Cielo Vista Mall", "The Outlet Shoppes at El Paso", "The Fountains at Farah", "Sunland Park Mall", "Bassett Place"]
+      }
     },
     {
       "date": "2026-05-20",
@@ -369,10 +381,10 @@
     {
       "date": "2026-05-25",
       "type": "TRAVEL",
-      "from": "Shreveport, LA",
+      "from": "Little Rock, AR",
       "to": "Nashville, TN",
-      "distance": "475 miles",
-      "drive_time": "8h 38m",
+      "distance": "370 miles",
+      "drive_time": "6h 40m",
       "next_city": "Nashville, TN",
       "next_distance": "0 miles",
       "next_drive_time": "0h 0m"
@@ -384,7 +396,11 @@
       "venue": "The Basement East",
       "next_city": "Allentown, PA",
       "next_distance": "655 miles",
-      "next_drive_time": "11h 55m"
+      "next_drive_time": "11h 55m",
+      "stopover": {
+        "city": "Roanoke, VA",
+        "highlights": ["Valley View Mall", "Tanglewood Mall", "City Market Building", "Market Square", "Downtown Arts District"]
+      }
     },
     {
       "date": "2026-05-27",
@@ -410,7 +426,7 @@
       "date": "2026-05-29",
       "type": "SHOW",
       "city": "Pittsburgh, PA",
-      "venue": "Thunderbird Café",
+      "venue": "Thunderbird CafÃ©",
       "next_city": "Lansing, MI",
       "next_distance": "350 miles",
       "next_drive_time": "5h 32m"
@@ -446,3 +462,5 @@
     }
   ]
 }
+
+
