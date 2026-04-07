@@ -309,19 +309,47 @@
     // Populate Routing
     fetch('data/routing_data.json')
       .then(res => res.json())
-      .then(data => {
-        const html = data.routing.slice(0, 5).map(day => `
-          <div class="info-row">
-            <div>
-              <div style="font-weight:700">${day.date}</div>
-              <div style="color:var(--dim); font-size:0.8rem">${day.city || day.from}</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-family:'Oswald'; color:${day.type === 'SHOW' ? 'var(--vana-red)' : 'var(--dim)'}">${day.type}</div>
-            </div>
-          </div>
-        `).join('');
-        document.getElementById('routing-list').innerHTML = html;
+      .then(routingData => {
+        const routingHtml = routingData.routing.map((day, index) => {
+          let nextInfo = "";
+          if (day.next_city && day.next_distance) {
+            nextInfo = `
+              <div style="font-size:0.8rem; color:var(--vana-red); margin-top:0.25rem; font-weight:600;">
+                NEXT SHOW: ${day.next_city} • ${day.next_distance}/${day.next_drive_time}
+              </div>
+            `;
+          }
+
+          if (day.type === 'SHOW') {
+            return `
+              <div class="info-row" style="border-left: 3px solid var(--vana-red); padding-left: 1rem;">
+                <div>
+                  <div style="font-weight:700; color: var(--vana-red)">${day.date}</div>
+                  <div style="font-size:0.9rem">${day.venue}</div>
+                  <div style="color:var(--dim); font-size:0.8rem">${day.city}</div>
+                  ${nextInfo}
+                </div>
+                <div style="text-align:right">
+                  <div style="font-family:'Oswald'; font-size:0.9rem; color: var(--vana-red)">SHOW DAY</div>
+                </div>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="info-row" style="border-left: 3px solid var(--dim); padding-left: 1rem;">
+                <div>
+                  <div style="font-weight:700">${day.date}</div>
+                  <div style="font-size:0.9rem">${day.from} → ${day.to}</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-family:'Oswald'; font-size:0.9rem; color: var(--dim)">OFF DAY</div>
+                  <div style="font-size:0.8rem; color: var(--dim)">${day.distance} / ${day.drive_time}</div>
+                </div>
+              </div>
+            `;
+          }
+        }).join('');
+        document.getElementById('routing-list').innerHTML = routingHtml;
       });
   </script>
 </body>
