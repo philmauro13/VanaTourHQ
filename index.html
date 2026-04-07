@@ -171,7 +171,9 @@
 
   <div class="tab-nav">
     <button class="tab-btn active" onclick="showTab('daysheet')">Day Sheet</button>
+    <button class="tab-btn" onclick="showTab('mastersheet')">Master Schedule</button>
     <button class="tab-btn" onclick="showTab('routing')">Tour Routing</button>
+    <button class="tab-btn" onclick="showTab('settle')">Settle & Advance</button>
     <button class="tab-btn" onclick="showTab('tour')">Tour Dates</button>
     <button class="tab-btn" onclick="showTab('tech')">Tech Specs</button>
     <button class="tab-btn" onclick="showTab('admats')">Admats</button>
@@ -224,6 +226,81 @@
   <div id="routing" class="section">
     <div class="card" id="routing-list">
       <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- MASTER SCHEDULE TAB -->
+  <div id="mastersheet" class="section">
+    <div class="card">
+      <div class="card-header">Standard Show Day Timeline</div>
+      <div class="timeline-item">
+        <span class="time">12:00 PM</span>
+        <span class="event">Load-In / Venue Access</span>
+      </div>
+      <div class="timeline-item">
+        <span class="time">04:00 PM</span>
+        <span class="event">Soundcheck (Support Acts)</span>
+      </div>
+      <div class="timeline-item">
+        <span class="time">06:00 PM</span>
+        <span class="event">Soundcheck (VANA)</span>
+      </div>
+      <div class="timeline-item">
+        <span class="time">06:30 PM</span>
+        <span class="event">VIP Meet & Greet</span>
+      </div>
+      <div class="timeline-item">
+        <span class="time">07:00 PM</span>
+        <span class="event">Doors Open</span>
+      </div>
+      <div class="timeline-item">
+        <span class="time">08:00 PM</span>
+        <span class="event">Support Sets (Deadlands / Cloudyfield / Redhook)</span>
+      </div>
+      <div class="timeline-item">
+        <span class="time">09:00 PM</span>
+        <span class="event" style="color:var(--accent)">VANA Headline Set</span>
+      </div>
+      <div class="timeline-item">
+        <span class="time">11:00 PM</span>
+        <span class="event">Curfew / Hard Stop</span>
+      </div>
+      <div class="timeline-item">
+        <span class="time">01:30 AM</span>
+        <span class="event">Bus Call / Wheels Up</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTLEMENT & ADVANCE TAB -->
+  <div id="settle" class="section">
+    <div class="card">
+      <div class="card-header">Settlement Checker</div>
+      <div style="padding: 1rem; text-align: center;">
+        <div class="label" style="margin-bottom: 1rem;">Upload Settlement Sheet Photo</div>
+        <div style="border: 2px dashed var(--border); padding: 2rem; border-radius: 8px; color: var(--dim);">
+          Camera/Upload Interface Coming Soon
+        </div>
+        <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--dim);">
+          The AI will compare this against the contract terms and flag any discrepancies in the promoter's math.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Advance Checklist</div>
+      <div class="info-row">
+        <span class="value">Power Distro Confirmed (100A 1-Phase)</span>
+        <span class="label" style="color:var(--accent)">PENDING</span>
+      </div>
+      <div class="info-row">
+        <span class="value">Hotel Rooms Assigned</span>
+        <span class="label" style="color:var(--accent)">PENDING</span>
+      </div>
+      <div class="info-row">
+        <span class="value">Local Crew Contacted</span>
+        <span class="label" style="color:var(--accent)">PENDING</span>
+      </div>
     </div>
   </div>
 
