@@ -3,155 +3,376 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VANA Tour Ops</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <title>Tour HQ — Dashboard</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) {
+        window.location.href = 'landing.html';
+      }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #050505;
-      --card: #141414;
-      --vana-red: #d90429;
+      --bg: #07070c;
+      --bg-card: #101018;
+      --bg-elevated: #181822;
+      --border: #1f1f2e;
+      --text: #f0f0f5;
+      --dim: #8888a0;
+      --muted: #555570;
+      --accent: #d90429;
+      --accent-glow: rgba(217, 4, 41, 0.2);
+      --cyan: #22d3ee;
+      --success: #22c55e;
+      --warning: #f59e0b;
       --support-blue: #0077b6;
-      --logistics-grey: #6c757d;
-      --text: #ffffff;
-      --dim: #888888;
-      --border: #2a2a2a;
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 0;
-      padding-bottom: 80px;
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
       max-width: 480px;
       margin: 0 auto;
+      padding-bottom: 80px;
     }
-    .header {
-      padding: 1.5rem;
+
+    /* User Bar */
+    .user-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .user-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .logout-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Section Headers */
+    .section-header {
+      padding: 1.25rem 1.5rem;
       text-align: center;
       border-bottom: 1px solid var(--border);
     }
     .date-badge {
-      background: var(--vana-red);
+      background: var(--accent);
       color: white;
-      font-family: 'Oswald', sans-serif;
-      padding: 0.5rem 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0.4rem 1rem;
       border-radius: 100px;
       display: inline-block;
       margin-bottom: 0.5rem;
-      font-size: 0.9rem;
+      font-size: 0.75rem;
       letter-spacing: 0.1em;
+      font-weight: 500;
     }
+    .section-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+    .section-subtitle {
+      color: var(--dim);
+      font-size: 0.85rem;
+    }
+
+    /* Pulse Bar */
     .pulse-bar {
-      height: 6px;
-      background: var(--card);
-      border-radius: 3px;
+      height: 4px;
+      background: var(--bg-elevated);
+      border-radius: 2px;
       margin: 1rem 1.5rem;
       overflow: hidden;
     }
     .pulse-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--vana-red), #ff6b6b);
+      background: linear-gradient(90deg, var(--accent), #ff6b6b);
       width: 65%;
+      border-radius: 2px;
     }
+
+    /* Time Blocks */
     .time-block {
-      padding: 1.25rem 1.5rem;
+      padding: 1rem 1.5rem;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       gap: 1rem;
     }
     .icon-box {
-      width: 50px;
-      height: 50px;
-      background: var(--card);
-      border-radius: 12px;
+      width: 44px; height: 44px;
+      background: var(--bg-elevated);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       flex-shrink: 0;
       border: 1px solid var(--border);
     }
     .info { flex-grow: 1; }
     .time {
-      font-family: 'Oswald', sans-serif;
-      font-size: 1.2rem;
-      margin-bottom: 0.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--cyan);
+      margin-bottom: 0.15rem;
+      font-weight: 500;
     }
     .event { font-size: 0.95rem; font-weight: 600; }
     .status {
-      font-size: 0.75rem;
-      margin-top: 0.25rem;
+      font-size: 0.65rem;
+      margin-top: 0.35rem;
       display: inline-block;
-      padding: 0.2rem 0.6rem;
+      padding: 0.2rem 0.5rem;
       border-radius: 4px;
       font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-    .status.vana { background: rgba(217, 4, 41, 0.2); color: var(--vana-red); }
-    .status.support { background: rgba(0, 119, 182, 0.2); color: var(--support-blue); }
-    .status.logistics { background: rgba(108, 117, 125, 0.2); color: var(--logistics-grey); }
-    
+    .status.vana { background: rgba(217, 4, 41, 0.15); color: var(--accent); }
+    .status.support { background: rgba(0, 119, 182, 0.15); color: var(--support-blue); }
+    .status.logistics { background: rgba(108, 117, 125, 0.15); color: var(--dim); }
+    .status.success { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+
+    /* Bottom Navigation */
     .nav-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      background: var(--card);
+      background: var(--bg-card);
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-around;
-      padding: 1rem;
+      padding: 0.75rem 1rem;
       max-width: 480px;
       margin: 0 auto;
       z-index: 100;
     }
-    .nav-item { font-size: 1.5rem; opacity: 0.5; cursor: pointer; transition: all 0.2s; }
-    .nav-item.active { opacity: 1; transform: scale(1.1); }
-    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 1.3rem;
+      opacity: 0.4;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 0.25rem;
+    }
+    .nav-item span {
+      font-size: 0.6rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .nav-item.active { opacity: 1; }
+    .nav-item.active span { color: var(--accent); }
+
+    /* Sections */
     .section { display: none; }
     .section.active { display: block; }
+
+    /* Cards */
     .card {
-      background: var(--card);
+      background: var(--bg-card);
       border: 1px solid var(--border);
       margin: 1rem;
-      border-radius: 12px;
+      border-radius: 14px;
       overflow: hidden;
     }
     .card-header {
-      background: #1a1a1a;
-      padding: 1rem;
-      font-family: 'Oswald', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.05em;
+      background: var(--bg-elevated);
+      padding: 0.875rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
       color: var(--dim);
       border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     .info-row {
       display: flex;
       justify-content: space-between;
-      padding: 1rem;
+      align-items: center;
+      padding: 0.875rem 1rem;
       border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
     .info-row:last-child { border-bottom: none; }
-    .label { color: var(--dim); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .label { color: var(--dim); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .value { font-weight: 600; text-align: right; }
     .btn-link {
-      color: var(--vana-red);
+      color: var(--accent);
       text-decoration: none;
       font-weight: 600;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+    .btn-link:hover { color: #ff6b6b; }
+
+    /* Document Upload Area */
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin: 1rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .upload-area:hover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .upload-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .upload-text {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+    .upload-hint {
+      font-size: 0.75rem;
+      color: var(--dim);
+    }
+
+    /* Document List */
+    .doc-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .doc-icon {
+      width: 36px; height: 36px;
+      background: var(--bg-elevated);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    .doc-info { flex-grow: 1; }
+    .doc-name { font-size: 0.85rem; font-weight: 600; }
+    .doc-meta { font-size: 0.7rem; color: var(--dim); margin-top: 2px; }
+    .doc-action {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+
+    /* Routing Items */
+    .route-item {
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .route-item.show { border-left: 3px solid var(--accent); padding-left: 0.75rem; }
+    .route-item.offday { border-left: 3px solid var(--muted); padding-left: 0.75rem; }
+    .route-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--dim);
+      margin-bottom: 2px;
+    }
+    .route-location { font-size: 0.9rem; font-weight: 600; }
+    .route-next {
+      font-size: 0.7rem;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .route-type {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .route-type.show { background: rgba(217, 4, 41, 0.15); color: var(--accent); }
+    .route-type.offday { background: rgba(108, 117, 125, 0.15); color: var(--dim); }
+
+    @media (max-width: 640px) {
+      .section-header { padding: 1rem; }
+      .time-block { padding: 0.875rem 1rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- MASTER SCHEDULE SECTION -->
-  <div id="schedule" class="section active">
-    <div class="header">
-      <div class="date-badge">FRIDAY, APRIL 17</div>
-      <div style="font-family: 'Oswald'; font-size: 1.5rem; letter-spacing: 0.05em;">ATLANTA, GA</div>
-      <div style="color: var(--dim); font-size: 0.9rem;">Hell at The Masquerade</div>
+  <!-- User Bar -->
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
     </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 0.75rem; color: var(--success); font-weight: 500;">● Online</span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- SCHEDULE SECTION -->
+  <div id="schedule" class="section active">
+    <div class="section-header">
+      <div class="date-badge" id="tourBadge">NO ACTIVE TOUR</div>
+      <div class="section-title" id="tourTitle">Create or Select a Tour</div>
+      <div class="section-subtitle" id="tourSubtitle">Tap below to get started</div>
+    </div>
+    <div style="padding: 1rem;">
+      <a href="create-tour.html" class="btn btn-primary" style="text-decoration: none; display: block; margin-bottom: 0.75rem;">+ Create New Tour</a>
+      <div id="tourList"></div>
+    </div>
+    <div id="scheduleContent" style="display: none;">
     <div class="pulse-bar"><div class="pulse-fill"></div></div>
 
     <div class="time-block">
@@ -174,7 +395,7 @@
       <div class="icon-box">🎤</div>
       <div class="info">
         <div class="time">06:00 PM</div>
-        <div class="event">Soundcheck: VANA</div>
+        <div class="event">Soundcheck: Headliner</div>
         <div class="status vana">HEADLINER</div>
       </div>
     </div>
@@ -198,7 +419,7 @@
       <div class="icon-box">🎸</div>
       <div class="info">
         <div class="time">09:00 PM</div>
-        <div class="event">VANA Set Time</div>
+        <div class="event">Headliner Set Time</div>
         <div class="status vana">HEADLINER</div>
       </div>
     </div>
@@ -215,52 +436,74 @@
       <div class="info">
         <div class="time">01:30 AM</div>
         <div class="event">Bus Call / Wheels Up</div>
-        <div class="status logistics">TRAVEL</div>
+        <div class="status success">TRAVEL</div>
       </div>
+    </div>
+    <div style="padding: 0 1rem 1rem;">
+      <a href="edit-day.html" class="btn btn-secondary" style="text-decoration: none; display: block; text-align: center;">✏️ Edit Day Sheet (Mobile)</a>
+    </div>
     </div>
   </div>
 
   <!-- ROUTING SECTION -->
   <div id="routing" class="section">
-    <div class="header">
-      <div style="font-family: 'Oswald'; font-size: 1.5rem;">TOUR ROUTING</div>
+    <div class="section-header">
+      <div class="section-title">Tour Routing</div>
+      <div class="section-subtitle">46-day run • Updated routing</div>
     </div>
-    <div class="card">
-      <div class="card-header">🗺️ ROUTING MAP</div>
-      <div id="routing-list">
-        <!-- Populated by JS -->
-      </div>
+    <div id="routing-list">
+      <!-- Populated by JS -->
     </div>
   </div>
 
-  <!-- TECH SPECS SECTION -->
-  <div id="tech" class="section">
-    <div class="header">
-      <div style="font-family: 'Oswald'; font-size: 1.5rem;">TECH SPECS</div>
+  <!-- DOCUMENTS SECTION -->
+  <div id="documents" class="section">
+    <div class="section-header">
+      <div class="section-title">Documents</div>
+      <div class="section-subtitle">Secure vault • All files encrypted</div>
     </div>
-    <div class="card">
-      <div class="card-header">🎛️ VANA - Lighting & Power</div>
-      <div style="padding: 1rem;">
-        <div class="info-row">
-          <span class="label">Lighting Plot</span>
-          <a href="tech-specs/vana-lighting-plot.jpg" target="_blank" class="btn-link">View Image</a>
-        </div>
-        <div class="info-row">
-          <span class="label">Power Distro</span>
-          <a href="tech-specs/vana-power-distro.pdf" target="_blank" class="btn-link">View PDF</a>
-        </div>
-      </div>
+
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📄</div>
+      <div class="upload-text">Tap to upload a document</div>
+      <div class="upload-hint">PDF, JPG, PNG up to 10MB</div>
+      <input type="file" id="fileInput" style="display: none;" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(event)">
     </div>
+
     <div class="card">
-      <div class="card-header">🎸 DEADLANDS</div>
-      <div style="padding: 1rem;">
-        <div class="info-row">
-          <span class="label">Tech Rider & Stage Plot</span>
-          <a href="tech-specs/deadlands/DEADLANDS TECH RIDER, STAGE PLOT, AND WIRELESS 2026.pdf" target="_blank" class="btn-link">View PDF</a>
+      <div class="card-header">📁 Recent Documents</div>
+      <div id="doc-list">
+        <div class="doc-item">
+          <div class="doc-icon">📋</div>
+          <div class="doc-info">
+            <div class="doc-name">Performance Contract - Masquerade</div>
+            <div class="doc-meta">PDF • 2.4 MB • Uploaded today</div>
+          </div>
+          <button class="doc-action">View</button>
         </div>
-        <div class="info-row">
-          <span class="label">Input List</span>
-          <a href="tech-specs/deadlands/DEADLANDS INPUT LIST 2026.pdf" target="_blank" class="btn-link">View PDF</a>
+        <div class="doc-item">
+          <div class="doc-icon">🎸</div>
+          <div class="doc-info">
+            <div class="doc-name">Tech Rider - Deadlands</div>
+            <div class="doc-meta">PDF • 1.1 MB • Uploaded yesterday</div>
+          </div>
+          <button class="doc-action">View</button>
+        </div>
+        <div class="doc-item">
+          <div class="doc-icon">🏨</div>
+          <div class="doc-info">
+            <div class="doc-name">Hotel Confirmation - Atlanta</div>
+            <div class="doc-meta">PDF • 0.4 MB • 2 days ago</div>
+          </div>
+          <button class="doc-action">View</button>
+        </div>
+        <div class="doc-item">
+          <div class="doc-icon">🍽️</div>
+          <div class="doc-info">
+            <div class="doc-name">Hospitality Rider - Masquerade</div>
+            <div class="doc-meta">PDF • 0.8 MB • 3 days ago</div>
+          </div>
+          <button class="doc-action">View</button>
         </div>
       </div>
     </div>
@@ -268,88 +511,204 @@
 
   <!-- SETTLEMENT SECTION -->
   <div id="settle" class="section">
-    <div class="header">
-      <div style="font-family: 'Oswald'; font-size: 1.5rem;">SETTLE & ADVANCE</div>
+    <div class="section-header">
+      <div class="section-title">Settle & Advance</div>
+      <div class="section-subtitle">Track payments and advance status</div>
+    </div>
+    <div style="padding: 0 1rem 1rem;">
+      <a href="settlement.html" class="btn btn-primary" style="text-decoration: none; display: block; text-align: center; margin-bottom: 0.5rem;">📊 Open Settlement Calculator</a>
+      <a href="advance.html" class="btn btn-secondary" style="text-decoration: none; display: block; text-align: center; margin-bottom: 0.5rem;">📋 Advance Tracker</a>
+      <a href="market-history.html" class="btn btn-secondary" style="text-decoration: none; display: block; text-align: center; margin-bottom: 0.5rem;">📈 Market History Report</a>
+      <a href="crew.html" class="btn btn-secondary" style="text-decoration: none; display: block; text-align: center;">👥 Crew Board</a>
     </div>
     <div class="card">
-      <div class="card-header">💰 Settlement Checker</div>
-      <div style="padding: 1rem; text-align: center; color: var(--dim);">
-        📸 Upload Settlement Sheet (Coming Soon)
+      <div class="card-header">💰 Deal Structure</div>
+      <div class="info-row">
+        <span class="label">Deal Type</span>
+        <span class="value">Guarantee vs. Door</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Guarantee</span>
+        <span class="value">$2,500</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Door Split</span>
+        <span class="value">80/20 after expenses</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Merch Split</span>
+        <span class="value">85/15 (no hall fee)</span>
       </div>
     </div>
     <div class="card">
       <div class="card-header">✅ Advance Checklist</div>
       <div class="info-row">
+        <span class="value">Contract Signed</span>
+        <span class="label" style="color: var(--success)">CONFIRMED</span>
+      </div>
+      <div class="info-row">
         <span class="value">Power Distro Confirmed</span>
-        <span class="label" style="color:var(--vana-red)">PENDING</span>
+        <span class="label" style="color: var(--warning)">PENDING</span>
       </div>
       <div class="info-row">
         <span class="value">Hotel Rooms Assigned</span>
-        <span class="label" style="color:var(--vana-red)">PENDING</span>
+        <span class="label" style="color: var(--warning)">PENDING</span>
+      </div>
+      <div class="info-row">
+        <span class="value">Hospitality Rider Confirmed</span>
+        <span class="label" style="color: var(--success)">CONFIRMED</span>
+      </div>
+      <div class="info-row">
+        <span class="value">Parking / Load-in Confirmed</span>
+        <span class="label" style="color: var(--success)">CONFIRMED</span>
       </div>
     </div>
   </div>
 
   <!-- BOTTOM NAVIGATION -->
   <div class="nav-bar">
-    <div class="nav-item active" onclick="switchTab('schedule', 0)">⏱️</div>
-    <div class="nav-item" onclick="switchTab('routing', 1)">🗺️</div>
-    <div class="nav-item" onclick="switchTab('tech', 2)">🎛️</div>
-    <div class="nav-item" onclick="switchTab('settle', 3)">💰</div>
+    <div class="nav-item active" onclick="switchTab('schedule', 0)">
+      ⏱️<span>Schedule</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('routing', 1)">
+      🗺️<span>Route</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('documents', 2)">
+      📄<span>Docs</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('settle', 3)">
+      💰<span>Settle</span>
+    </div>
   </div>
 
   <script>
+    // User info
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      window.location.href = 'landing.html';
+    }
+
     function switchTab(tabId, index) {
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+      document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
       document.getElementById(tabId).classList.add('active');
       document.querySelectorAll('.nav-item')[index].classList.add('active');
     }
 
+    // File upload handler
+    function handleFileUpload(event) {
+      var file = event.target.files[0];
+      if (file) {
+        var docs = JSON.parse(localStorage.getItem('tourhq_documents') || '[]');
+        var newDoc = {
+          name: file.name,
+          size: (file.size / 1024 / 1024).toFixed(1) + ' MB',
+          type: file.type,
+          date: new Date().toISOString(),
+          id: Date.now()
+        };
+        docs.unshift(newDoc);
+        localStorage.setItem('tourhq_documents', JSON.stringify(docs));
+        
+        // Add to UI
+        var docList = document.getElementById('doc-list');
+        var newDocHtml = '<div class="doc-item">' +
+          '<div class="doc-icon">📎</div>' +
+          '<div class="doc-info">' +
+          '<div class="doc-name">' + newDoc.name + '</div>' +
+          '<div class="doc-meta">' + newDoc.size + ' • Just now</div>' +
+          '</div>' +
+          '<button class="doc-action">View</button>' +
+          '</div>';
+        docList.insertAdjacentHTML('afterbegin', newDocHtml);
+      }
+    }
+
+    // Load user tours
+    (function() {
+      var tours = JSON.parse(localStorage.getItem('tourhq_tours') || '[]');
+      var currentTour = JSON.parse(localStorage.getItem('tourhq_current_tour') || 'null');
+      var tourList = document.getElementById('tourList');
+      
+      if (tours.length > 0) {
+        var html = '';
+        tours.forEach(function(tour) {
+          var isActive = currentTour && currentTour.id === tour.id;
+          html += '<div style="background: var(--bg-elevated); border: 1px solid ' + (isActive ? 'var(--accent)' : 'var(--border)') + '; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; cursor: pointer;" onclick="selectTour(\'' + tour.id + '\')">' +
+            '<div style="font-weight: 600; font-size: 0.95rem;">' + tour.name + '</div>' +
+            '<div style="font-size: 0.8rem; color: var(--dim); margin-top: 2px;">' + tour.artist + ' • ' + tour.startDate + ' to ' + tour.endDate + '</div>' +
+            (isActive ? '<div style="font-size: 0.7rem; color: var(--accent); margin-top: 4px; font-weight: 600;">● ACTIVE</div>' : '') +
+            '</div>';
+        });
+        tourList.innerHTML = html;
+      }
+    })();
+
+    function selectTour(tourId) {
+      var tours = JSON.parse(localStorage.getItem('tourhq_tours') || '[]');
+      var tour = tours.find(function(t) { return t.id === tourId; });
+      if (tour) {
+        localStorage.setItem('tourhq_current_tour', JSON.stringify(tour));
+        location.reload();
+      }
+    }
+
+    // Load current tour info
+    (function() {
+      var tour = JSON.parse(localStorage.getItem('tourhq_current_tour') || 'null');
+      if (tour) {
+        document.getElementById('tourBadge').textContent = 'ACTIVE TOUR';
+        document.getElementById('tourTitle').textContent = tour.name;
+        document.getElementById('tourSubtitle').textContent = tour.artist + ' • ' + tour.startDate + ' to ' + tour.endDate;
+        document.getElementById('scheduleContent').style.display = 'block';
+        document.querySelector('[onclick="window.location.href=\'create-tour.html\'"]') && (document.querySelector('[onclick="window.location.href=\'create-tour.html\'"]').style.display = 'none');
+      }
+    })();
+
     // Populate Routing
     fetch('data/routing_data.json')
-      .then(res => res.json())
-      .then(routingData => {
-        const routingHtml = routingData.routing.map((day, index) => {
-          let nextInfo = "";
+      .then(function(res) { return res.json(); })
+      .then(function(routingData) {
+        var html = '';
+        routingData.routing.forEach(function(day) {
+          var nextInfo = '';
           if (day.next_city && day.next_distance) {
-            nextInfo = `
-              <div style="font-size:0.8rem; color:var(--vana-red); margin-top:0.25rem; font-weight:600;">
-                NEXT SHOW: ${day.next_city} • ${day.next_distance}/${day.next_drive_time}
-              </div>
-            `;
+            nextInfo = '<div class="route-next">NEXT SHOW: ' + day.next_city + ' • ' + day.next_distance + '/' + day.next_drive_time + '</div>';
           }
 
           if (day.type === 'SHOW') {
-            return `
-              <div class="info-row" style="border-left: 3px solid var(--vana-red); padding-left: 1rem;">
-                <div>
-                  <div style="font-weight:700; color: var(--vana-red)">${day.date}</div>
-                  <div style="font-size:0.9rem">${day.venue}</div>
-                  <div style="color:var(--dim); font-size:0.8rem">${day.city}</div>
-                  ${nextInfo}
-                </div>
-                <div style="text-align:right">
-                  <div style="font-family:'Oswald'; font-size:0.9rem; color: var(--vana-red)">SHOW DAY</div>
-                </div>
-              </div>
-            `;
+            html += '<div class="route-item show">' +
+              '<div>' +
+              '<div class="route-date">' + day.date + '</div>' +
+              '<div class="route-location">' + (day.venue || day.city) + '</div>' +
+              nextInfo +
+              '</div>' +
+              '<div class="route-type show">SHOW</div>' +
+              '</div>';
           } else {
-            return `
-              <div class="info-row" style="border-left: 3px solid var(--dim); padding-left: 1rem;">
-                <div>
-                  <div style="font-weight:700">${day.date}</div>
-                  <div style="font-size:0.9rem">${day.from} → ${day.to}</div>
-                </div>
-                <div style="text-align:right">
-                  <div style="font-family:'Oswald'; font-size:0.9rem; color: var(--dim)">OFF DAY</div>
-                  <div style="font-size:0.8rem; color: var(--dim)">${day.distance} / ${day.drive_time}</div>
-                </div>
-              </div>
-            `;
+            html += '<div class="route-item offday">' +
+              '<div>' +
+              '<div class="route-date">' + day.date + '</div>' +
+              '<div class="route-location">' + day.from + ' → ' + day.to + '</div>' +
+              '<div class="route-next" style="color: var(--dim);">' + day.distance + ' • ' + day.drive_time + '</div>' +
+              '</div>' +
+              '<div class="route-type offday">OFF</div>' +
+              '</div>';
           }
-        }).join('');
-        document.getElementById('routing-list').innerHTML = routingHtml;
+        });
+        document.getElementById('routing-list').innerHTML = html;
+      })
+      .catch(function(err) {
+        console.log('Routing data not loaded:', err);
+        document.getElementById('routing-list').innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--dim);">Routing data will load when connected to your tour.</div>';
       });
   </script>
 </body>

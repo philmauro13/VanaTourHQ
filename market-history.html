@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Market History Report</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070c;
+      --bg-card: #101018;
+      --bg-elevated: #181822;
+      --border: #1f1f2e;
+      --text: #f0f0f5;
+      --dim: #8888a0;
+      --muted: #555570;
+      --accent: #d90429;
+      --cyan: #22d3ee;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+
+    .user-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.5rem; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--dim); padding: 0.4rem 0.8rem;
+      border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .page-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.85rem; margin-bottom: 0.75rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-subtitle { color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    /* Summary Stats */
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-stat {
+      text-align: center;
+      padding: 0.75rem 0.5rem;
+      background: var(--bg-elevated);
+      border-radius: 10px;
+    }
+    .summary-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+    .summary-label {
+      font-size: 0.6rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex-shrink: 0;
+      padding: 0.4rem 0.8rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .filter-chip.active {
+      background: rgba(217, 4, 41, 0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Report Table */
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .report-table th {
+      background: var(--bg-elevated);
+      padding: 0.6rem 0.75rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--dim);
+      text-align: left;
+      position: sticky;
+      top: 0;
+      white-space: nowrap;
+    }
+    .report-table td {
+      padding: 0.75rem;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .report-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .rating {
+      display: inline-flex;
+      gap: 2px;
+    }
+    .rating-star {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+    .rating-star.filled { background: var(--warning); }
+    .rating-star.empty { background: var(--bg-elevated); }
+    .rating-star.missing { background: var(--accent); }
+
+    /* Add Show Button */
+    .add-show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: calc(100% - 2rem);
+      margin: 1rem;
+      padding: 1rem;
+      background: none;
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      color: var(--dim);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .add-show:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Add Show Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: var(--muted);
+      border-radius: 2px;
+      margin: 0 auto 1rem;
+    }
+    .modal h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 0.875rem; }
+    .form-label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--dim); margin-bottom: 0.4rem; }
+    .form-input {
+      width: 100%; padding: 0.75rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+    .rating-input {
+      display: flex;
+      gap: 0.25rem;
+      margin-top: 0.25rem;
+    }
+    .rating-star-input {
+      width: 28px; height: 28px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--dim);
+      transition: all 0.2s;
+    }
+    .rating-star-input.selected {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+    .btn {
+      width: 100%; padding: 0.875rem;
+      border: none; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-secondary { background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border); margin-top: 0.5rem; }
+
+    /* Export Bar */
+    .export-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      max-width: 480px;
+      margin: 0 auto;
+      z-index: 100;
+      display: flex;
+      gap: 0.75rem;
+    }
+    .export-btn {
+      flex: 1;
+      padding: 0.875rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .export-btn.secondary {
+      background: var(--bg-elevated);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="page-header">
+    <a href="index.html" class="back-btn">← Back to Dashboard</a>
+    <div class="page-title">Market History</div>
+    <div class="page-subtitle">Your touring history for booking agents</div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="summary-stats">
+    <div class="summary-stat">
+      <div class="summary-number" id="totalShows">0</div>
+      <div class="summary-label">Total Shows</div>
+    </div>
+    <div class="summary-stat">
+      <div class="summary-number" id="totalCities">0</div>
+      <div class="summary-label">Cities Played</div>
+    </div>
+    <div class="summary-stat">
+      <div class="summary-number" id="avgRating">-</div>
+      <div class="summary-label">Avg Rating</div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="filter-chip active" onclick="filterShows('all')">All</div>
+    <div class="filter-chip" onclick="filterShows('2026')">2026</div>
+    <div class="filter-chip" onclick="filterShows('2025')">2025</div>
+    <div class="filter-chip" onclick="filterShows('5star')">★ 5 Stars</div>
+    <div class="filter-chip" onclick="filterShows('4star')">★ 4+ Stars</div>
+  </div>
+
+  <!-- Report Table -->
+  <div style="overflow-x: auto; padding-bottom: 60px;">
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>City</th>
+          <th>Venue</th>
+          <th>Rating</th>
+          <th>Promoter</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="reportBody">
+        <!-- Populated by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Show Button -->
+  <button class="add-show" onclick="openModal()" style="position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); max-width: 448px;">
+    + Add Show to History
+  </button>
+
+  <!-- Export Bar -->
+  <div class="export-bar">
+    <button class="export-btn secondary" onclick="exportCSV()">📄 Export CSV</button>
+    <button class="export-btn" onclick="openModal()">+ Add Show</button>
+  </div>
+
+  <!-- Add Show Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>Add Show to History</h2>
+      <form onsubmit="addShow(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date *</label>
+            <input type="date" class="form-input" id="showDate" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Year</label>
+            <input type="number" class="form-input" id="showYear" value="2026">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">City *</label>
+          <input type="text" class="form-input" id="showCity" placeholder="Atlanta, GA" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Venue *</label>
+          <input type="text" class="form-input" id="showVenue" placeholder="The Masquerade" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Promoter / Buyer</label>
+          <input type="text" class="form-input" id="showPromoter" placeholder="Promoter name or agency">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Show Rating</label>
+          <div class="rating-input" id="ratingInput">
+            <div class="rating-star-input" onclick="setRating(1)">★</div>
+            <div class="rating-star-input" onclick="setRating(2)">★</div>
+            <div class="rating-star-input" onclick="setRating(3)">★</div>
+            <div class="rating-star-input" onclick="setRating(4)">★</div>
+            <div class="rating-star-input" onclick="setRating(5)">★</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-input" id="showNotes" rows="2" placeholder="Venue quality, promoter reliability, etc." style="resize: vertical;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Add to History</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // User info
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      window.location.href = 'landing.html';
+    }
+
+    // Sample market history data
+    var sampleShows = [
+      { id: 1, date: '2026-04-17', year: '2026', city: 'Atlanta, GA', venue: 'Hell at The Masquerade', promoter: 'Masquerade Booking', rating: 5, notes: 'Great venue, easy load-in, attentive staff. Perfect for this size show.' },
+      { id: 2, date: '2026-04-18', year: '2026', city: 'Orlando, FL', venue: 'Conduit', promoter: 'Conduit Booking', rating: 4, notes: 'Good room, decent PA. Parking tight for trailer.' },
+      { id: 3, date: '2026-04-19', year: '2026', city: 'Tampa, FL', venue: 'The Orpheum', promoter: 'Live Nation Tampa', rating: 4, notes: 'Beautiful room, professional staff. Sound check schedule tight.' },
+      { id: 4, date: '2026-04-21', year: '2026', city: 'Greensboro, NC', venue: 'Greensboro Coliseum', promoter: 'Piedmont Entertainment', rating: 3, notes: 'Large room, felt empty at our draw. Promoter slow to respond.' },
+      { id: 5, date: '2026-04-22', year: '2026', city: 'Philadelphia, PA', venue: 'The Fillmore', promoter: 'Live Nation Philly', rating: 5, notes: 'Amazing room, great crowd, perfect sound.' },
+      { id: 6, date: '2026-04-23', year: '2026', city: 'Washington, DC', venue: '9:30 Club', promoter: 'IMP', rating: 5, notes: 'Legendary venue. Staff incredible. Best show of the run.' },
+      { id: 7, date: '2026-03-15', year: '2026', city: 'Nashville, TN', venue: 'Exit/In', promoter: 'Exit/In Staff', rating: 4, notes: 'Good room, solid turnout.' },
+      { id: 8, date: '2026-03-01', year: '2026', city: 'Chicago, IL', venue: 'Metro', promoter: 'Metro Booking', rating: 5, notes: 'Perfect venue for our size. Great sound, great staff.' },
+      { id: 9, date: '2025-11-15', year: '2025', city: 'Austin, TX', venue: 'Mohawk', promoter: 'Mohawk Booking', rating: 4, notes: 'Outdoor stage was great. Weather held out.' },
+      { id: 10, date: '2025-10-20', year: '2025', city: 'Denver, CO', venue: 'Gothic Theatre', promoter: 'AEG Rocky Mountains', rating: 5, notes: 'Perfect room size, great promoter relationship.' },
+      { id: 11, date: '2025-09-10', year: '2025', city: 'Portland, OR', venue: 'Wonder Ballroom', promoter: 'PCMS', rating: 3, notes: 'Beautiful room but promoter disorganized. Parking nightmare.' },
+      { id: 12, date: '2025-08-05', year: '2025', city: 'Seattle, WA', venue: 'Neumos', promoter: 'Neumos Booking', rating: 4, notes: 'Solid show, good crowd engagement.' }
+    ];
+
+    var shows = JSON.parse(localStorage.getItem('tourhq_market_history') || 'null');
+    if (!shows) {
+      shows = sampleShows;
+      localStorage.setItem('tourhq_market_history', JSON.stringify(shows));
+    }
+
+    var currentRating = 0;
+    var currentFilter = 'all';
+
+    function renderShows() {
+      var filtered = shows.filter(function(show) {
+        if (currentFilter === 'all') return true;
+        if (currentFilter === '2026' || currentFilter === '2025') return show.year === currentFilter;
+        if (currentFilter === '5star') return show.rating === 5;
+        if (currentFilter === '4star') return show.rating >= 4;
+        return true;
+      });
+
+      // Sort by date descending
+      filtered.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+
+      var html = '';
+      filtered.forEach(function(show) {
+        var stars = '';
+        for (var i = 1; i <= 5; i++) {
+          stars += '<div class="rating-star ' + (i <= show.rating ? 'filled' : 'empty') + '"></div>';
+        }
+        html += '<tr>' +
+          '<td>' + show.date + '</td>' +
+          '<td>' + show.city + '</td>' +
+          '<td>' + show.venue + '</td>' +
+          '<td><div class="rating">' + stars + '</div></td>' +
+          '<td>' + (show.promoter || '—') + '</td>' +
+          '<td style="white-space: normal; max-width: 120px; font-size: 0.75rem; color: var(--dim);">' + (show.notes || '—') + '</td>' +
+          '</tr>';
+      });
+
+      document.getElementById('reportBody').innerHTML = html || '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--dim);">No shows match this filter</td></tr>';
+
+      // Update summary stats
+      var totalShows = shows.length;
+      var uniqueCities = new Set(shows.map(function(s) { return s.city; })).size;
+      var avgRating = shows.reduce(function(sum, s) { return sum + s.rating; }, 0) / shows.length;
+
+      document.getElementById('totalShows').textContent = totalShows;
+      document.getElementById('totalCities').textContent = uniqueCities;
+      document.getElementById('avgRating').textContent = avgRating.toFixed(1);
+    }
+
+    function filterShows(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-chip').forEach(function(chip) {
+        chip.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      renderShows();
+    }
+
+    function setRating(rating) {
+      currentRating = rating;
+      document.querySelectorAll('.rating-star-input').forEach(function(star, index) {
+        star.classList.toggle('selected', index < rating);
+      });
+    }
+
+    function openModal() {
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('addModal').classList.remove('active');
+    }
+
+    function addShow(e) {
+      e.preventDefault();
+      var newShow = {
+        id: Date.now(),
+        date: document.getElementById('showDate').value,
+        year: document.getElementById('showYear').value || new Date().getFullYear().toString(),
+        city: document.getElementById('showCity').value,
+        venue: document.getElementById('showVenue').value,
+        promoter: document.getElementById('showPromoter').value,
+        rating: currentRating || 3,
+        notes: document.getElementById('showNotes').value
+      };
+      shows.push(newShow);
+      localStorage.setItem('tourhq_market_history', JSON.stringify(shows));
+      closeModal();
+      renderShows();
+      // Reset form
+      document.getElementById('showDate').value = '';
+      document.getElementById('showCity').value = '';
+      document.getElementById('showVenue').value = '';
+      document.getElementById('showPromoter').value = '';
+      document.getElementById('showNotes').value = '';
+      currentRating = 0;
+      document.querySelectorAll('.rating-star-input').forEach(function(s) { s.classList.remove('selected'); });
+    }
+
+    function exportCSV() {
+      var csv = 'Date,City,Venue,Rating,Promoter,Notes\n';
+      shows.forEach(function(show) {
+        csv += '"' + show.date + '","' + show.city + '","' + show.venue + '",' + show.rating + ',"' + (show.promoter || '') + '","' + (show.notes || '').replace(/"/g, '""') + '"\n';
+      });
+      var blob = new Blob([csv], { type: 'text/csv' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'market_history_' + new Date().getFullYear() + '.csv';
+      a.click();
+    }
+
+    // Initialize
+    renderShows();
+  </script>
+</body>
+</html>

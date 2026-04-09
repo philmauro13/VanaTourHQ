@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Crew Board</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070c;
+      --bg-card: #101018;
+      --bg-elevated: #181822;
+      --border: #1f1f2e;
+      --text: #f0f0f5;
+      --dim: #8888a0;
+      --muted: #555570;
+      --accent: #d90429;
+      --cyan: #22d3ee;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+
+    .user-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.5rem; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--dim); padding: 0.4rem 0.8rem;
+      border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .page-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.85rem; margin-bottom: 0.75rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-subtitle { color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-item {
+      text-align: center;
+      padding: 0.75rem 0.5rem;
+      background: var(--bg-elevated);
+      border-radius: 10px;
+    }
+    .stat-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+    .stat-label {
+      font-size: 0.6rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    /* Task Board */
+    .task-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+    }
+    .task-column {
+      background: var(--bg-elevated);
+      border-radius: 12px;
+      padding: 0.75rem;
+      min-height: 200px;
+    }
+    .task-column-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .task-column-icon {
+      font-size: 1rem;
+    }
+    .task-column-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--dim);
+    }
+    .task-column-count {
+      margin-left: auto;
+      background: var(--bg-card);
+      border-radius: 100px;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    /* Task Cards */
+    .task-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .task-card:hover {
+      border-color: rgba(217, 4, 41, 0.3);
+    }
+    .task-card:last-child { margin-bottom: 0; }
+    .task-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+    .task-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--dim);
+    }
+    .task-assignee {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .task-assignee-avatar {
+      width: 18px; height: 18px;
+      background: var(--bg-elevated);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+    }
+    .task-priority {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+    .task-priority.high { background: var(--accent); }
+    .task-priority.medium { background: var(--warning); }
+    .task-priority.low { background: var(--success); }
+
+    /* Add Task Button */
+    .add-task-btn {
+      width: 100%;
+      padding: 0.5rem;
+      background: none;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: all 0.2s;
+    }
+    .add-task-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Add Task Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: var(--muted);
+      border-radius: 2px;
+      margin: 0 auto 1rem;
+    }
+    .modal h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 0.875rem; }
+    .form-label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--dim); margin-bottom: 0.4rem; }
+    .form-input {
+      width: 100%; padding: 0.75rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .btn {
+      width: 100%; padding: 0.875rem;
+      border: none; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-secondary { background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border); margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="page-header">
+    <a href="index.html" class="back-btn">← Back to Dashboard</a>
+    <div class="page-title">Crew Board</div>
+    <div class="page-subtitle">Tasks and coordination for your crew</div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-number" id="statTotal">0</div>
+      <div class="stat-label">Total Tasks</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" style="color: var(--warning);" id="statPending">0</div>
+      <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" style="color: var(--success);" id="statDone">0</div>
+      <div class="stat-label">Done</div>
+    </div>
+  </div>
+
+  <!-- Task Board (2-column: To Do / Done) -->
+  <div class="task-columns">
+    <div class="task-column">
+      <div class="task-column-header">
+        <span class="task-column-icon">📋</span>
+        <span class="task-column-title">To Do</span>
+        <span class="task-column-count" id="todoCount">0</span>
+      </div>
+      <div id="todoList"></div>
+      <button class="add-task-btn" onclick="openModal('todo')">+ Add Task</button>
+    </div>
+    <div class="task-column">
+      <div class="task-column-header">
+        <span class="task-column-icon">✅</span>
+        <span class="task-column-title">Done</span>
+        <span class="task-column-count" id="doneCount">0</span>
+      </div>
+      <div id="doneList"></div>
+    </div>
+  </div>
+
+  <!-- Add Task Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>Add Task</h2>
+      <form onsubmit="addTask(event)">
+        <div class="form-group">
+          <label class="form-label">Task Title *</label>
+          <input type="text" class="form-input" id="taskTitle" placeholder="e.g., Confirm load-in time" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assigned To</label>
+          <input type="text" class="form-input" id="taskAssignee" placeholder="e.g., Phil (TM)">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select class="form-input" id="taskPriority">
+              <option value="high">High</option>
+              <option value="medium" selected>Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Due</label>
+            <select class="form-input" id="taskDue">
+              <option value="today">Today</option>
+              <option value="tomorrow">Tomorrow</option>
+              <option value="showday">Show Day</option>
+              <option value="flexible">Flexible</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-input" id="taskNotes" rows="2" placeholder="Additional details..." style="resize: vertical;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Task</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // User info
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      window.location.href = 'landing.html';
+    }
+
+    // Sample crew tasks
+    var sampleTasks = [
+      { id: 1, title: 'Confirm load-in time with venue', assignee: 'Phil (TM)', priority: 'high', due: 'today', status: 'todo', notes: 'Call Masquerade production office before noon' },
+      { id: 2, title: 'Send hospitality rider to promoter', assignee: 'Phil (TM)', priority: 'high', due: 'today', status: 'todo', notes: 'Email updated rider with water/food requests' },
+      { id: 3, title: 'Confirm parking for trailer', assignee: 'Driver', priority: 'medium', due: 'showday', status: 'todo', notes: 'Need confirmed spot for 53ft trailer' },
+      { id: 4, title: 'Set up merch table layout', assignee: 'Merch', priority: 'medium', due: 'showday', status: 'todo', notes: 'Check inventory counts before doors' },
+      { id: 5, title: 'Soundcheck schedule confirmed', assignee: 'Phil (TM)', priority: 'low', due: 'done', status: 'done', notes: '4pm for support, 6pm for headliner' },
+      { id: 6, title: 'Hotel rooms booked for crew', assignee: 'Phil (TM)', priority: 'low', due: 'done', status: 'done', notes: 'Marriott Downtown, 4 rooms, checkout 2pm' },
+      { id: 7, title: 'Advance packet sent to venue', assignee: 'Phil (TM)', priority: 'high', due: 'done', status: 'done', notes: 'Contract, rider, stage plot, input list all sent' }
+    ];
+
+    var tasks = JSON.parse(localStorage.getItem('tourhq_tasks') || 'null');
+    if (!tasks) {
+      tasks = sampleTasks;
+      localStorage.setItem('tourhq_tasks', JSON.stringify(tasks));
+    }
+
+    var currentTarget = 'todo';
+
+    function renderTasks() {
+      var todoTasks = tasks.filter(function(t) { return t.status === 'todo'; });
+      var doneTasks = tasks.filter(function(t) { return t.status === 'done'; });
+
+      // Render To Do
+      var todoHtml = '';
+      todoTasks.forEach(function(task) {
+        todoHtml += renderTaskCard(task);
+      });
+      document.getElementById('todoList').innerHTML = todoHtml || '<div style="text-align: center; padding: 1rem; color: var(--muted); font-size: 0.8rem;">No tasks yet</div>';
+      document.getElementById('todoCount').textContent = todoTasks.length;
+
+      // Render Done
+      var doneHtml = '';
+      doneTasks.forEach(function(task) {
+        doneHtml += renderTaskCard(task);
+      });
+      document.getElementById('doneList').innerHTML = doneHtml || '<div style="text-align: center; padding: 1rem; color: var(--muted); font-size: 0.8rem;">No completed tasks</div>';
+      document.getElementById('doneCount').textContent = doneTasks.length;
+
+      // Update stats
+      document.getElementById('statTotal').textContent = tasks.length;
+      document.getElementById('statPending').textContent = todoTasks.length;
+      document.getElementById('statDone').textContent = doneTasks.length;
+    }
+
+    function renderTaskCard(task) {
+      var dueLabels = { today: 'Today', tomorrow: 'Tomorrow', showday: 'Show Day', flexible: 'Flexible' };
+      return '<div class="task-card" onclick="toggleTask(' + task.id + ')">' +
+        '<div class="task-title">' + task.title + '</div>' +
+        '<div class="task-meta">' +
+        '<div class="task-assignee">' +
+        '<div class="task-assignee-avatar">' + (task.assignee ? task.assignee.charAt(0) : '?') + '</div>' +
+        (task.assignee || 'Unassigned') +
+        '</div>' +
+        '<div style="display: flex; align-items: center; gap: 0.5rem;">' +
+        '<span>' + (dueLabels[task.due] || task.due) + '</span>' +
+        '<div class="task-priority ' + task.priority + '"></div>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+    }
+
+    function toggleTask(id) {
+      var task = tasks.find(function(t) { return t.id === id; });
+      if (task) {
+        task.status = task.status === 'todo' ? 'done' : 'todo';
+        localStorage.setItem('tourhq_tasks', JSON.stringify(tasks));
+        renderTasks();
+      }
+    }
+
+    function openModal(target) {
+      currentTarget = target;
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('addModal').classList.remove('active');
+    }
+
+    function addTask(e) {
+      e.preventDefault();
+      var newTask = {
+        id: Date.now(),
+        title: document.getElementById('taskTitle').value,
+        assignee: document.getElementById('taskAssignee').value || 'Unassigned',
+        priority: document.getElementById('taskPriority').value,
+        due: document.getElementById('taskDue').value,
+        status: currentTarget,
+        notes: document.getElementById('taskNotes').value
+      };
+      tasks.push(newTask);
+      localStorage.setItem('tourhq_tasks', JSON.stringify(tasks));
+      closeModal();
+      renderTasks();
+      // Reset form
+      document.getElementById('taskTitle').value = '';
+      document.getElementById('taskAssignee').value = '';
+      document.getElementById('taskNotes').value = '';
+    }
+
+    // Initialize
+    renderTasks();
+  </script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tour HQ — Create Tour</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070c;
+      --bg-card: #101018;
+      --bg-elevated: #181822;
+      --border: #1f1f2e;
+      --text: #f0f0f5;
+      --dim: #8888a0;
+      --muted: #555570;
+      --accent: #d90429;
+      --cyan: #22d3ee;
+      --success: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+
+    .user-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.5rem; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--dim); padding: 0.4rem 0.8rem;
+      border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .page-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.85rem; margin-bottom: 1rem;
+    }
+    .page-title {
+      font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em;
+    }
+    .page-subtitle {
+      color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem;
+    }
+
+    .form-section {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-section-title {
+      font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--dim); margin-bottom: 1rem;
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label {
+      display: block; font-size: 0.8rem; font-weight: 500;
+      color: var(--dim); margin-bottom: 0.4rem;
+    }
+    .form-input {
+      width: 100%; padding: 0.75rem 1rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text); font-size: 0.95rem;
+      font-family: inherit; outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--muted); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0.75rem 1.5rem; border-radius: 10px;
+      font-size: 0.9rem; font-weight: 600; text-decoration: none;
+      cursor: pointer; border: none; transition: all 0.2s;
+      width: 100%;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: #ff2d4a; }
+    .btn-secondary { background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--dim); }
+
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around;
+      padding: 0.75rem 1rem; max-width: 480px; margin: 0 auto; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 1.3rem; opacity: 0.4; cursor: pointer; padding: 0.25rem;
+    }
+    .nav-item span { font-size: 0.6rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="page-header">
+    <a href="index.html" class="back-btn">← Back to Dashboard</a>
+    <div class="page-title">Create New Tour</div>
+    <div class="page-subtitle">Set up your tour in under 2 minutes</div>
+  </div>
+
+  <form id="createTourForm" onsubmit="handleCreateTour(event)">
+    <div class="form-section">
+      <div class="form-section-title">Tour Details</div>
+      <div class="form-group">
+        <label class="form-label">Tour Name *</label>
+        <input type="text" class="form-input" id="tourName" placeholder="e.g., Spring 2026 US Tour" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Artist / Band Name *</label>
+        <input type="text" class="form-input" id="artistName" placeholder="e.g., The Midnight" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Start Date *</label>
+          <input type="date" class="form-input" id="startDate" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Date *</label>
+          <input type="date" class="form-input" id="endDate" required>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Crew & Management</div>
+      <div class="form-group">
+        <label class="form-label">Tour Manager Name</label>
+        <input type="text" class="form-input" id="tmName" placeholder="e.g., Phil Mauro">
+      </div>
+      <div class="form-group">
+        <label class="form-label">TM Email</label>
+        <input type="email" class="form-input" id="tmEmail" placeholder="phil@example.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Booking Agent</label>
+        <input type="text" class="form-input" id="bookingAgent" placeholder="Agency name">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Transportation</div>
+      <div class="form-group">
+        <label class="form-label">Vehicle Type</label>
+        <select class="form-input" id="vehicleType">
+          <option value="bus">Tour Bus</option>
+          <option value="van">Van + Trailer</option>
+          <option value="suv">SUV / Car</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Average Drive Speed (mph)</label>
+        <input type="number" class="form-input" id="driveSpeed" value="55" min="30" max="80">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <button type="submit" class="btn btn-primary">Create Tour</button>
+      <div style="height: 0.75rem;"></div>
+      <button type="button" class="btn btn-secondary" onclick="window.location.href='index.html'">Cancel</button>
+    </div>
+  </form>
+
+  <div class="nav-bar">
+    <div class="nav-item" onclick="window.location.href='index.html'">⏱️<span>Schedule</span></div>
+    <div class="nav-item" onclick="window.location.href='index.html'">🗺️<span>Route</span></div>
+    <div class="nav-item" onclick="window.location.href='index.html'">📄<span>Docs</span></div>
+    <div class="nav-item" onclick="window.location.href='index.html'">💰<span>Settle</span></div>
+  </div>
+
+  <script>
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      window.location.href = 'landing.html';
+    }
+
+    function handleCreateTour(e) {
+      e.preventDefault();
+      
+      var tour = {
+        id: 'tour_' + Date.now(),
+        name: document.getElementById('tourName').value,
+        artist: document.getElementById('artistName').value,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        tmName: document.getElementById('tmName').value,
+        tmEmail: document.getElementById('tmEmail').value,
+        bookingAgent: document.getElementById('bookingAgent').value,
+        vehicleType: document.getElementById('vehicleType').value,
+        driveSpeed: parseInt(document.getElementById('driveSpeed').value) || 55,
+        createdAt: new Date().toISOString(),
+        userId: JSON.parse(localStorage.getItem('tourhq_current_user') || '{}').email
+      };
+
+      var tours = JSON.parse(localStorage.getItem('tourhq_tours') || '[]');
+      tours.push(tour);
+      localStorage.setItem('tourhq_tours', JSON.stringify(tours));
+      localStorage.setItem('tourhq_current_tour', JSON.stringify(tour));
+
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

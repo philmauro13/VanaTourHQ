@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour HQ — Tour Management Platform</title>
+    <meta name="description" content="The modern tour management platform built by touring professionals. Secure document storage, mobile-first day sheets, and real-time crew coordination.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #07070c;
+            --bg-card: #101018;
+            --bg-elevated: #181822;
+            --border: #1f1f2e;
+            --text: #f0f0f5;
+            --text-dim: #8888a0;
+            --text-muted: #555570;
+            --accent: #d90429;
+            --accent-glow: rgba(217, 4, 41, 0.25);
+            --cyan: #22d3ee;
+            --success: #22c55e;
+            --glass: rgba(16, 16, 24, 0.85);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Grid Background */
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .gradient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orb-1 {
+            width: 600px; height: 600px;
+            top: -200px; right: -100px;
+            background: rgba(217, 4, 41, 0.08);
+        }
+        .orb-2 {
+            width: 400px; height: 400px;
+            bottom: 0; left: -100px;
+            background: rgba(34, 211, 238, 0.06);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent), #ff6b6b);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .logo-text span {
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+        .header-cta {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #ff2d4a;
+            box-shadow: 0 0 24px var(--accent-glow);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: var(--bg-elevated);
+            border-color: var(--text-muted);
+        }
+        .btn-large {
+            padding: 14px 28px;
+            font-size: 16px;
+            border-radius: 12px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 80px 0 60px;
+            text-align: center;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(217, 4, 41, 0.1);
+            border: 1px solid rgba(217, 4, 41, 0.2);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ff6b6b;
+            margin-bottom: 24px;
+        }
+        .hero-badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 20px;
+        }
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 45%, #67e8f9 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .hero p {
+            font-size: clamp(16px, 2vw, 18px);
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 32px;
+            line-height: 1.7;
+        }
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Features Grid */
+        .features {
+            padding: 60px 0;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            border-color: rgba(217, 4, 41, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .feature-icon {
+            width: 48px; height: 48px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        .feature-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .feature-card p {
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        /* Stats */
+        .stats {
+            padding: 40px 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+        .stat-item h3 {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .stat-item p {
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* CTA */
+        .cta {
+            padding: 60px 0 80px;
+            text-align: center;
+        }
+        .cta-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px 32px;
+        }
+        .cta-box h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .cta-box p {
+            color: var(--text-dim);
+            margin-bottom: 24px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 32px 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Login Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px; right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .modal h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .modal p {
+            color: var(--text-dim);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            border-color: var(--accent);
+        }
+        .form-group input::placeholder {
+            color: var(--text-muted);
+        }
+        .form-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .form-footer a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .form-error {
+            display: none;
+            background: rgba(217, 4, 41, 0.1);
+            border: 1px solid rgba(217, 4, 41, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #ff6b6b;
+        }
+        .form-success {
+            display: none;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: var(--success);
+        }
+
+        /* Mobile */
+        @media (max-width: 640px) {
+            .hero { padding: 48px 0 40px; }
+            .features { padding: 40px 0; }
+            .stats { padding: 24px 0; }
+            .cta { padding: 40px 0 60px; }
+            .cta-box { padding: 32px 20px; }
+            .header-cta .btn span { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-inner">
+                <div class="logo">
+                    <div class="logo-icon">📋</div>
+                    <div class="logo-text">Tour HQ <span>by Phil Mauro</span></div>
+                </div>
+                <div class="header-cta">
+                    <a href="#" class="btn btn-secondary" onclick="openModal('login')">Log In</a>
+                    <a href="#" class="btn btn-primary" onclick="openModal('signup')"><span>Get Started — </span>It's Free</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-badge">Now in Beta — Built for the Road</div>
+            <h1>The tour management platform<br><span class="gradient-text">built by touring professionals.</span></h1>
+            <p>Stop managing tours through scattered PDFs, spreadsheets, and group chats. Tour HQ gives you mobile-first day sheets, secure document storage, and real-time crew coordination — all in one place.</p>
+            <div class="hero-actions">
+                <a href="#" class="btn btn-primary btn-large" onclick="openModal('signup')">Start Free — No Credit Card</a>
+                <a href="#features" class="btn btn-secondary btn-large">See How It Works</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3>67%</h3>
+                    <p>of Tour Managers still use spreadsheets and email for core tour operations</p>
+                </div>
+                <div class="stat-item">
+                    <h3>3hrs</h3>
+                    <p>average daily time spent on manual data entry per Tour Manager</p>
+                </div>
+                <div class="stat-item">
+                    <h3>$1K+</h3>
+                    <p>average cost of a single communication failure on tour (fines, rebookings)</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile-First Day Sheets</h3>
+                    <p>Update your schedule from your phone on show day. No laptop required. Real-time sync across all crew devices.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure Document Vault</h3>
+                    <p>Contracts, riders, tech specs, and settlement sheets — all encrypted and organized. Upload once, access everywhere.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <h3>Smart Tour Routing</h3>
+                    <p>Auto-calculated drive times based on bus speed limits. Off-day planning that actually makes sense for your crew.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <h3>One-Click Advancing</h3>
+                    <p>Send professional advance packets to venues instantly. Track confirmation status. No more email chains.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Settlement Tracking</h3>
+                    <p>Calculate guarantee vs. door deals, split points, and venue fees automatically. Export for your accountant.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Crew Coordination</h3>
+                    <p>Assign tasks, share updates, and keep everyone on the same page. No more buried WhatsApp messages.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-box">
+                <h2>Ready to stop managing chaos?</h2>
+                <p>Join Tour HQ today. Free for independent tours. No credit card required.</p>
+                <a href="#" class="btn btn-primary btn-large" onclick="openModal('signup')">Create Your Free Account</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Tour HQ by Phil Mauro. All rights reserved. Built in Denver, CO.</p>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('login')">&times;</button>
+            <h2>Welcome back</h2>
+            <p>Log in to access your tours, documents, and crew dashboard.</p>
+            <div class="form-error" id="loginError">Invalid email or password. Please try again.</div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email address</label>
+                    <input type="email" id="loginEmail" placeholder="you@tourname.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-large" style="width: 100%">Log In</button>
+            </form>
+            <div class="form-footer">
+                Don't have an account? <a href="#" onclick="switchModal('login', 'signup')">Sign up free</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal-overlay" id="signupModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('signup')">&times;</button>
+            <h2>Create your account</h2>
+            <p>Free for independent tours. No credit card required.</p>
+            <div class="form-error" id="signupError">Please fill in all fields.</div>
+            <div class="form-success" id="signupSuccess">Account created! Redirecting to your dashboard...</div>
+            <form onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label for="signupName">Full name</label>
+                    <input type="text" id="signupName" placeholder="Phil Mauro" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email address</label>
+                    <input type="email" id="signupEmail" placeholder="you@tourname.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password (min 8 characters)</label>
+                    <input type="password" id="signupPassword" placeholder="Create a strong password" minlength="8" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-large" style="width: 100%">Create Account</button>
+            </form>
+            <div class="form-footer">
+                Already have an account? <a href="#" onclick="switchModal('signup', 'login')">Log in</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal Management
+        function openModal(type) {
+            document.getElementById(type + 'Modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(type) {
+            document.getElementById(type + 'Modal').classList.remove('active');
+            document.body.style.overflow = '';
+            // Reset form states
+            document.getElementById(type + 'Error').style.display = 'none';
+            document.getElementById(type + 'Success').style.display = 'none';
+        }
+
+        function switchModal(from, to) {
+            closeModal(from);
+            openModal(to);
+        }
+
+        // Close on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
+        // Login Handler
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            // Check stored credentials
+            const users = JSON.parse(localStorage.getItem('tourhq_users') || '[]');
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (user) {
+                localStorage.setItem('tourhq_current_user', JSON.stringify(user));
+                window.location.href = 'index.html';
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        // Signup Handler
+        function handleSignup(e) {
+            e.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+
+            if (!name || !email || !password || password.length < 8) {
+                document.getElementById('signupError').style.display = 'block';
+                return;
+            }
+
+            // Store user
+            const users = JSON.parse(localStorage.getItem('tourhq_users') || '[]');
+            const newUser = { name, email, password, created: new Date().toISOString() };
+            users.push(newUser);
+            localStorage.setItem('tourhq_users', JSON.stringify(users));
+            localStorage.setItem('tourhq_current_user', JSON.stringify(newUser));
+
+            // Show success and redirect
+            document.getElementById('signupSuccess').style.display = 'block';
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

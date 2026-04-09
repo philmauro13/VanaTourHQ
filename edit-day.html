@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Edit Day Sheet</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070c;
+      --bg-card: #101018;
+      --bg-elevated: #181822;
+      --border: #1f1f2e;
+      --text: #f0f0f5;
+      --dim: #8888a0;
+      --muted: #555570;
+      --accent: #d90429;
+      --cyan: #22d3ee;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+
+    .user-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.5rem; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--dim); padding: 0.4rem 0.8rem;
+      border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .page-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.85rem; margin-bottom: 0.75rem;
+    }
+    .page-title {
+      font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em;
+    }
+    .page-subtitle {
+      color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem;
+    }
+
+    /* Day Selector */
+    .day-selector {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .day-selector::-webkit-scrollbar { display: none; }
+    .day-chip {
+      flex-shrink: 0;
+      padding: 0.5rem 1rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .day-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .day-chip.show {
+      border-color: rgba(217, 4, 41, 0.3);
+    }
+
+    /* Time Entry */
+    .time-entries {
+      padding: 0 1rem;
+    }
+    .time-entry {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.875rem 0;
+      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+    }
+    .time-input-wrap {
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .time-input {
+      width: 100%;
+      padding: 0.5rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--cyan);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      text-align: center;
+      outline: none;
+    }
+    .time-input:focus { border-color: var(--accent); }
+    .entry-fields { flex-grow: 1; }
+    .entry-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 0.5rem;
+    }
+    .entry-input:focus { border-color: var(--accent); }
+    .entry-select {
+      width: 100%;
+      padding: 0.4rem 0.75rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--dim);
+      font-size: 0.75rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .entry-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      flex-shrink: 0;
+    }
+    .entry-delete {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      line-height: 1;
+    }
+    .entry-delete:hover { color: var(--accent); }
+    .entry-move {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      line-height: 1;
+    }
+
+    /* Add Entry Button */
+    .add-entry {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 1rem;
+      background: none;
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      color: var(--dim);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin: 1rem;
+      transition: all 0.2s;
+    }
+    .add-entry:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(217, 4, 41, 0.05);
+    }
+
+    /* Venue Info Section */
+    .venue-section {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      margin-top: 1rem;
+    }
+    .venue-section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      margin-bottom: 0.75rem;
+    }
+    .venue-field {
+      margin-bottom: 0.75rem;
+    }
+    .venue-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+    .venue-input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .venue-input:focus { border-color: var(--accent); }
+
+    /* Save Bar */
+    .save-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      max-width: 480px;
+      margin: 0 auto;
+      z-index: 100;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .save-status {
+      flex-grow: 1;
+      font-size: 0.8rem;
+      color: var(--dim);
+    }
+    .save-status.saved { color: var(--success); }
+    .save-btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .save-btn:active { transform: scale(0.98); }
+  </style>
+</head>
+<body>
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="page-header">
+    <a href="index.html" class="back-btn">← Back to Dashboard</a>
+    <div class="page-title">Edit Day Sheet</div>
+    <div class="page-subtitle" id="currentDate">Loading...</div>
+  </div>
+
+  <!-- Day Selector -->
+  <div class="day-selector" id="daySelector">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- Time Entries -->
+  <div class="time-entries" id="timeEntries">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- Add Entry Button -->
+  <button class="add-entry" onclick="addEntry()">
+    + Add Time Entry
+  </button>
+
+  <!-- Venue Info -->
+  <div class="venue-section">
+    <div class="venue-section-title">Venue Information</div>
+    <div class="venue-field">
+      <div class="venue-label">Venue Name</div>
+      <input type="text" class="venue-input" id="venueName" placeholder="e.g., The Masquerade">
+    </div>
+    <div class="venue-field">
+      <div class="venue-label">Address</div>
+      <input type="text" class="venue-input" id="venueAddress" placeholder="123 Main St">
+    </div>
+    <div class="venue-field">
+      <div class="venue-label">Promoter Contact</div>
+      <input type="text" class="venue-input" id="promoterContact" placeholder="Name, phone, email">
+    </div>
+    <div class="venue-field">
+      <div class="venue-label">Hotel</div>
+      <input type="text" class="venue-input" id="hotelInfo" placeholder="Hotel name, checkout time">
+    </div>
+    <div class="venue-field">
+      <div class="venue-label">Notes</div>
+      <textarea class="venue-input" id="dayNotes" rows="3" placeholder="Any special instructions, VIP details, etc." style="resize: vertical;"></textarea>
+    </div>
+  </div>
+
+  <!-- Save Bar -->
+  <div class="save-bar">
+    <div class="save-status" id="saveStatus">Unsaved changes</div>
+    <button class="save-btn" onclick="saveDay()">Save</button>
+  </div>
+
+  <script>
+    // User info
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      window.location.href = 'landing.html';
+    }
+
+    // Generate sample days for tour
+    var sampleDays = [];
+    var startDate = new Date('2026-04-17');
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      var isShow = i !== 2; // Day 3 is off day
+      sampleDays.push({
+        date: d.toISOString().split('T')[0],
+        dayLabel: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+        isShow: isShow,
+        city: ['Atlanta, GA', 'Orlando, FL', 'Tampa, FL', '— Off Day —', 'Greensboro, NC', 'Philadelphia, PA', 'Washington, DC'][i],
+        venue: ['Hell at The Masquerade', 'Conduit', 'The Orpheum', '', 'Greensboro Coliseum', 'The Fillmore', '9:30 Club'][i],
+        entries: isShow ? [
+          { time: '12:00 PM', event: 'Load-In', type: 'logistics' },
+          { time: '04:00 PM', event: 'Soundcheck: Support', type: 'support' },
+          { time: '06:00 PM', event: 'Soundcheck: Headliner', type: 'headliner' },
+          { time: '06:30 PM', event: 'VIP Meet & Greet', type: 'headliner' },
+          { time: '07:00 PM', event: 'Doors Open', type: 'logistics' },
+          { time: '09:00 PM', event: 'Headliner Set', type: 'headliner' },
+          { time: '11:00 PM', event: 'Curfew', type: 'logistics' },
+          { time: '01:30 AM', event: 'Bus Call', type: 'travel' }
+        ] : [
+          { time: '11:00 AM', event: 'Hotel Checkout', type: 'logistics' },
+          { time: '12:00 PM', event: 'Drive Day — Rest', type: 'travel' },
+          { time: '06:00 PM', event: 'Arrive at Hotel', type: 'logistics' }
+        ]
+      });
+    }
+
+    var currentDayIndex = 0;
+
+    // Render day selector
+    function renderDaySelector() {
+      var html = '';
+      sampleDays.forEach(function(day, index) {
+        var cls = 'day-chip' + (index === currentDayIndex ? ' active' : '') + (day.isShow ? ' show' : '');
+        html += '<div class="' + cls + '" onclick="selectDay(' + index + ')">' + day.dayLabel + '</div>';
+      });
+      document.getElementById('daySelector').innerHTML = html;
+    }
+
+    // Select a day
+    function selectDay(index) {
+      currentDayIndex = index;
+      renderDaySelector();
+      renderEntries();
+      renderVenueInfo();
+    }
+
+    // Render time entries
+    function renderEntries() {
+      var day = sampleDays[currentDayIndex];
+      document.getElementById('currentDate').textContent = day.dayLabel + ' — ' + day.city;
+
+      if (!day.isShow) {
+        document.getElementById('timeEntries').innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--dim);"><div style="font-size: 2rem; margin-bottom: 0.5rem;">😴</div>Off Day — No schedule entries</div>';
+        return;
+      }
+
+      var html = '';
+      day.entries.forEach(function(entry, index) {
+        var typeColors = {
+          logistics: 'var(--dim)',
+          support: 'var(--support-blue, #0077b6)',
+          headliner: 'var(--accent)',
+          travel: 'var(--success)'
+        };
+        html += '<div class="time-entry" data-index="' + index + '">' +
+          '<div class="time-input-wrap">' +
+          '<input type="text" class="time-input" value="' + entry.time + '" onchange="updateEntry(' + index + ', \'time\', this.value)">' +
+          '</div>' +
+          '<div class="entry-fields">' +
+          '<input type="text" class="entry-input" value="' + entry.event + '" onchange="updateEntry(' + index + ', \'event\', this.value)">' +
+          '<select class="entry-select" onchange="updateEntry(' + index + ', \'type\', this.value)">' +
+          '<option value="logistics"' + (entry.type === 'logistics' ? ' selected' : '') + '>Logistics</option>' +
+          '<option value="support"' + (entry.type === 'support' ? ' selected' : '') + '>Support</option>' +
+          '<option value="headliner"' + (entry.type === 'headliner' ? ' selected' : '') + '>Headliner</option>' +
+          '<option value="travel"' + (entry.type === 'travel' ? ' selected' : '') + '>Travel</option>' +
+          '</select>' +
+          '</div>' +
+          '<div class="entry-actions">' +
+          '<button class="entry-delete" onclick="deleteEntry(' + index + ')" title="Delete">×</button>' +
+          '</div>' +
+          '</div>';
+      });
+      document.getElementById('timeEntries').innerHTML = html;
+    }
+
+    // Render venue info
+    function renderVenueInfo() {
+      var day = sampleDays[currentDayIndex];
+      if (day.venue) {
+        document.getElementById('venueName').value = day.venue;
+      }
+    }
+
+    // Update entry
+    function updateEntry(index, field, value) {
+      sampleDays[currentDayIndex].entries[index][field] = value;
+      document.getElementById('saveStatus').textContent = 'Unsaved changes';
+      document.getElementById('saveStatus').className = 'save-status';
+    }
+
+    // Delete entry
+    function deleteEntry(index) {
+      sampleDays[currentDayIndex].entries.splice(index, 1);
+      renderEntries();
+      document.getElementById('saveStatus').textContent = 'Unsaved changes';
+      document.getElementById('saveStatus').className = 'save-status';
+    }
+
+    // Add entry
+    function addEntry() {
+      if (!sampleDays[currentDayIndex].isShow) {
+        sampleDays[currentDayIndex].isShow = true;
+        sampleDays[currentDayIndex].entries = [];
+      }
+      sampleDays[currentDayIndex].entries.push({
+        time: '12:00 PM',
+        event: 'New Entry',
+        type: 'logistics'
+      });
+      renderDaySelector();
+      renderEntries();
+      document.getElementById('saveStatus').textContent = 'Unsaved changes';
+      document.getElementById('saveStatus').className = 'save-status';
+    }
+
+    // Save day
+    function saveDay() {
+      var dayData = {
+        date: sampleDays[currentDayIndex].date,
+        venue: document.getElementById('venueName').value,
+        address: document.getElementById('venueAddress').value,
+        promoter: document.getElementById('promoterContact').value,
+        hotel: document.getElementById('hotelInfo').value,
+        notes: document.getElementById('dayNotes').value,
+        entries: sampleDays[currentDayIndex].entries,
+        isShow: sampleDays[currentDayIndex].isShow
+      };
+
+      var allDays = JSON.parse(localStorage.getItem('tourhq_days') || '{}');
+      allDays[sampleDays[currentDayIndex].date] = dayData;
+      localStorage.setItem('tourhq_days', JSON.stringify(allDays));
+
+      document.getElementById('saveStatus').textContent = '✓ Saved';
+      document.getElementById('saveStatus').className = 'save-status saved';
+    }
+
+    // Initialize
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    renderDaySelector();
+    renderEntries();
+    renderVenueInfo();
+  </script>
+</body>
+</html>

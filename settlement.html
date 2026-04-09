@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Settlement Calculator</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070c;
+      --bg-card: #101018;
+      --bg-elevated: #181822;
+      --border: #1f1f2e;
+      --text: #f0f0f5;
+      --dim: #8888a0;
+      --muted: #555570;
+      --accent: #d90429;
+      --cyan: #22d3ee;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+
+    .user-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.5rem; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--dim); padding: 0.4rem 0.8rem;
+      border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .page-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.85rem; margin-bottom: 0.75rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-subtitle { color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    /* Deal Type Selector */
+    .deal-selector {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+    }
+    .deal-chip {
+      flex: 1;
+      padding: 0.75rem 0.5rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--dim);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .deal-chip.active {
+      background: rgba(217, 4, 41, 0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Calculator Sections */
+    .calc-section {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .calc-section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      margin-bottom: 1rem;
+    }
+    .input-group {
+      margin-bottom: 0.875rem;
+    }
+    .input-group:last-child { margin-bottom: 0; }
+    .input-label {
+      font-size: 0.8rem;
+      color: var(--dim);
+      margin-bottom: 0.35rem;
+      display: block;
+    }
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .input-prefix {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .calc-input {
+      flex: 1;
+      padding: 0.75rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      outline: none;
+      text-align: right;
+    }
+    .calc-input:focus { border-color: var(--accent); }
+    .input-suffix {
+      font-size: 0.8rem;
+      color: var(--muted);
+      width: 40px;
+    }
+
+    /* Results */
+    .result-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      margin: 1rem;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .result-header {
+      background: var(--bg-elevated);
+      padding: 0.875rem 1rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      border-bottom: 1px solid var(--border);
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .result-row:last-child { border-bottom: none; }
+    .result-label { color: var(--dim); }
+    .result-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+    .result-value.positive { color: var(--success); }
+    .result-value.negative { color: var(--accent); }
+    .result-value.highlight {
+      color: var(--cyan);
+      font-size: 1.1rem;
+    }
+    .result-total {
+      background: rgba(217, 4, 41, 0.08);
+      border-top: 1px solid var(--accent);
+    }
+    .result-total .result-label {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Save Bar */
+    .save-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      max-width: 480px;
+      margin: 0 auto;
+      z-index: 100;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .save-btn {
+      flex: 1;
+      padding: 0.875rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .export-btn {
+      padding: 0.875rem;
+      background: var(--bg-elevated);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="page-header">
+    <a href="index.html" class="back-btn">← Back to Dashboard</a>
+    <div class="page-title">Settlement Calculator</div>
+    <div class="page-subtitle">Auto-calculate deal structures</div>
+  </div>
+
+  <!-- Deal Type Selector -->
+  <div class="deal-selector">
+    <div class="deal-chip active" onclick="selectDeal('guarantee_door')">Guarantee vs Door</div>
+    <div class="deal-chip" onclick="selectDeal('door_split')">Door Split</div>
+    <div class="deal-chip" onclick="selectDeal('flat')">Flat Fee</div>
+  </div>
+
+  <!-- Income Section -->
+  <div class="calc-section">
+    <div class="calc-section-title">💰 Income</div>
+    <div class="input-group">
+      <label class="input-label">Gross Ticket Sales</label>
+      <div class="input-row">
+        <span class="input-prefix">$</span>
+        <input type="number" class="calc-input" id="ticketSales" value="5000" oninput="calculate()">
+      </div>
+    </div>
+    <div class="input-group" id="guaranteeGroup">
+      <label class="input-label">Guarantee Amount</label>
+      <div class="input-row">
+        <span class="input-prefix">$</span>
+        <input type="number" class="calc-input" id="guarantee" value="2500" oninput="calculate()">
+      </div>
+    </div>
+    <div class="input-group" id="doorSplitGroup">
+      <label class="input-label">Artist Door Split</label>
+      <div class="input-row">
+        <input type="number" class="calc-input" id="artistSplit" value="80" oninput="calculate()">
+        <span class="input-suffix">%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expenses Section -->
+  <div class="calc-section">
+    <div class="calc-section-title">📋 Expenses (deducted before split)</div>
+    <div class="input-group">
+      <label class="input-label">Venue Rental / House Fee</label>
+      <div class="input-row">
+        <span class="input-prefix">$</span>
+        <input type="number" class="calc-input" id="venueFee" value="500" oninput="calculate()">
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Sound / Production</label>
+      <div class="input-row">
+        <span class="input-prefix">$</span>
+        <input type="number" class="calc-input" id="soundFee" value="300" oninput="calculate()">
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Door Staff / Security</label>
+      <div class="input-row">
+        <span class="input-prefix">$</span>
+        <input type="number" class="calc-input" id="securityFee" value="200" oninput="calculate()">
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Other Expenses</label>
+      <div class="input-row">
+        <span class="input-prefix">$</span>
+        <input type="number" class="calc-input" id="otherExpenses" value="0" oninput="calculate()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Merch Section -->
+  <div class="calc-section">
+    <div class="calc-section-title">👕 Merch (separate calculation)</div>
+    <div class="input-group">
+      <label class="input-label">Gross Merch Sales</label>
+      <div class="input-row">
+        <span class="input-prefix">$</span>
+        <input type="number" class="calc-input" id="merchSales" value="1200" oninput="calculate()">
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Venue Merch Cut</label>
+      <div class="input-row">
+        <input type="number" class="calc-input" id="merchSplit" value="15" oninput="calculate()">
+        <span class="input-suffix">%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="result-card">
+    <div class="result-header">📊 Settlement Breakdown</div>
+    <div class="result-row">
+      <span class="result-label">Gross Ticket Sales</span>
+      <span class="result-value" id="resultGross">$5,000</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Total Expenses</span>
+      <span class="result-value negative" id="resultExpenses">-$1,000</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Net Before Split</span>
+      <span class="result-value" id="resultNet">$4,000</span>
+    </div>
+    <div class="result-row" id="guaranteeRow">
+      <span class="result-label">Guarantee (vs. Door)</span>
+      <span class="result-value" id="resultGuarantee">$2,500</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Artist Share (<span id="resultSplit">80</span>%)</span>
+      <span class="result-value positive" id="resultArtistShare">$3,200</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Venue Share</span>
+      <span class="result-value" id="resultVenueShare">$800</span>
+    </div>
+    <div class="result-row result-total">
+      <span class="result-label">💰 Artist Payout (Tickets)</span>
+      <span class="result-value highlight" id="resultTicketPayout">$3,200</span>
+    </div>
+  </div>
+
+  <!-- Merch Results -->
+  <div class="result-card">
+    <div class="result-header">👕 Merch Settlement</div>
+    <div class="result-row">
+      <span class="result-label">Gross Merch Sales</span>
+      <span class="result-value" id="resultMerchGross">$1,200</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Venue Cut (<span id="resultMerchSplit">15</span>%)</span>
+      <span class="result-value negative" id="resultMerchVenue">-$180</span>
+    </div>
+    <div class="result-row result-total">
+      <span class="result-label">💰 Artist Payout (Merch)</span>
+      <span class="result-value highlight" id="resultMerchPayout">$1,020</span>
+    </div>
+  </div>
+
+  <!-- Grand Total -->
+  <div class="result-card" style="border-color: var(--success);">
+    <div class="result-header" style="color: var(--success);">✅ Grand Total Payout</div>
+    <div class="result-row result-total" style="background: rgba(34, 197, 94, 0.08);">
+      <span class="result-label">Total to Artist</span>
+      <span class="result-value highlight" id="resultGrandTotal" style="color: var(--success); font-size: 1.3rem;">$4,220</span>
+    </div>
+  </div>
+
+  <!-- Save Bar -->
+  <div class="save-bar">
+    <button class="export-btn" onclick="exportSettlement()" title="Export">📄</button>
+    <button class="save-btn" onclick="saveSettlement()">Save Settlement</button>
+  </div>
+
+  <script>
+    // User info
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      window.location.href = 'landing.html';
+    }
+
+    var currentDeal = 'guarantee_door';
+
+    function selectDeal(type) {
+      currentDeal = type;
+      document.querySelectorAll('.deal-chip').forEach(function(chip) {
+        chip.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Show/hide fields based on deal type
+      document.getElementById('guaranteeGroup').style.display = type === 'guarantee_door' ? 'block' : 'none';
+      document.getElementById('guaranteeRow').style.display = type === 'guarantee_door' ? 'flex' : 'none';
+      document.getElementById('doorSplitGroup').style.display = type !== 'flat' ? 'block' : 'none';
+
+      calculate();
+    }
+
+    function calculate() {
+      var ticketSales = parseFloat(document.getElementById('ticketSales').value) || 0;
+      var guarantee = parseFloat(document.getElementById('guarantee').value) || 0;
+      var artistSplit = parseFloat(document.getElementById('artistSplit').value) || 80;
+      var venueFee = parseFloat(document.getElementById('venueFee').value) || 0;
+      var soundFee = parseFloat(document.getElementById('soundFee').value) || 0;
+      var securityFee = parseFloat(document.getElementById('securityFee').value) || 0;
+      var otherExpenses = parseFloat(document.getElementById('otherExpenses').value) || 0;
+      var merchSales = parseFloat(document.getElementById('merchSales').value) || 0;
+      var merchSplit = parseFloat(document.getElementById('merchSplit').value) || 15;
+
+      var totalExpenses = venueFee + soundFee + securityFee + otherExpenses;
+      var netBeforeSplit = ticketSales - totalExpenses;
+      var artistPayout;
+
+      if (currentDeal === 'guarantee_door') {
+        artistPayout = Math.max(guarantee, netBeforeSplit * (artistSplit / 100));
+      } else if (currentDeal === 'door_split') {
+        artistPayout = netBeforeSplit * (artistSplit / 100);
+      } else {
+        artistPayout = guarantee; // flat fee
+      }
+
+      var venueShare = netBeforeSplit - (artistPayout - (currentDeal === 'guarantee_door' && guarantee > netBeforeSplit * (artistSplit / 100) ? guarantee - netBeforeSplit * (artistSplit / 100) : 0));
+      var artistShare = netBeforeSplit * (artistSplit / 100);
+
+      // Merch
+      var merchVenueCut = merchSales * (merchSplit / 100);
+      var merchArtistPayout = merchSales - merchVenueCut;
+
+      // Grand total
+      var grandTotal = artistPayout + merchArtistPayout;
+
+      // Update display
+      document.getElementById('resultGross').textContent = formatCurrency(ticketSales);
+      document.getElementById('resultExpenses').textContent = '-' + formatCurrency(totalExpenses);
+      document.getElementById('resultNet').textContent = formatCurrency(netBeforeSplit);
+      document.getElementById('resultGuarantee').textContent = formatCurrency(guarantee);
+      document.getElementById('resultSplit').textContent = artistSplit;
+      document.getElementById('resultArtistShare').textContent = formatCurrency(artistShare);
+      document.getElementById('resultVenueShare').textContent = formatCurrency(netBeforeSplit - artistShare);
+      document.getElementById('resultTicketPayout').textContent = formatCurrency(artistPayout);
+
+      document.getElementById('resultMerchGross').textContent = formatCurrency(merchSales);
+      document.getElementById('resultMerchSplit').textContent = merchSplit;
+      document.getElementById('resultMerchVenue').textContent = '-' + formatCurrency(merchVenueCut);
+      document.getElementById('resultMerchPayout').textContent = formatCurrency(merchArtistPayout);
+
+      document.getElementById('resultGrandTotal').textContent = formatCurrency(grandTotal);
+    }
+
+    function formatCurrency(amount) {
+      return '$' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function saveSettlement() {
+      var settlement = {
+        date: new Date().toISOString(),
+        dealType: currentDeal,
+        ticketSales: document.getElementById('ticketSales').value,
+        guarantee: document.getElementById('guarantee').value,
+        artistSplit: document.getElementById('artistSplit').value,
+        venueFee: document.getElementById('venueFee').value,
+        soundFee: document.getElementById('soundFee').value,
+        securityFee: document.getElementById('securityFee').value,
+        otherExpenses: document.getElementById('otherExpenses').value,
+        merchSales: document.getElementById('merchSales').value,
+        merchSplit: document.getElementById('merchSplit').value,
+        grandTotal: document.getElementById('resultGrandTotal').textContent
+      };
+
+      var settlements = JSON.parse(localStorage.getItem('tourhq_settlements') || '[]');
+      settlements.push(settlement);
+      localStorage.setItem('tourhq_settlements', JSON.stringify(settlements));
+
+      alert('Settlement saved! Total: ' + settlement.grandTotal);
+    }
+
+    function exportSettlement() {
+      var text = 'SETTLEMENT REPORT\n';
+      text += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
+      text += 'Deal Type: ' + currentDeal.replace('_', ' ').toUpperCase() + '\n\n';
+      text += '--- INCOME ---\n';
+      text += 'Gross Ticket Sales: ' + document.getElementById('resultGross').textContent + '\n';
+      text += 'Gross Merch Sales: ' + document.getElementById('resultMerchGross').textContent + '\n\n';
+      text += '--- EXPENSES ---\n';
+      text += 'Total Expenses: ' + document.getElementById('resultExpenses').textContent + '\n';
+      text += 'Venue Merch Cut: ' + document.getElementById('resultMerchVenue').textContent + '\n\n';
+      text += '--- PAYOUTS ---\n';
+      text += 'Artist Ticket Payout: ' + document.getElementById('resultTicketPayout').textContent + '\n';
+      text += 'Artist Merch Payout: ' + document.getElementById('resultMerchPayout').textContent + '\n';
+      text += '=========================\n';
+      text += 'GRAND TOTAL: ' + document.getElementById('resultGrandTotal').textContent + '\n';
+
+      var blob = new Blob([text], { type: 'text/plain' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'settlement_' + new Date().toISOString().split('T')[0] + '.txt';
+      a.click();
+    }
+
+    // Initialize
+    calculate();
+  </script>
+</body>
+</html>
