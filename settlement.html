@@ -507,26 +507,47 @@
     }
 
     function exportSettlement() {
-      var text = 'SETTLEMENT REPORT\n';
-      text += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
-      text += 'Deal Type: ' + currentDeal.replace('_', ' ').toUpperCase() + '\n\n';
-      text += '--- INCOME ---\n';
-      text += 'Gross Ticket Sales: ' + document.getElementById('resultGross').textContent + '\n';
-      text += 'Gross Merch Sales: ' + document.getElementById('resultMerchGross').textContent + '\n\n';
-      text += '--- EXPENSES ---\n';
-      text += 'Total Expenses: ' + document.getElementById('resultExpenses').textContent + '\n';
-      text += 'Venue Merch Cut: ' + document.getElementById('resultMerchVenue').textContent + '\n\n';
-      text += '--- PAYOUTS ---\n';
-      text += 'Artist Ticket Payout: ' + document.getElementById('resultTicketPayout').textContent + '\n';
-      text += 'Artist Merch Payout: ' + document.getElementById('resultMerchPayout').textContent + '\n';
-      text += '=========================\n';
-      text += 'GRAND TOTAL: ' + document.getElementById('resultGrandTotal').textContent + '\n';
+      var tour = JSON.parse(localStorage.getItem('tourhq_current_tour') || '{}');
+      var today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      var dealLabel = currentDeal.replace('_', ' ').toUpperCase();
 
-      var blob = new Blob([text], { type: 'text/plain' });
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'settlement_' + new Date().toISOString().split('T')[0] + '.txt';
-      a.click();
+      var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Settlement — ' + today + '</title><style>' +
+        '* { margin: 0; padding: 0; box-sizing: border-box; }' +
+        'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1a1a2e; padding: 40px; max-width: 700px; margin: 0 auto; }' +
+        '.header { border-bottom: 2px solid #1a1a2e; padding-bottom: 16px; margin-bottom: 24px; }' +
+        '.header h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }' +
+        '.header .sub { font-size: 13px; color: #666; }' +
+        '.section { margin-bottom: 20px; }' +
+        '.section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #eee; }' +
+        '.row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }' +
+        '.row .label { color: #666; }' +
+        '.row .value { font-weight: 600; }' +
+        '.row.total { border-top: 2px solid #1a1a2e; margin-top: 8px; padding-top: 8px; font-size: 16px; }' +
+        '.row.total .value { color: #d90429; font-size: 18px; font-weight: 800; }' +
+        '.footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; font-size: 11px; color: #999; }' +
+        '@media print { body { padding: 20px; } }' +
+        '</style></head><body>' +
+        '<div class="header"><h1>Settlement Report</h1><div class="sub">' + (tour.name || 'Tour') + ' — ' + (tour.artist || '') + ' • ' + today + '</div></div>' +
+        '<div class="section"><div class="section-title">Deal</div>' +
+        '<div class="row"><span class="label">Deal Type</span><span class="value">' + dealLabel + '</span></div>' +
+        '<div class="row"><span class="label">Guarantee</span><span class="value">' + document.getElementById('resultGuarantee').textContent + '</span></div>' +
+        '<div class="row"><span class="label">Artist Split %</span><span class="value">' + document.getElementById('resultSplit').textContent + '%</span></div></div>' +
+        '<div class="section"><div class="section-title">Income</div>' +
+        '<div class="row"><span class="label">Gross Ticket Sales</span><span class="value">' + document.getElementById('resultGross').textContent + '</span></div>' +
+        '<div class="row"><span class="label">Gross Merch Sales</span><span class="value">' + document.getElementById('resultMerchGross').textContent + '</span></div></div>' +
+        '<div class="section"><div class="section-title">Expenses</div>' +
+        '<div class="row"><span class="label">Total Expenses</span><span class="value">' + document.getElementById('resultExpenses').textContent + '</span></div>' +
+        '<div class="row"><span class="label">Venue Merch Cut</span><span class="value">' + document.getElementById('resultMerchVenue').textContent + '</span></div></div>' +
+        '<div class="section"><div class="section-title">Payouts</div>' +
+        '<div class="row"><span class="label">Artist Ticket Payout</span><span class="value">' + document.getElementById('resultTicketPayout').textContent + '</span></div>' +
+        '<div class="row"><span class="label">Artist Merch Payout</span><span class="value">' + document.getElementById('resultMerchPayout').textContent + '</span></div>' +
+        '<div class="row total"><span class="label">GRAND TOTAL</span><span class="value">' + document.getElementById('resultGrandTotal').textContent + '</span></div></div>' +
+        '<div class="footer">Generated by Tour HQ — tourhq.app • ' + today + '</div>' +
+        '<script>window.onload=function(){window.print()}<\/script></body></html>';
+
+      var win = window.open('', '_blank');
+      win.document.write(html);
+      win.document.close();
     }
 
     // Initialize

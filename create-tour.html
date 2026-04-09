@@ -10,6 +10,8 @@
       if (!user) { window.location.href = 'landing.html'; }
     })();
   </script>
+  <script src="config.js"></script>
+  <script src="js/supabase.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -221,14 +223,18 @@
       }
     })();
 
-    function logout() {
+    async function logout() {
       localStorage.removeItem('tourhq_current_user');
+      if (window.TourHQ && TourHQ.supabase) {
+        try { await TourHQ.supabase.signOut(); } catch (e) {}
+      }
       window.location.href = 'landing.html';
     }
 
-    function handleCreateTour(e) {
+    async function handleCreateTour(e) {
       e.preventDefault();
       
+      var currentUser = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
       var tour = {
         id: 'tour_' + Date.now(),
         name: document.getElementById('tourName').value,
@@ -241,8 +247,33 @@
         vehicleType: document.getElementById('vehicleType').value,
         driveSpeed: parseInt(document.getElementById('driveSpeed').value) || 55,
         createdAt: new Date().toISOString(),
-        userId: JSON.parse(localStorage.getItem('tourhq_current_user') || '{}').email
+        userId: currentUser.id || currentUser.email
       };
+
+      try {
+        if (window.TourHQ && TourHQ.supabase && TourHQ.supabase.hasRemote()) {
+          var remoteResult = await TourHQ.supabase.createTour(tour);
+          if (remoteResult && remoteResult.data) {
+            localStorage.setItem('tourhq_current_tour', JSON.stringify({
+              id: remoteResult.data.id,
+              name: remoteResult.data.name,
+              artist: remoteResult.data.artist_name,
+              startDate: remoteResult.data.start_date,
+              endDate: remoteResult.data.end_date,
+              tmName: remoteResult.data.tm_name,
+              tmEmail: remoteResult.data.tm_email,
+              bookingAgent: remoteResult.data.booking_agent,
+              vehicleType: remoteResult.data.vehicle_type,
+              driveSpeed: remoteResult.data.drive_speed_mph,
+              authMode: 'supabase'
+            }));
+            window.location.href = 'index.html';
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Remote tour creation failed, falling back to localStorage:', error);
+      }
 
       var tours = JSON.parse(localStorage.getItem('tourhq_tours') || '[]');
       tours.push(tour);

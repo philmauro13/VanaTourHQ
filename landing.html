@@ -576,6 +576,8 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
+    <script src="js/supabase.js"></script>
     <script>
         // Modal Management
         function openModal(type) {
@@ -587,8 +589,10 @@
             document.getElementById(type + 'Modal').classList.remove('active');
             document.body.style.overflow = '';
             // Reset form states
-            document.getElementById(type + 'Error').style.display = 'none';
-            document.getElementById(type + 'Success').style.display = 'none';
+            var errorEl = document.getElementById(type + 'Error');
+            var successEl = document.getElementById(type + 'Success');
+            if (errorEl) errorEl.style.display = 'none';
+            if (successEl) successEl.style.display = 'none';
         }
 
         function switchModal(from, to) {
@@ -607,47 +611,102 @@
         });
 
         // Login Handler
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+            errorEl.style.display = 'none';
 
-            // Check stored credentials
-            const users = JSON.parse(localStorage.getItem('tourhq_users') || '[]');
-            const user = users.find(u => u.email === email && u.password === password);
+            try {
+                if (window.TourHQ && TourHQ.supabase && TourHQ.supabase.hasRemote()) {
+                    const result = await TourHQ.supabase.signIn({ email, password });
+                    const remoteUser = result.response && result.response.data ? result.response.data.user : null;
+                    const sessionUser = remoteUser || await TourHQ.supabase.getSessionUser();
+                    if (sessionUser) {
+                        localStorage.setItem('tourhq_current_user', JSON.stringify({
+                            id: sessionUser.id,
+                            name: sessionUser.user_metadata && sessionUser.user_metadata.full_name || sessionUser.email,
+                            email: sessionUser.email,
+                            authMode: 'supabase'
+                        }));
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                }
 
-            if (user) {
-                localStorage.setItem('tourhq_current_user', JSON.stringify(user));
-                window.location.href = 'index.html';
-            } else {
-                document.getElementById('loginError').style.display = 'block';
+                // Fallback local auth
+                const users = JSON.parse(localStorage.getItem('tourhq_users') || '[]');
+                const user = users.find(u => u.email === email && u.password === password);
+
+                if (user) {
+                    localStorage.setItem('tourhq_current_user', JSON.stringify(user));
+                    window.location.href = 'index.html';
+                } else {
+                    errorEl.textContent = 'Invalid email or password. Please try again.';
+                    errorEl.style.display = 'block';
+                }
+            } catch (error) {
+                errorEl.textContent = error && error.message ? error.message : 'Login failed. Please try again.';
+                errorEl.style.display = 'block';
             }
         }
 
         // Signup Handler
-        function handleSignup(e) {
+        async function handleSignup(e) {
             e.preventDefault();
             const name = document.getElementById('signupName').value;
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
+            const errorEl = document.getElementById('signupError');
+            const successEl = document.getElementById('signupSuccess');
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
 
             if (!name || !email || !password || password.length < 8) {
-                document.getElementById('signupError').style.display = 'block';
+                errorEl.textContent = 'Please fill in all fields and use a password with at least 8 characters.';
+                errorEl.style.display = 'block';
                 return;
             }
 
-            // Store user
-            const users = JSON.parse(localStorage.getItem('tourhq_users') || '[]');
-            const newUser = { name, email, password, created: new Date().toISOString() };
-            users.push(newUser);
-            localStorage.setItem('tourhq_users', JSON.stringify(users));
-            localStorage.setItem('tourhq_current_user', JSON.stringify(newUser));
+            try {
+                if (window.TourHQ && TourHQ.supabase && TourHQ.supabase.hasRemote()) {
+                    const result = await TourHQ.supabase.signUp({ name, email, password });
+                    const remoteUser = result.response && result.response.data ? result.response.data.user : null;
+                    localStorage.setItem('tourhq_current_user', JSON.stringify({
+                        id: remoteUser && remoteUser.id || email,
+                        name: name,
+                        email: email,
+                        authMode: 'supabase'
+                    }));
+                    successEl.textContent = 'Account created. Check your email to confirm your account, then log in.';
+                    successEl.style.display = 'block';
+                    return;
+                }
 
-            // Show success and redirect
-            document.getElementById('signupSuccess').style.display = 'block';
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 1500);
+                // Fallback local auth
+                const users = JSON.parse(localStorage.getItem('tourhq_users') || '[]');
+                const existingUser = users.find(u => u.email === email);
+                if (existingUser) {
+                    errorEl.textContent = 'An account with that email already exists.';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                const newUser = { name, email, password, created: new Date().toISOString(), authMode: 'local' };
+                users.push(newUser);
+                localStorage.setItem('tourhq_users', JSON.stringify(users));
+                localStorage.setItem('tourhq_current_user', JSON.stringify(newUser));
+
+                successEl.textContent = 'Account created! Redirecting to your dashboard...';
+                successEl.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } catch (error) {
+                errorEl.textContent = error && error.message ? error.message : 'Signup failed. Please try again.';
+                errorEl.style.display = 'block';
+            }
         }
     </script>
 </body>

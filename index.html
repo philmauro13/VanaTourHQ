@@ -12,6 +12,8 @@
       }
     })();
   </script>
+  <script src="config.js"></script>
+  <script src="js/supabase.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -591,8 +593,12 @@
       }
     })();
 
-    function logout() {
+    async function logout() {
       localStorage.removeItem('tourhq_current_user');
+      localStorage.removeItem('tourhq_current_tour');
+      if (window.TourHQ && TourHQ.supabase) {
+        try { await TourHQ.supabase.signOut(); } catch (e) {}
+      }
       window.location.href = 'landing.html';
     }
 
@@ -603,54 +609,153 @@
       document.querySelectorAll('.nav-item')[index].classList.add('active');
     }
 
-    // File upload handler
-    function handleFileUpload(event) {
+    // File upload handler — Supabase Storage with localStorage fallback
+    async function handleFileUpload(event) {
       var file = event.target.files[0];
-      if (file) {
-        var docs = JSON.parse(localStorage.getItem('tourhq_documents') || '[]');
-        var newDoc = {
-          name: file.name,
-          size: (file.size / 1024 / 1024).toFixed(1) + ' MB',
-          type: file.type,
-          date: new Date().toISOString(),
-          id: Date.now()
-        };
-        docs.unshift(newDoc);
-        localStorage.setItem('tourhq_documents', JSON.stringify(docs));
-        
-        // Add to UI
-        var docList = document.getElementById('doc-list');
-        var newDocHtml = '<div class="doc-item">' +
-          '<div class="doc-icon">📎</div>' +
-          '<div class="doc-info">' +
-          '<div class="doc-name">' + newDoc.name + '</div>' +
-          '<div class="doc-meta">' + newDoc.size + ' • Just now</div>' +
-          '</div>' +
-          '<button class="doc-action">View</button>' +
-          '</div>';
-        docList.insertAdjacentHTML('afterbegin', newDocHtml);
+      if (!file) return;
+
+      var currentTour = JSON.parse(localStorage.getItem('tourhq_current_tour') || 'null');
+      var tourId = currentTour ? currentTour.id : null;
+
+      // Try Supabase first
+      if (window.TourHQ && TourHQ.supabase && TourHQ.supabase.hasRemote()) {
+        try {
+          var result = await TourHQ.supabase.uploadDocument(file, tourId);
+          var doc = result.data;
+          var url = TourHQ.supabase.getDocumentUrl(doc);
+          var docList = document.getElementById('doc-list');
+          var newDocHtml = '<div class="doc-item">' +
+            '<div class="doc-icon">📎</div>' +
+            '<div class="doc-info">' +
+            '<div class="doc-name">' + doc.file_name + '</div>' +
+            '<div class="doc-meta">' + formatBytes(doc.file_size) + ' • Just now • Uploaded to cloud</div>' +
+            '</div>' +
+            '<a class="doc-action" href="' + url + '" target="_blank">View</a>' +
+            '</div>';
+          docList.insertAdjacentHTML('afterbegin', newDocHtml);
+          return;
+        } catch (error) {
+          console.error('Remote upload failed, falling back to local:', error);
+        }
+      }
+
+      // localStorage fallback — metadata only (no file re-view)
+      var docs = JSON.parse(localStorage.getItem('tourhq_documents') || '[]');
+      var newDoc = {
+        name: file.name,
+        size: (file.size / 1024 / 1024).toFixed(1) + ' MB',
+        type: file.type,
+        date: new Date().toISOString(),
+        id: Date.now()
+      };
+      docs.unshift(newDoc);
+      localStorage.setItem('tourhq_documents', JSON.stringify(docs));
+
+      var docList = document.getElementById('doc-list');
+      var newDocHtml = '<div class="doc-item">' +
+        '<div class="doc-icon">📎</div>' +
+        '<div class="doc-info">' +
+        '<div class="doc-name">' + newDoc.name + '</div>' +
+        '<div class="doc-meta">' + newDoc.size + ' • Just now • Local only</div>' +
+        '</div>' +
+        '<button class="doc-action">View</button>' +
+        '</div>';
+      docList.insertAdjacentHTML('afterbegin', newDocHtml);
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes) return '0 B';
+      var k = 1024;
+      var sizes = ['B', 'KB', 'MB', 'GB'];
+      var i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    async function loadRemoteDocs() {
+      if (!(window.TourHQ && TourHQ.supabase && TourHQ.supabase.hasRemote())) return;
+      try {
+        var currentTour = JSON.parse(localStorage.getItem('tourhq_current_tour') || 'null');
+        var tourId = currentTour ? currentTour.id : null;
+        var remote = await TourHQ.supabase.listDocuments(tourId);
+        if (remote && remote.data && remote.data.length > 0) {
+          var docList = document.getElementById('doc-list');
+          var html = '';
+          remote.data.forEach(function(doc) {
+            var url = TourHQ.supabase.getDocumentUrl(doc);
+            html += '<div class="doc-item">' +
+              '<div class="doc-icon">📎</div>' +
+              '<div class="doc-info">' +
+              '<div class="doc-name">' + doc.file_name + '</div>' +
+              '<div class="doc-meta">' + formatBytes(doc.file_size) + ' • ' + new Date(doc.created_at).toLocaleDateString() + '</div>' +
+              '</div>' +
+              '<a class="doc-action" href="' + url + '" target="_blank">View</a>' +
+              '</div>';
+          });
+          docList.innerHTML = html;
+        }
+      } catch (error) {
+        console.log('Remote docs not loaded:', error);
       }
     }
 
-    // Load user tours
-    (function() {
-      var tours = JSON.parse(localStorage.getItem('tourhq_tours') || '[]');
+    function normalizeTour(tour) {
+      return {
+        id: tour.id,
+        name: tour.name,
+        artist: tour.artist || tour.artist_name,
+        startDate: tour.startDate || tour.start_date,
+        endDate: tour.endDate || tour.end_date,
+        tmName: tour.tmName || tour.tm_name,
+        tmEmail: tour.tmEmail || tour.tm_email,
+        bookingAgent: tour.bookingAgent || tour.booking_agent,
+        vehicleType: tour.vehicleType || tour.vehicle_type,
+        driveSpeed: tour.driveSpeed || tour.drive_speed_mph
+      };
+    }
+
+    function renderTours(tours) {
       var currentTour = JSON.parse(localStorage.getItem('tourhq_current_tour') || 'null');
       var tourList = document.getElementById('tourList');
-      
-      if (tours.length > 0) {
-        var html = '';
-        tours.forEach(function(tour) {
-          var isActive = currentTour && currentTour.id === tour.id;
-          html += '<div style="background: var(--bg-elevated); border: 1px solid ' + (isActive ? 'var(--accent)' : 'var(--border)') + '; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; cursor: pointer;" onclick="selectTour(\'' + tour.id + '\')">' +
-            '<div style="font-weight: 600; font-size: 0.95rem;">' + tour.name + '</div>' +
-            '<div style="font-size: 0.8rem; color: var(--dim); margin-top: 2px;">' + tour.artist + ' • ' + tour.startDate + ' to ' + tour.endDate + '</div>' +
-            (isActive ? '<div style="font-size: 0.7rem; color: var(--accent); margin-top: 4px; font-weight: 600;">● ACTIVE</div>' : '') +
-            '</div>';
-        });
-        tourList.innerHTML = html;
+
+      if (!tours || tours.length === 0) {
+        tourList.innerHTML = '<div style="color: var(--dim); font-size: 0.85rem; padding: 0.5rem 0;">No tours yet. Create your first tour below.</div>';
+        return;
       }
-    })();
+
+      var html = '';
+      tours.forEach(function(rawTour) {
+        var tour = normalizeTour(rawTour);
+        var isActive = currentTour && currentTour.id === tour.id;
+        html += '<div style="background: var(--bg-elevated); border: 1px solid ' + (isActive ? 'var(--accent)' : 'var(--border)') + '; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; cursor: pointer;" onclick="selectTour(\'' + tour.id + '\')">' +
+          '<div style="font-weight: 600; font-size: 0.95rem;">' + tour.name + '</div>' +
+          '<div style="font-size: 0.8rem; color: var(--dim); margin-top: 2px;">' + tour.artist + ' • ' + tour.startDate + ' to ' + tour.endDate + '</div>' +
+          (isActive ? '<div style="font-size: 0.7rem; color: var(--accent); margin-top: 4px; font-weight: 600;">● ACTIVE</div>' : '') +
+          '</div>';
+      });
+      tourList.innerHTML = html;
+    }
+
+    async function loadTours() {
+      var localTours = JSON.parse(localStorage.getItem('tourhq_tours') || '[]');
+      renderTours(localTours);
+
+      if (window.TourHQ && TourHQ.supabase && TourHQ.supabase.hasRemote()) {
+        try {
+          var remote = await TourHQ.supabase.listTours();
+          if (remote && remote.data && remote.data.length >= 0) {
+            var normalized = remote.data.map(normalizeTour);
+            localStorage.setItem('tourhq_tours', JSON.stringify(normalized));
+            if (!localStorage.getItem('tourhq_current_tour') && normalized[0]) {
+              localStorage.setItem('tourhq_current_tour', JSON.stringify(normalized[0]));
+            }
+            renderTours(normalized);
+            syncCurrentTourHeader();
+          }
+        } catch (error) {
+          console.log('Remote tours not loaded:', error);
+        }
+      }
+    }
 
     function selectTour(tourId) {
       var tours = JSON.parse(localStorage.getItem('tourhq_tours') || '[]');
@@ -661,17 +766,21 @@
       }
     }
 
-    // Load current tour info
-    (function() {
+    function syncCurrentTourHeader() {
       var tour = JSON.parse(localStorage.getItem('tourhq_current_tour') || 'null');
       if (tour) {
+        tour = normalizeTour(tour);
+        localStorage.setItem('tourhq_current_tour', JSON.stringify(tour));
         document.getElementById('tourBadge').textContent = 'ACTIVE TOUR';
         document.getElementById('tourTitle').textContent = tour.name;
         document.getElementById('tourSubtitle').textContent = tour.artist + ' • ' + tour.startDate + ' to ' + tour.endDate;
         document.getElementById('scheduleContent').style.display = 'block';
-        document.querySelector('[onclick="window.location.href=\'create-tour.html\'"]') && (document.querySelector('[onclick="window.location.href=\'create-tour.html\'"]').style.display = 'none');
       }
-    })();
+    }
+
+    syncCurrentTourHeader();
+    loadTours();
+    loadRemoteDocs();
 
     // Populate Routing
     fetch('data/routing_data.json')
