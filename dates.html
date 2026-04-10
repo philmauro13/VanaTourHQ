@@ -106,6 +106,21 @@
       font-weight: 500; text-decoration: none; cursor: pointer; transition: all 0.2s;
     }
     .detail-action:hover { border-color: var(--accent); color: var(--accent); }
+    .detail-action.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .detail-action.primary:hover { background: #ff2d4a; }
+    .nav-links {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+      padding: 0 1rem 0.75rem;
+    }
+    .nav-link {
+      display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+      padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-elevated); color: var(--text); font-size: 0.75rem;
+      font-weight: 500; text-decoration: none; cursor: pointer; transition: all 0.2s;
+    }
+    .nav-link:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-link.uber { background: rgba(0,0,0,0.3); border-color: #333; }
+    .nav-link.uber:hover { border-color: #fff; }
 
     .stopover-bar {
       background: rgba(34, 211, 238, 0.06); border: 1px solid rgba(34, 211, 238, 0.15);
@@ -202,6 +217,14 @@
             '</div>';
         }
 
+        // Navigation links
+        var destAddr = encodeURIComponent(isShow ? (day.venue + ', ' + day.city) : (day.to || ''));
+        var navHtml = '<div class="nav-links">' +
+          '<a class="nav-link" href="https://www.google.com/maps/dir/?api=1&destination=' + destAddr + '" target="_blank">🗺️ Maps</a>' +
+          '<a class="nav-link" href="https://maps.apple.com/?daddr=' + destAddr + '" target="_blank">🍎 Apple</a>' +
+          '<a class="nav-link uber" href="https://m.uber.com/go?pickup=my_location&dropoff[formatted_address]=' + destAddr + '" target="_blank">🚗 Uber</a>' +
+          '</div>';
+
         html += '<div class="date-card ' + day.type.toLowerCase() + (isToday ? ' today' : '') + '" id="date-' + day.date + '">' +
           '<div class="date-header" onclick="toggleDate(\'' + day.date + '\')">' +
           '<div class="date-day"><div class="date-day-num">' + dayNum + '</div><div class="date-day-abbrev">' + dayAbbr + '</div></div>' +
@@ -240,9 +263,10 @@
               '<div class="detail-row"><span class="detail-key">Drive Time</span><span class="detail-val">' + day.next_drive_time + '</span></div></div>'
             : '') +
           '<div class="detail-actions">' +
-          '<a href="edit-day.html?date=' + day.date + '" class="detail-action">✏️ Edit Day</a>' +
-          '<a href="schedule.html?date=' + day.date + '" class="detail-action">📋 Day Sheet</a>' +
+          '<a href="index.html?date=' + day.date + '" class="detail-action primary">📋 View Day</a>' +
+          '<a href="edit-day.html?date=' + day.date + '" class="detail-action">✏️ Edit</a>' +
           '</div>' +
+          navHtml +
           '</div>' +
           '</div>';
       });

@@ -573,6 +573,13 @@
                     <label for="signupPassword">Password (min 8 characters)</label>
                     <input type="password" id="signupPassword" placeholder="Create a strong password" minlength="8" required>
                 </div>
+                <div class="form-group">
+                    <label for="signupRole">I am a...</label>
+                    <select id="signupRole" class="form-group-select" style="width:100%;padding:12px 16px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;font-family:inherit;">
+                        <option value="crew">Crew Member</option>
+                        <option value="tour_manager">Tour Manager</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-primary btn-large" style="width: 100%">Create Account</button>
             </form>
             <div class="form-footer">
@@ -645,6 +652,7 @@
                 const user = users.find(u => u.email === email && u.password === password);
 
                 if (user) {
+                    if (!user.role) user.role = 'crew';
                     localStorage.setItem('tourhq_current_user', JSON.stringify(user));
                     window.location.href = 'index.html';
                 } else {
@@ -663,6 +671,7 @@
             const name = document.getElementById('signupName').value;
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
+            const role = document.getElementById('signupRole').value || 'crew';
             const errorEl = document.getElementById('signupError');
             const successEl = document.getElementById('signupSuccess');
             errorEl.style.display = 'none';
@@ -698,7 +707,7 @@
                     return;
                 }
 
-                const newUser = { name, email, password, created: new Date().toISOString(), authMode: 'local' };
+                const newUser = { name, email, password, role: role, created: new Date().toISOString(), authMode: 'local' };
                 users.push(newUser);
                 localStorage.setItem('tourhq_users', JSON.stringify(users));
                 localStorage.setItem('tourhq_current_user', JSON.stringify(newUser));

@@ -775,6 +775,93 @@
     loadTours();
     loadRemoteDocs();
 
+    // Handle ?date= parameter from dates.html
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var dateParam = params.get('date');
+      if (dateParam) {
+        // Switch to schedule tab and load that date
+        var scheduleSection = document.getElementById('schedule');
+        if (scheduleSection) {
+          document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+          scheduleSection.classList.add('active');
+          document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+          document.querySelectorAll('.nav-item')[0].classList.add('active');
+        }
+        // Load routing data to find this date
+        fetch('data/routing_data.json')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var day = data.routing.find(function(d) { return d.date === dateParam; });
+            if (day) {
+              var d = new Date(dateParam + 'T12:00:00');
+              var dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+              var isShow = day.type === 'SHOW';
+
+              document.getElementById('tourBadge').textContent = isShow ? 'SHOW DAY' : 'TRAVEL DAY';
+              document.getElementById('tourTitle').textContent = isShow ? (day.venue || day.city) : (day.from + ' → ' + day.to);
+              document.getElementById('tourSubtitle').textContent = dateStr + ' — ' + day.city;
+
+              // Load saved day data
+              var savedDays = JSON.parse(localStorage.getItem('tourhq_days') || '{}');
+              var saved = savedDays[dateParam] || {};
+
+              // Build schedule content
+              var entries = isShow ? [
+                { time: '12:00 PM', event: 'Load-In', type: 'logistics', icon: '🚛' },
+                { time: '04:00 PM', event: 'Soundcheck: Support', type: 'support', icon: '🎛️' },
+                { time: '06:00 PM', event: 'Soundcheck: Headliner', type: 'headliner', icon: '🎤' },
+                { time: '07:00 PM', event: 'Doors Open', type: 'logistics', icon: '🚪' },
+                { time: '09:00 PM', event: 'Headliner Set', type: 'headliner', icon: '🎸' },
+                { time: '11:00 PM', event: 'Curfew', type: 'logistics', icon: '🛑' },
+                { time: '01:30 AM', event: 'Bus Call', type: 'travel', icon: '🚌' }
+              ] : [
+                { time: '11:00 AM', event: 'Hotel Checkout', type: 'logistics', icon: '🏨' },
+                { time: '12:00 PM', event: 'Drive Day', type: 'travel', icon: '🚛' },
+                { time: '06:00 PM', event: 'Arrive at Hotel', type: 'logistics', icon: '🏨' }
+              ];
+
+              if (saved.entries && saved.entries.length > 0) entries = saved.entries;
+
+              var html = '<div class="pulse-bar"><div class="pulse-fill" style="width: 100%"></div></div>';
+              entries.forEach(function(entry) {
+                html += '<div class="time-block">' +
+                  '<div class="icon-box">' + (entry.icon || '⏱️') + '</div>' +
+                  '<div class="info">' +
+                  '<div class="time">' + entry.time + '</div>' +
+                  '<div class="event">' + entry.event + '</div>' +
+                  '<div class="status ' + entry.type + '">' + entry.type.toUpperCase() + '</div>' +
+                  '</div></div>';
+              });
+
+              // Venue info
+              if (isShow) {
+                var venueAddr = encodeURIComponent((saved.address || day.city || '').trim());
+                html += '<div style="padding: 0 1rem 0.5rem;"><a href="edit-day.html?date=' + dateParam + '" style="color: var(--accent); font-size: 0.85rem; font-weight: 600; text-decoration: none;">✏️ Edit this day →</a></div>';
+                html += '<div class="card"><div class="card-header">📍 Venue</div>' +
+                  '<div class="info-row"><span class="label">Venue</span><span class="value">' + (saved.venue || day.venue) + '</span></div>' +
+                  '<div class="info-row"><span class="label">City</span><span class="value">' + day.city + '</span></div>' +
+                  '<div class="info-row"><span class="label">Promoter</span><span class="value">' + (saved.promoter || '—') + '</span></div>' +
+                  '<div class="info-row"><span class="label">Hotel</span><span class="value">' + (saved.hotel || '—') + '</span></div>' +
+                  '</div>';
+                html += '<div style="padding: 0 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">' +
+                  '<a href="https://www.google.com/maps/dir/?api=1&destination=' + venueAddr + '" target="_blank" style="padding: 0.6rem; border: 1px solid var(--border); border-radius: 8px; text-align: center; font-size: 0.8rem; color: var(--text); text-decoration: none;">🗺️ Google Maps</a>' +
+                  '<a href="https://m.uber.com/go?pickup=my_location&dropoff[formatted_address]=' + venueAddr + '" target="_blank" style="padding: 0.6rem; border: 1px solid var(--border); border-radius: 8px; text-align: center; font-size: 0.8rem; color: var(--text); text-decoration: none;">🚗 Uber</a>' +
+                  '</div>';
+              }
+
+              if (saved.notes) {
+                html += '<div class="card"><div class="card-header">📝 Notes</div><div style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.5;">' + saved.notes + '</div></div>';
+              }
+
+              document.getElementById('scheduleContent').innerHTML = html;
+              document.getElementById('scheduleContent').style.display = 'block';
+            }
+          })
+          .catch(function(err) { console.log('Date load error:', err); });
+      }
+    })();
+
     // Populate Routing
     fetch('data/routing_data.json')
       .then(function(res) { return res.json(); })

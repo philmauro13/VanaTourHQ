@@ -359,7 +359,7 @@
   <div class="save-bar">
     <div class="save-status" id="saveStatus">Unsaved changes</div>
     <button class="export-btn" onclick="exportDaySheet()">📄 PDF</button>
-    <button class="save-btn" onclick="saveDay()">Save</button>
+    <button class="save-btn" id="saveBtn" onclick="saveDay()">Save</button>
   </div>
 
   <script>
@@ -376,6 +376,23 @@
       localStorage.removeItem('tourhq_current_user');
       window.location.href = 'landing.html';
     }
+
+    // Role-based UI
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.role === 'crew') {
+        // Show read-only badge, disable editing
+        var badge = document.createElement('div');
+        badge.style.cssText = 'padding: 0.5rem 1rem; background: rgba(34,211,238,0.08); border-bottom: 1px solid var(--border); font-size: 0.8rem; color: var(--cyan); text-align: center;';
+        badge.textContent = '👤 View Only — Tour Manager access required to edit';
+        document.querySelector('.page-header').after(badge);
+        document.getElementById('saveBtn').style.display = 'none';
+        document.querySelector('.add-entry').style.display = 'none';
+        document.querySelectorAll('.entry-delete').forEach(function(el) { el.style.display = 'none'; });
+        document.querySelectorAll('.entry-input, .venue-input, .time-input').forEach(function(el) { el.readOnly = true; });
+        document.querySelectorAll('.entry-select').forEach(function(el) { el.disabled = true; });
+      }
+    })();
 
     // Generate sample days for tour
     var sampleDays = [];

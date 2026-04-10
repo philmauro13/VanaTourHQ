@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Guest List</title>
+  <script src="config.js"></script>
+  <script src="js/supabase.js"></script>
+  <style>
+    :root {
+      --bg: #07070c; --bg-card: #101018; --bg-elevated: #181822;
+      --border: #1f1f2e; --text: #f0f0f5; --dim: #8888a0;
+      --muted: #555570; --accent: #d90429; --cyan: #22d3ee;
+      --success: #22c55e; --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 100px;
+    }
+
+    .header-bar {
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+    }
+    .header-title { font-size: 1.1rem; font-weight: 700; }
+    .header-sub { font-size: 0.75rem; color: var(--dim); margin-top: 2px; }
+
+    .page-header {
+      padding: 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none; font-size: 0.85rem; margin-bottom: 0.75rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-subtitle { color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    /* Role badge */
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.3rem 0.7rem; border-radius: 100px; font-size: 0.7rem;
+      font-weight: 600; margin-bottom: 0.5rem;
+    }
+    .role-badge.tm { background: rgba(217, 4, 41, 0.12); color: var(--accent); }
+    .role-badge.crew { background: rgba(34, 211, 238, 0.12); color: var(--cyan); }
+
+    /* Request Form */
+    .form-section {
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .form-section-title {
+      font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--dim); margin-bottom: 1rem;
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--dim); margin-bottom: 0.4rem; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; padding: 0.75rem 1rem;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 0.95rem;
+      font-family: inherit; outline: none;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0.75rem 1.5rem; border-radius: 10px; font-size: 0.9rem;
+      font-weight: 600; text-decoration: none; cursor: pointer; border: none; width: 100%;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-secondary { background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border); margin-top: 0.5rem; }
+
+    /* Request Cards */
+    .request-card {
+      margin: 0.5rem 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 12px; padding: 1rem;
+    }
+    .request-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .request-name { font-weight: 600; font-size: 0.95rem; }
+    .request-status {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 0.2rem 0.5rem; border-radius: 4px;
+    }
+    .request-status.pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .request-status.approved { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .request-status.denied { background: rgba(217, 4, 41, 0.15); color: var(--accent); }
+    .request-meta { font-size: 0.8rem; color: var(--dim); margin-top: 0.25rem; }
+    .request-notes { font-size: 0.8rem; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+
+    /* TM actions */
+    .tm-actions {
+      display: flex; gap: 0.5rem; margin-top: 0.75rem;
+    }
+    .tm-btn {
+      flex: 1; padding: 0.5rem; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+      text-align: center; cursor: pointer; transition: all 0.2s;
+    }
+    .tm-btn.approve { background: rgba(34, 197, 94, 0.1); border-color: var(--success); color: var(--success); }
+    .tm-btn.deny { background: rgba(217, 4, 41, 0.1); border-color: var(--accent); color: var(--accent); }
+
+    /* Nav */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; padding: 0.65rem 0.5rem;
+      max-width: 480px; margin: 0 auto; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 1.2rem; opacity: 0.4; cursor: pointer; padding: 0.25rem 0.5rem;
+      text-decoration: none; color: var(--text);
+    }
+    .nav-item span { font-size: 0.55rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-item.active { opacity: 1; }
+    .nav-item.active span { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <a href="more.html" class="back-btn">← Back</a>
+    <div class="page-title">Guest List</div>
+    <div class="page-subtitle">Request and manage guest list passes</div>
+  </div>
+
+  <!-- Role Badge -->
+  <div style="padding: 0.75rem 1.5rem;">
+    <div class="role-badge" id="roleBadge">Loading...</div>
+  </div>
+
+  <!-- Request Form (for crew) -->
+  <div class="form-section" id="requestForm">
+    <div class="form-section-title">Request Guest Pass</div>
+    <form onsubmit="submitRequest(event)">
+      <div class="form-group">
+        <label class="form-label">Guest Name *</label>
+        <input type="text" class="form-input" id="guestName" placeholder="Full name" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Pass Type</label>
+          <select class="form-select" id="passType">
+            <option value="guest">Guest</option>
+            <option value="industry">Industry</option>
+            <option value="comp">Comp</option>
+            <option value="vip">VIP</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Guest Count</label>
+          <input type="number" class="form-input" id="guestCount" value="1" min="1" max="10">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Guest Email</label>
+        <input type="email" class="form-input" id="guestEmail" placeholder="guest@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="requestNotes" placeholder="Any special requests or details..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Request</button>
+    </form>
+  </div>
+
+  <!-- Requests List -->
+  <div style="padding: 0.75rem 1.5rem 0.5rem;">
+    <div class="form-section-title">Requests</div>
+  </div>
+  <div id="requestsList"></div>
+
+  <!-- Nav -->
+  <div class="nav-bar">
+    <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
+    <a href="dates.html" class="nav-item">📅<span>Dates</span></a>
+    <a href="schedule.html" class="nav-item">⏱️<span>Schedule</span></a>
+    <a href="route.html" class="nav-item">🗺️<span>Route</span></a>
+    <a href="more.html" class="nav-item active">⋯<span>More</span></a>
+  </div>
+
+  <script>
+    var userRole = 'crew';
+    var currentUser = {};
+
+    (function() {
+      currentUser = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      userRole = currentUser.role || 'crew';
+
+      var badge = document.getElementById('roleBadge');
+      if (userRole === 'tour_manager') {
+        badge.className = 'role-badge tm';
+        badge.textContent = '🔑 Tour Manager — Full Access';
+      } else {
+        badge.className = 'role-badge crew';
+        badge.textContent = '👤 Crew Member — View + Request';
+      }
+    })();
+
+    // Sample requests
+    var sampleRequests = [
+      { id: 1, guest_name: 'Sarah Mitchell', pass_type: 'guest', guest_count: 2, guest_email: 'sarah@email.com', notes: 'Label rep', status: 'approved', created_at: '2026-04-09T10:00:00Z' },
+      { id: 2, guest_name: 'Mike Torres', pass_type: 'industry', guest_count: 1, guest_email: 'mike@venue.com', notes: 'Venue GM', status: 'pending', created_at: '2026-04-09T14:00:00Z' },
+      { id: 3, guest_name: 'Jen Park', pass_type: 'comp', guest_count: 3, guest_email: 'jen@press.com', notes: 'Press - local blog', status: 'pending', created_at: '2026-04-10T08:00:00Z' }
+    ];
+
+    var requests = JSON.parse(localStorage.getItem('tourhq_guest_requests') || 'null');
+    if (!requests) {
+      requests = sampleRequests;
+      localStorage.setItem('tourhq_guest_requests', JSON.stringify(requests));
+    }
+
+    function renderRequests() {
+      var html = '';
+      requests.forEach(function(req) {
+        html += '<div class="request-card">' +
+          '<div class="request-header">' +
+          '<div class="request-name">' + req.guest_name + '</div>' +
+          '<span class="request-status ' + req.status + '">' + req.status + '</span>' +
+          '</div>' +
+          '<div class="request-meta">' + req.pass_type.toUpperCase() + ' • ' + req.guest_count + ' pass' + (req.guest_count > 1 ? 'es' : '') +
+          (req.guest_email ? ' • ' + req.guest_email : '') + '</div>' +
+          (req.notes ? '<div class="request-notes">' + req.notes + '</div>' : '') +
+          (userRole === 'tour_manager' && req.status === 'pending'
+            ? '<div class="tm-actions">' +
+              '<div class="tm-btn approve" onclick="handleRequest(' + req.id + ', \'approved\')">✓ Approve</div>' +
+              '<div class="tm-btn deny" onclick="handleRequest(' + req.id + ', \'denied\')">✕ Deny</div>' +
+              '</div>'
+            : '') +
+          '</div>';
+      });
+      document.getElementById('requestsList').innerHTML = html || '<div style="padding: 1rem; text-align: center; color: var(--dim);">No requests yet</div>';
+    }
+
+    function submitRequest(e) {
+      e.preventDefault();
+      var newReq = {
+        id: Date.now(),
+        guest_name: document.getElementById('guestName').value,
+        pass_type: document.getElementById('passType').value,
+        guest_count: parseInt(document.getElementById('guestCount').value) || 1,
+        guest_email: document.getElementById('guestEmail').value,
+        notes: document.getElementById('requestNotes').value,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+      requests.push(newReq);
+      localStorage.setItem('tourhq_guest_requests', JSON.stringify(requests));
+      renderRequests();
+      document.getElementById('guestName').value = '';
+      document.getElementById('guestEmail').value = '';
+      document.getElementById('requestNotes').value = '';
+      document.getElementById('guestCount').value = '1';
+    }
+
+    function handleRequest(id, status) {
+      var req = requests.find(function(r) { return r.id === id; });
+      if (req) {
+        req.status = status;
+        localStorage.setItem('tourhq_guest_requests', JSON.stringify(requests));
+        renderRequests();
+      }
+    }
+
+    renderRequests();
+  </script>
+</body>
+</html>

@@ -109,6 +109,19 @@
       border-radius: 10px; font-size: 0.9rem; font-weight: 600;
       text-decoration: none; cursor: pointer;
     }
+    .nav-links {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+      margin: 0.75rem 1rem;
+    }
+    .nav-link {
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+      padding: 0.6rem; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-card); color: var(--text); font-size: 0.8rem;
+      font-weight: 500; text-decoration: none; cursor: pointer; transition: all 0.2s;
+    }
+    .nav-link:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-link.uber { background: rgba(0, 0, 0, 0.4); border-color: #333; }
+    .nav-link.uber:hover { border-color: #fff; }
 
     /* Nav */
     .nav-bar {
@@ -230,12 +243,22 @@
       // Venue info card
       if (isShow) {
         var saved = savedDays[day.date] || {};
+        var venueAddr = encodeURIComponent((saved.address || day.city || '').trim());
+        var hotelAddr = encodeURIComponent((saved.hotel || '').trim());
+        var venueName = encodeURIComponent((saved.venue || day.venue || '').trim());
+
         html += '<div class="info-card">' +
           '<div class="info-card-header">📍 Venue Info</div>' +
           '<div class="info-row"><span class="info-key">Venue</span><span class="info-val">' + (saved.venue || day.venue || '—') + '</span></div>' +
           '<div class="info-row"><span class="info-key">Address</span><span class="info-val">' + (saved.address || '—') + '</span></div>' +
           '<div class="info-row"><span class="info-key">Promoter</span><span class="info-val">' + (saved.promoter || '—') + '</span></div>' +
           '<div class="info-row"><span class="info-key">Hotel</span><span class="info-val">' + (saved.hotel || '—') + '</span></div>' +
+          '</div>' +
+          '<div class="nav-links">' +
+          '<a class="nav-link" href="https://www.google.com/maps/dir/?api=1&destination=' + venueAddr + '" target="_blank">🗺️ Google Maps</a>' +
+          '<a class="nav-link" href="https://maps.apple.com/?daddr=' + venueAddr + '" target="_blank">🍎 Apple Maps</a>' +
+          (hotelAddr !== '%20' ? '<a class="nav-link" href="https://www.google.com/maps/dir/?api=1&origin=' + hotelAddr + '&destination=' + venueAddr + '" target="_blank">🏨→📍 Hotel to Venue</a>' : '') +
+          '<a class="nav-link uber" href="https://m.uber.com/go?pickup=my_location&dropoff[formatted_address]=' + venueAddr + '" target="_blank">🚗 Uber to Venue</a>' +
           '</div>';
 
         // Next leg
@@ -248,12 +271,18 @@
             '</div>';
         }
       } else {
+        var toAddr = encodeURIComponent(day.to || '');
         html += '<div class="info-card">' +
           '<div class="info-card-header">🚛 Travel Details</div>' +
           '<div class="info-row"><span class="info-key">From</span><span class="info-val">' + day.from + '</span></div>' +
           '<div class="info-row"><span class="info-key">To</span><span class="info-val">' + day.to + '</span></div>' +
           '<div class="info-row"><span class="info-key">Distance</span><span class="info-val">' + day.distance + '</span></div>' +
           '<div class="info-row"><span class="info-key">Drive Time</span><span class="info-val">' + day.drive_time + '</span></div>' +
+          '</div>' +
+          '<div class="nav-links">' +
+          '<a class="nav-link" href="https://www.google.com/maps/dir/?api=1&destination=' + toAddr + '" target="_blank">🗺️ Google Maps</a>' +
+          '<a class="nav-link" href="https://maps.apple.com/?daddr=' + toAddr + '" target="_blank">🍎 Apple Maps</a>' +
+          '<a class="nav-link uber" href="https://m.uber.com/go?pickup=my_location&dropoff[formatted_address]=' + toAddr + '" target="_blank">🚗 Uber</a>' +
           '</div>';
       }
 
