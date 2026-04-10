@@ -96,7 +96,6 @@ alter table public.profiles enable row level security;
 alter table public.tours enable row level security;
 alter table public.day_sheets enable row level security;
 alter table public.documents enable row level security;
-alter table public.guest_list_requests enable row level security;
 
 -- Profiles policies
 create policy "users can view own profile" on public.profiles
@@ -170,6 +169,13 @@ create table if not exists public.guest_list_requests (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.guest_list_requests enable row level security;
+
+drop trigger if exists guest_list_requests_set_updated_at on public.guest_list_requests;
+create trigger guest_list_requests_set_updated_at
+before update on public.guest_list_requests
+for each row execute procedure public.handle_updated_at();
 
 create policy "users can view own tour guest requests" on public.guest_list_requests
 for select using (
