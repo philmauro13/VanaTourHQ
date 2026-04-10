@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Route</title>
+  <script src="config.js"></script>
+  <script src="js/supabase.js"></script>
+  <style>
+    :root {
+      --bg: #07070c; --bg-card: #101018; --bg-elevated: #181822;
+      --border: #1f1f2e; --text: #f0f0f5; --dim: #8888a0;
+      --muted: #555570; --accent: #d90429; --cyan: #22d3ee;
+      --success: #22c55e; --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 100px;
+    }
+
+    .header-bar {
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+    }
+    .header-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
+    .header-subtitle { font-size: 0.75rem; color: var(--dim); margin-top: 2px; }
+
+    /* Stats bar */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+    }
+    .stat { text-align: center; padding: 0.5rem; background: var(--bg-elevated); border-radius: 8px; }
+    .stat-num { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 700; color: var(--cyan); }
+    .stat-label { font-size: 0.55rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
+
+    /* Route cards */
+    .route-card {
+      margin: 0.5rem 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .route-card.show { border-left: 3px solid var(--accent); }
+    .route-card.travel { border-left: 3px solid var(--success); }
+
+    .route-header {
+      display: flex; align-items: center; padding: 0.75rem 1rem; gap: 0.75rem;
+    }
+    .route-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .show .route-icon { background: rgba(217, 4, 41, 0.12); }
+    .travel .route-icon { background: rgba(34, 197, 94, 0.12); }
+
+    .route-info { flex-grow: 1; }
+    .route-date { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--dim); }
+    .route-from-to { font-size: 0.9rem; font-weight: 600; margin-top: 1px; }
+    .route-details { font-size: 0.75rem; color: var(--dim); margin-top: 2px; }
+
+    .route-right { text-align: right; flex-shrink: 0; }
+    .route-distance { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; color: var(--cyan); }
+    .route-time { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--warning); margin-top: 1px; }
+
+    .stopover-info {
+      padding: 0.5rem 1rem; background: rgba(34, 211, 238, 0.04);
+      border-top: 1px solid rgba(34, 211, 238, 0.1); font-size: 0.75rem;
+    }
+    .stopover-city { font-weight: 600; color: var(--cyan); }
+    .stopover-detail { color: var(--dim); margin-top: 2px; }
+
+    /* Nav */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; padding: 0.65rem 0.5rem;
+      max-width: 480px; margin: 0 auto; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 1.2rem; opacity: 0.4; cursor: pointer; padding: 0.25rem 0.5rem;
+      text-decoration: none; color: var(--text); transition: opacity 0.2s;
+    }
+    .nav-item span { font-size: 0.55rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-item.active { opacity: 1; }
+    .nav-item.active span { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <div class="header-title">Route</div>
+    <div class="header-subtitle" id="routeSub">Driver routing</div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-num" id="statMiles">0</div><div class="stat-label">Total Miles</div></div>
+    <div class="stat"><div class="stat-num" id="statShows">0</div><div class="stat-label">Shows</div></div>
+    <div class="stat"><div class="stat-num" id="statTravel">0</div><div class="stat-label">Travel Days</div></div>
+  </div>
+
+  <div id="routeList"></div>
+
+  <div class="nav-bar">
+    <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
+    <a href="dates.html" class="nav-item">📅<span>Dates</span></a>
+    <a href="schedule.html" class="nav-item">⏱️<span>Schedule</span></a>
+    <a href="route.html" class="nav-item active">🗺️<span>Route</span></a>
+    <a href="more.html" class="nav-item">⋯<span>More</span></a>
+  </div>
+
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+
+    fetch('data/routing_data.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var routing = data.routing;
+        var totalMiles = 0, showCount = 0, travelCount = 0;
+        var html = '';
+
+        routing.forEach(function(day) {
+          var isShow = day.type === 'SHOW';
+          if (isShow) showCount++; else travelCount++;
+
+          var dist = day.next_distance || day.distance || '0 miles';
+          var time = day.next_drive_time || day.drive_time || '0h 0m';
+          var milesNum = parseInt(dist) || 0;
+          totalMiles += milesNum;
+
+          var d = new Date(day.date + 'T12:00:00');
+          var dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+          html += '<div class="route-card ' + day.type.toLowerCase() + '">' +
+            '<div class="route-header">' +
+            '<div class="route-icon">' + (isShow ? '📍' : '🚛') + '</div>' +
+            '<div class="route-info">' +
+            '<div class="route-date">' + dateStr + '</div>' +
+            (isShow
+              ? '<div class="route-from-to">' + (day.venue || day.city) + '</div>' +
+                '<div class="route-details">' + day.city + (day.next_city && day.next_city !== 'End of Tour' ? ' → ' + day.next_city : '') + '</div>'
+              : '<div class="route-from-to">' + day.from + ' → ' + day.to + '</div>' +
+                '<div class="route-details">Drive day</div>'
+            ) +
+            '</div>' +
+            '<div class="route-right">' +
+            '<div class="route-distance">' + dist + '</div>' +
+            '<div class="route-time">' + time + '</div>' +
+            '</div>' +
+            '</div>';
+
+          if (day.stopover) {
+            html += '<div class="stopover-info">' +
+              '<div class="stopover-city">🏨 Stopover: ' + day.stopover.city + '</div>' +
+              '<div class="stopover-detail">' + (day.stopover.highlights || []).slice(0, 3).join(' • ') + '</div>' +
+              '</div>';
+          }
+
+          html += '</div>';
+        });
+
+        document.getElementById('routeList').innerHTML = html;
+        document.getElementById('statMiles').textContent = totalMiles.toLocaleString();
+        document.getElementById('statShows').textContent = showCount;
+        document.getElementById('statTravel').textContent = travelCount;
+        document.getElementById('routeSub').textContent = showCount + ' shows • ' + totalMiles.toLocaleString() + ' miles';
+      })
+      .catch(function() {
+        document.getElementById('routeList').innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--dim);">Tour routing data will appear here.</div>';
+      });
+  </script>
+</body>
+</html>

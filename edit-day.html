@@ -123,22 +123,29 @@
       align-items: flex-start;
     }
     .time-input-wrap {
-      width: 80px;
+      width: 110px;
       flex-shrink: 0;
     }
-    .time-input {
-      width: 100%;
-      padding: 0.5rem;
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--cyan);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      text-align: center;
-      outline: none;
+    .time-picker {
+      display: flex; gap: 2px; align-items: center;
     }
-    .time-input:focus { border-color: var(--accent); }
+    .time-picker select {
+      flex: 1; padding: 0.4rem 0.25rem;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--cyan);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      text-align: center; outline: none; appearance: auto;
+    }
+    .time-picker select:focus { border-color: var(--accent); }
+    .time-sep { color: var(--muted); font-size: 0.75rem; }
+    .time-ampm {
+      width: 42px; flex-shrink: 0; padding: 0.4rem 0.15rem;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--accent);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+      text-align: center; outline: none; appearance: auto;
+    }
+    .time-ampm:focus { border-color: var(--accent); }
     .entry-fields { flex-grow: 1; }
     .entry-input {
       width: 100%;
@@ -303,7 +310,7 @@
   </div>
 
   <div class="page-header">
-    <a href="index.html" class="back-btn">← Back to Dashboard</a>
+    <a href="schedule.html" class="back-btn">← Back to Schedule</a>
     <div class="page-title">Edit Day Sheet</div>
     <div class="page-subtitle" id="currentDate">Loading...</div>
   </div>
@@ -420,6 +427,29 @@
       renderVenueInfo();
     }
 
+    function parseTime(str) {
+      var parts = str.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      if (!parts) return { hour: '12', minute: '00', ampm: 'PM' };
+      return { hour: parts[1], minute: parts[2], ampm: parts[3].toUpperCase() };
+    }
+
+    function makeHourOptions(selected) {
+      var h = '';
+      for (var i = 1; i <= 12; i++) {
+        var v = String(i);
+        h += '<option value="' + v + '"' + (v === String(selected) ? ' selected' : '') + '>' + v + '</option>';
+      }
+      return h;
+    }
+
+    function makeMinuteOptions(selected) {
+      var m = '';
+      ['00','05','10','15','20','25','30','35','40','45','50','55'].forEach(function(val) {
+        m += '<option value="' + val + '"' + (val === String(selected) ? ' selected' : '') + '>' + val + '</option>';
+      });
+      return m;
+    }
+
     // Render time entries
     function renderEntries() {
       var day = sampleDays[currentDayIndex];
@@ -432,15 +462,18 @@
 
       var html = '';
       day.entries.forEach(function(entry, index) {
-        var typeColors = {
-          logistics: 'var(--dim)',
-          support: 'var(--support-blue, #0077b6)',
-          headliner: 'var(--accent)',
-          travel: 'var(--success)'
-        };
+        var t = parseTime(entry.time);
         html += '<div class="time-entry" data-index="' + index + '">' +
           '<div class="time-input-wrap">' +
-          '<input type="text" class="time-input" value="' + entry.time + '" onchange="updateEntry(' + index + ', \'time\', this.value)">' +
+          '<div class="time-picker">' +
+          '<select onchange="updateTime(' + index + ')">' + makeHourOptions(t.hour) + '</select>' +
+          '<span class="time-sep">:</span>' +
+          '<select onchange="updateTime(' + index + ')">' + makeMinuteOptions(t.minute) + '</select>' +
+          '<select class="time-ampm" onchange="updateTime(' + index + ')">' +
+          '<option value="AM"' + (t.ampm === 'AM' ? ' selected' : '') + '>AM</option>' +
+          '<option value="PM"' + (t.ampm === 'PM' ? ' selected' : '') + '>PM</option>' +
+          '</select>' +
+          '</div>' +
           '</div>' +
           '<div class="entry-fields">' +
           '<input type="text" class="entry-input" value="' + entry.event + '" onchange="updateEntry(' + index + ', \'event\', this.value)">' +
@@ -457,6 +490,17 @@
           '</div>';
       });
       document.getElementById('timeEntries').innerHTML = html;
+    }
+
+    function updateTime(index) {
+      var row = document.querySelector('[data-index="' + index + '"]');
+      var selects = row.querySelectorAll('.time-picker select, .time-ampm');
+      var hour = selects[0].value;
+      var minute = selects[1].value;
+      var ampm = selects[2].value;
+      sampleDays[currentDayIndex].entries[index].time = hour + ':' + minute + ' ' + ampm;
+      document.getElementById('saveStatus').textContent = 'Unsaved changes';
+      document.getElementById('saveStatus').className = 'save-status';
     }
 
     // Render venue info

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Dates</title>
+  <script src="config.js"></script>
+  <script src="js/supabase.js"></script>
+  <style>
+    :root {
+      --bg: #07070c; --bg-card: #101018; --bg-elevated: #181822;
+      --border: #1f1f2e; --text: #f0f0f5; --dim: #8888a0;
+      --muted: #555570; --accent: #d90429; --cyan: #22d3ee;
+      --success: #22c55e; --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 100px;
+    }
+
+    /* Header */
+    .header-bar {
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .header-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
+    .header-subtitle { font-size: 0.75rem; color: var(--dim); }
+
+    /* Month Headers */
+    .month-header {
+      padding: 1rem 1.25rem 0.5rem;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--dim);
+    }
+
+    /* Date Cards */
+    .date-card {
+      margin: 0 1rem; margin-bottom: 2px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; transition: all 0.2s;
+    }
+    .date-card.show { border-left: 3px solid var(--accent); }
+    .date-card.travel { border-left: 3px solid var(--success); }
+    .date-card.today { background: rgba(217, 4, 41, 0.04); border-color: rgba(217, 4, 41, 0.3); }
+
+    .date-header {
+      display: flex; align-items: center; padding: 0.875rem 1rem;
+      cursor: pointer; gap: 0.75rem;
+    }
+    .date-day {
+      width: 44px; height: 44px; flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border-radius: 10px;
+    }
+    .date-day-num { font-size: 1.1rem; font-weight: 800; line-height: 1; }
+    .date-day-abbrev { font-size: 0.55rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
+    .show .date-day { background: rgba(217, 4, 41, 0.12); color: var(--accent); }
+    .travel .date-day { background: rgba(34, 197, 94, 0.12); color: var(--success); }
+
+    .date-info { flex-grow: 1; min-width: 0; }
+    .date-venue { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .date-city { font-size: 0.8rem; color: var(--dim); margin-top: 1px; }
+    .date-drive { font-size: 0.7rem; color: var(--warning); margin-top: 2px; font-weight: 500; }
+
+    .date-badge {
+      flex-shrink: 0; font-size: 0.6rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem; border-radius: 4px;
+    }
+    .date-badge.show { background: rgba(217, 4, 41, 0.15); color: var(--accent); }
+    .date-badge.travel { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+
+    .date-expand-icon { color: var(--muted); font-size: 0.7rem; flex-shrink: 0; transition: transform 0.2s; }
+    .date-card.open .date-expand-icon { transform: rotate(180deg); }
+
+    /* Date Detail (expandable) */
+    .date-detail {
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+    }
+    .date-card.open .date-detail { max-height: 800px; }
+
+    .detail-section {
+      padding: 0.75rem 1rem; border-top: 1px solid var(--border);
+    }
+    .detail-label {
+      font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .detail-row {
+      display: flex; justify-content: space-between; padding: 0.35rem 0;
+      font-size: 0.85rem;
+    }
+    .detail-key { color: var(--dim); }
+    .detail-val { font-weight: 600; text-align: right; }
+
+    .detail-actions {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+      padding: 0.75rem 1rem;
+    }
+    .detail-action {
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+      padding: 0.6rem; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-elevated); color: var(--text); font-size: 0.8rem;
+      font-weight: 500; text-decoration: none; cursor: pointer; transition: all 0.2s;
+    }
+    .detail-action:hover { border-color: var(--accent); color: var(--accent); }
+
+    .stopover-bar {
+      background: rgba(34, 211, 238, 0.06); border: 1px solid rgba(34, 211, 238, 0.15);
+      border-radius: 8px; padding: 0.5rem 0.75rem; margin-top: 0.5rem;
+    }
+    .stopover-title { font-size: 0.75rem; font-weight: 600; color: var(--cyan); margin-bottom: 0.25rem; }
+    .stopover-text { font-size: 0.75rem; color: var(--dim); line-height: 1.5; }
+
+    /* Today indicator */
+    .today-dot {
+      width: 6px; height: 6px; background: var(--accent);
+      border-radius: 50%; margin-left: auto; flex-shrink: 0;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* Nav Bar */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; padding: 0.65rem 0.5rem;
+      max-width: 480px; margin: 0 auto; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 1.2rem; opacity: 0.4; cursor: pointer; padding: 0.25rem 0.5rem;
+      text-decoration: none; color: var(--text); transition: opacity 0.2s;
+    }
+    .nav-item span { font-size: 0.55rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-item.active { opacity: 1; }
+    .nav-item.active span { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <div>
+      <div class="header-title">Dates</div>
+      <div class="header-subtitle" id="dateCount">Loading...</div>
+    </div>
+  </div>
+
+  <div id="calendarList"></div>
+
+  <!-- Nav -->
+  <div class="nav-bar">
+    <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
+    <a href="dates.html" class="nav-item active">📅<span>Dates</span></a>
+    <a href="schedule.html" class="nav-item">⏱️<span>Schedule</span></a>
+    <a href="route.html" class="nav-item">🗺️<span>Route</span></a>
+    <a href="more.html" class="nav-item">⋯<span>More</span></a>
+  </div>
+
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+
+    function buildCalendar(routing) {
+      var today = new Date().toISOString().split('T')[0];
+      var html = '';
+      var currentMonth = '';
+      var showCount = 0;
+      var travelCount = 0;
+
+      routing.forEach(function(day) {
+        // Month header
+        var d = new Date(day.date + 'T12:00:00');
+        var monthKey = d.getFullYear() + '-' + d.getMonth();
+        if (monthKey !== currentMonth) {
+          currentMonth = monthKey;
+          html += '<div class="month-header">' + d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + '</div>';
+        }
+
+        var isToday = day.date === today;
+        var isShow = day.type === 'SHOW';
+        if (isShow) showCount++; else travelCount++;
+
+        var dayAbbr = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+        var dayNum = d.getDate();
+
+        // Next drive info for shows
+        var driveInfo = '';
+        if (isShow && day.next_city && day.next_distance && day.next_city !== 'End of Tour') {
+          driveInfo = '→ ' + day.next_city + ' • ' + day.next_distance + ' / ' + day.next_drive_time;
+        }
+
+        // Stopover
+        var stopoverHtml = '';
+        if (day.stopover) {
+          stopoverHtml = '<div class="stopover-bar">' +
+            '<div class="stopover-title">🏨 Stopover: ' + day.stopover.city + '</div>' +
+            '<div class="stopover-text">' + (day.stopover.highlights || []).slice(0, 3).join(' • ') + '</div>' +
+            '</div>';
+        }
+
+        html += '<div class="date-card ' + day.type.toLowerCase() + (isToday ? ' today' : '') + '" id="date-' + day.date + '">' +
+          '<div class="date-header" onclick="toggleDate(\'' + day.date + '\')">' +
+          '<div class="date-day"><div class="date-day-num">' + dayNum + '</div><div class="date-day-abbrev">' + dayAbbr + '</div></div>' +
+          '<div class="date-info">' +
+          (isShow
+            ? '<div class="date-venue">' + (day.venue || day.city) + '</div><div class="date-city">' + day.city + '</div>' + (driveInfo ? '<div class="date-drive">' + driveInfo + '</div>' : '')
+            : '<div class="date-venue">' + day.from + ' → ' + day.to + '</div><div class="date-city">' + day.distance + ' • ' + day.drive_time + '</div>'
+          ) +
+          '</div>' +
+          '<span class="date-badge ' + day.type.toLowerCase() + '">' + day.type + '</span>' +
+          (isToday ? '<div class="today-dot"></div>' : '') +
+          '<span class="date-expand-icon">▼</span>' +
+          '</div>' +
+          '<div class="date-detail">' +
+          '<div class="detail-section">' +
+          (isShow
+            ? '<div class="detail-label">Venue Info</div>' +
+              '<div class="detail-row"><span class="detail-key">Venue</span><span class="detail-val">' + (day.venue || '—') + '</span></div>' +
+              '<div class="detail-row"><span class="detail-key">City</span><span class="detail-val">' + day.city + '</span></div>' +
+              '<div class="detail-row"><span class="detail-key">Load In</span><span class="detail-val" style="color:var(--cyan)">12:00 PM</span></div>' +
+              '<div class="detail-row"><span class="detail-key">Doors</span><span class="detail-val" style="color:var(--cyan)">07:00 PM</span></div>' +
+              '<div class="detail-row"><span class="detail-key">Show</span><span class="detail-val" style="color:var(--accent)">09:00 PM</span></div>' +
+              '<div class="detail-row"><span class="detail-key">Curfew</span><span class="detail-val">11:00 PM</span></div>'
+            : '<div class="detail-label">Travel</div>' +
+              '<div class="detail-row"><span class="detail-key">From</span><span class="detail-val">' + day.from + '</span></div>' +
+              '<div class="detail-row"><span class="detail-key">To</span><span class="detail-val">' + day.to + '</span></div>' +
+              '<div class="detail-row"><span class="detail-key">Distance</span><span class="detail-val">' + day.distance + '</span></div>' +
+              '<div class="detail-row"><span class="detail-key">Drive Time</span><span class="detail-val">' + day.drive_time + '</span></div>'
+          ) +
+          '</div>' +
+          stopoverHtml +
+          (isShow && day.next_city && day.next_city !== 'End of Tour'
+            ? '<div class="detail-section"><div class="detail-label">Next Leg</div>' +
+              '<div class="detail-row"><span class="detail-key">Next Show</span><span class="detail-val">' + day.next_city + '</span></div>' +
+              '<div class="detail-row"><span class="detail-key">Distance</span><span class="detail-val">' + day.next_distance + '</span></div>' +
+              '<div class="detail-row"><span class="detail-key">Drive Time</span><span class="detail-val">' + day.next_drive_time + '</span></div></div>'
+            : '') +
+          '<div class="detail-actions">' +
+          '<a href="edit-day.html?date=' + day.date + '" class="detail-action">✏️ Edit Day</a>' +
+          '<a href="schedule.html?date=' + day.date + '" class="detail-action">📋 Day Sheet</a>' +
+          '</div>' +
+          '</div>' +
+          '</div>';
+      });
+
+      document.getElementById('calendarList').innerHTML = html;
+      document.getElementById('dateCount').textContent = showCount + ' shows • ' + travelCount + ' travel days • ' + routing.length + ' total';
+    }
+
+    function toggleDate(date) {
+      var card = document.getElementById('date-' + date);
+      card.classList.toggle('open');
+    }
+
+    // Load routing data
+    fetch('data/routing_data.json')
+      .then(function(res) { return res.json(); })
+      .then(function(data) { buildCalendar(data.routing); })
+      .catch(function() {
+        document.getElementById('calendarList').innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--dim);">Tour routing data will appear here.</div>';
+      });
+  </script>
+</body>
+</html>

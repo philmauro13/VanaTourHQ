@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Schedule</title>
+  <script src="config.js"></script>
+  <script src="js/supabase.js"></script>
+  <style>
+    :root {
+      --bg: #07070c; --bg-card: #101018; --bg-elevated: #181822;
+      --border: #1f1f2e; --text: #f0f0f5; --dim: #8888a0;
+      --muted: #555570; --accent: #d90429; --cyan: #22d3ee;
+      --success: #22c55e; --warning: #f59e0b; --support-blue: #0077b6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 100px;
+    }
+
+    .header-bar {
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+    }
+    .header-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
+    .header-subtitle { font-size: 0.75rem; color: var(--dim); margin-top: 2px; }
+
+    /* Day selector */
+    .day-selector {
+      display: flex; gap: 0.5rem; padding: 0.75rem 1rem;
+      overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .day-selector::-webkit-scrollbar { display: none; }
+    .day-chip {
+      flex-shrink: 0; padding: 0.45rem 0.9rem;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 100px; font-size: 0.7rem; font-weight: 500;
+      color: var(--dim); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .day-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .day-chip.show { border-color: rgba(217, 4, 41, 0.3); }
+    .day-chip.travel { border-color: rgba(34, 197, 94, 0.3); }
+
+    /* Schedule Header */
+    .schedule-header {
+      padding: 1rem 1.25rem; text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .schedule-date {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      color: var(--accent); letter-spacing: 0.05em; margin-bottom: 0.25rem;
+    }
+    .schedule-venue { font-size: 1.25rem; font-weight: 700; }
+    .schedule-city { font-size: 0.85rem; color: var(--dim); margin-top: 2px; }
+
+    /* Time blocks */
+    .time-block {
+      padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .icon-box {
+      width: 38px; height: 38px; background: var(--bg-elevated);
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .info { flex-grow: 1; }
+    .time {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+      color: var(--cyan); margin-bottom: 1px; font-weight: 500;
+    }
+    .event { font-size: 0.9rem; font-weight: 600; }
+    .status {
+      font-size: 0.6rem; margin-top: 0.3rem; display: inline-block;
+      padding: 0.15rem 0.4rem; border-radius: 3px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .status.headliner { background: rgba(217, 4, 41, 0.15); color: var(--accent); }
+    .status.support { background: rgba(0, 119, 182, 0.15); color: var(--support-blue); }
+    .status.logistics { background: rgba(108, 117, 125, 0.15); color: var(--dim); }
+    .status.travel { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+
+    /* Info cards */
+    .info-card {
+      margin: 0.75rem 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .info-card-header {
+      padding: 0.6rem 0.75rem; font-size: 0.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim);
+      border-bottom: 1px solid var(--border); background: var(--bg-elevated);
+    }
+    .info-row {
+      display: flex; justify-content: space-between; padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border); font-size: 0.8rem;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-key { color: var(--dim); }
+    .info-val { font-weight: 600; text-align: right; }
+
+    /* Edit day link */
+    .edit-link {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.4rem; margin: 0.75rem 1rem; padding: 0.75rem;
+      background: var(--accent); color: white; border: none;
+      border-radius: 10px; font-size: 0.9rem; font-weight: 600;
+      text-decoration: none; cursor: pointer;
+    }
+
+    /* Nav */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; padding: 0.65rem 0.5rem;
+      max-width: 480px; margin: 0 auto; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 1.2rem; opacity: 0.4; cursor: pointer; padding: 0.25rem 0.5rem;
+      text-decoration: none; color: var(--text); transition: opacity 0.2s;
+    }
+    .nav-item span { font-size: 0.55rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-item.active { opacity: 1; }
+    .nav-item.active span { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <div class="header-title">Schedule</div>
+    <div class="header-subtitle" id="dayLabel">Loading...</div>
+  </div>
+
+  <div class="day-selector" id="daySelector"></div>
+  <div id="dayContent"></div>
+
+  <a href="edit-day.html" class="edit-link">✏️ Edit This Day</a>
+
+  <div class="nav-bar">
+    <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
+    <a href="dates.html" class="nav-item">📅<span>Dates</span></a>
+    <a href="schedule.html" class="nav-item active">⏱️<span>Schedule</span></a>
+    <a href="route.html" class="nav-item">🗺️<span>Route</span></a>
+    <a href="more.html" class="nav-item">⋯<span>More</span></a>
+  </div>
+
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+
+    var allDays = [];
+    var currentIndex = 0;
+
+    // Default schedule for a show day
+    function defaultEntries() {
+      return [
+        { time: '12:00 PM', event: 'Load-In', type: 'logistics', icon: '🚛' },
+        { time: '04:00 PM', event: 'Soundcheck: Support', type: 'support', icon: '🎛️' },
+        { time: '06:00 PM', event: 'Soundcheck: Headliner', type: 'headliner', icon: '🎤' },
+        { time: '06:30 PM', event: 'VIP Meet & Greet', type: 'headliner', icon: '🤝' },
+        { time: '07:00 PM', event: 'Doors Open', type: 'logistics', icon: '🚪' },
+        { time: '09:00 PM', event: 'Headliner Set', type: 'headliner', icon: '🎸' },
+        { time: '11:00 PM', event: 'Curfew / Hard Stop', type: 'logistics', icon: '🛑' },
+        { time: '01:30 AM', event: 'Bus Call / Wheels Up', type: 'travel', icon: '🚌' }
+      ];
+    }
+
+    function defaultTravelEntries() {
+      return [
+        { time: '11:00 AM', event: 'Hotel Checkout', type: 'logistics', icon: '🏨' },
+        { time: '12:00 PM', event: 'Drive Day', type: 'travel', icon: '🚛' },
+        { time: '06:00 PM', event: 'Arrive at Hotel', type: 'logistics', icon: '🏨' }
+      ];
+    }
+
+    function renderDaySelector() {
+      var html = '';
+      allDays.forEach(function(day, i) {
+        var cls = 'day-chip' + (i === currentIndex ? ' active' : '') + ' ' + day.type.toLowerCase();
+        var d = new Date(day.date + 'T12:00:00');
+        var label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        html += '<div class="' + cls + '" onclick="selectDay(' + i + ')">' + label + '</div>';
+      });
+      document.getElementById('daySelector').innerHTML = html;
+    }
+
+    function selectDay(i) {
+      currentIndex = i;
+      renderDaySelector();
+      renderDay();
+    }
+
+    function renderDay() {
+      var day = allDays[currentIndex];
+      var isShow = day.type === 'SHOW';
+      var entries = isShow ? defaultEntries() : defaultTravelEntries();
+
+      // Load saved entries from localStorage
+      var savedDays = JSON.parse(localStorage.getItem('tourhq_days') || '{}');
+      if (savedDays[day.date] && savedDays[day.date].entries) {
+        entries = savedDays[day.date].entries;
+      }
+
+      // Header
+      document.getElementById('dayLabel').textContent = day.city || (day.from + ' → ' + day.to);
+      var d = new Date(day.date + 'T12:00:00');
+      var dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+      var html = '<div class="schedule-header">' +
+        '<div class="schedule-date">' + dateStr + '</div>' +
+        '<div class="schedule-venue">' + (isShow ? (day.venue || 'Show Day') : 'Travel Day') + '</div>' +
+        '<div class="schedule-city">' + (isShow ? day.city : day.from + ' → ' + day.to) + '</div>' +
+        '</div>';
+
+      // Time blocks
+      entries.forEach(function(entry) {
+        html += '<div class="time-block">' +
+          '<div class="icon-box">' + (entry.icon || '⏱️') + '</div>' +
+          '<div class="info">' +
+          '<div class="time">' + entry.time + '</div>' +
+          '<div class="event">' + entry.event + '</div>' +
+          '<div class="status ' + entry.type + '">' + entry.type.toUpperCase() + '</div>' +
+          '</div></div>';
+      });
+
+      // Venue info card
+      if (isShow) {
+        var saved = savedDays[day.date] || {};
+        html += '<div class="info-card">' +
+          '<div class="info-card-header">📍 Venue Info</div>' +
+          '<div class="info-row"><span class="info-key">Venue</span><span class="info-val">' + (saved.venue || day.venue || '—') + '</span></div>' +
+          '<div class="info-row"><span class="info-key">Address</span><span class="info-val">' + (saved.address || '—') + '</span></div>' +
+          '<div class="info-row"><span class="info-key">Promoter</span><span class="info-val">' + (saved.promoter || '—') + '</span></div>' +
+          '<div class="info-row"><span class="info-key">Hotel</span><span class="info-val">' + (saved.hotel || '—') + '</span></div>' +
+          '</div>';
+
+        // Next leg
+        if (day.next_city && day.next_city !== 'End of Tour') {
+          html += '<div class="info-card">' +
+            '<div class="info-card-header">🚛 Next Leg</div>' +
+            '<div class="info-row"><span class="info-key">Next</span><span class="info-val">' + day.next_city + '</span></div>' +
+            '<div class="info-row"><span class="info-key">Distance</span><span class="info-val">' + day.next_distance + '</span></div>' +
+            '<div class="info-row"><span class="info-key">Drive Time</span><span class="info-val">' + day.next_drive_time + '</span></div>' +
+            '</div>';
+        }
+      } else {
+        html += '<div class="info-card">' +
+          '<div class="info-card-header">🚛 Travel Details</div>' +
+          '<div class="info-row"><span class="info-key">From</span><span class="info-val">' + day.from + '</span></div>' +
+          '<div class="info-row"><span class="info-key">To</span><span class="info-val">' + day.to + '</span></div>' +
+          '<div class="info-row"><span class="info-key">Distance</span><span class="info-val">' + day.distance + '</span></div>' +
+          '<div class="info-row"><span class="info-key">Drive Time</span><span class="info-val">' + day.drive_time + '</span></div>' +
+          '</div>';
+      }
+
+      // Notes
+      if (savedDays[day.date] && savedDays[day.date].notes) {
+        html += '<div class="info-card"><div class="info-card-header">📝 Notes</div>' +
+          '<div style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.5;">' + savedDays[day.date].notes + '</div></div>';
+      }
+
+      document.getElementById('dayContent').innerHTML = html;
+
+      // Update edit link to pass date
+      document.querySelector('.edit-link').href = 'edit-day.html?date=' + day.date;
+    }
+
+    // Load routing
+    fetch('data/routing_data.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        allDays = data.routing;
+
+        // Find today or first upcoming show
+        var today = new Date().toISOString().split('T')[0];
+        var todayIdx = allDays.findIndex(function(d) { return d.date >= today; });
+        if (todayIdx >= 0) currentIndex = todayIdx;
+
+        renderDaySelector();
+        renderDay();
+      })
+      .catch(function() {
+        document.getElementById('dayContent').innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--dim);">Tour data will appear here.</div>';
+      });
+  </script>
+</body>
+</html>
