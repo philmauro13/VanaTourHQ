@@ -19,38 +19,30 @@
       font-family: 'Inter', -apple-system, sans-serif;
       min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 100px;
     }
-
     .header-bar {
       background: var(--bg-card); border-bottom: 1px solid var(--border);
       padding: 0.75rem 1.25rem;
     }
-    .header-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
-
-    .menu-group {
-      padding: 0.75rem 1rem;
-    }
+    .header-title { font-size: 1.1rem; font-weight: 700; }
+    .menu-group { padding: 0.75rem 1rem; }
     .menu-group-title {
       font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
       letter-spacing: 0.08em; color: var(--muted); padding: 0.5rem 0.25rem;
     }
-
     .menu-item {
       display: flex; align-items: center; gap: 0.75rem;
       padding: 0.875rem 0.75rem; border-bottom: 1px solid var(--border);
-      text-decoration: none; color: var(--text); transition: background 0.2s;
-      border-radius: 10px; margin-bottom: 2px;
+      text-decoration: none; color: var(--text); border-radius: 10px; margin-bottom: 2px;
     }
     .menu-item:hover { background: var(--bg-elevated); }
     .menu-icon {
       width: 36px; height: 36px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; flex-shrink: 0; background: var(--bg-elevated);
-      border: 1px solid var(--border);
+      font-size: 1rem; flex-shrink: 0; background: var(--bg-elevated); border: 1px solid var(--border);
     }
     .menu-label { font-size: 0.9rem; font-weight: 600; flex-grow: 1; }
     .menu-desc { font-size: 0.7rem; color: var(--dim); margin-top: 1px; }
     .menu-arrow { color: var(--muted); font-size: 0.8rem; }
-
     .tour-info {
       margin: 0.75rem 1rem; background: var(--bg-card);
       border: 1px solid var(--border); border-radius: 12px; padding: 1rem;
@@ -61,12 +53,9 @@
     .tour-btn {
       flex: 1; padding: 0.5rem; border: 1px solid var(--border);
       border-radius: 8px; background: var(--bg-elevated); color: var(--text);
-      font-size: 0.8rem; font-weight: 500; text-align: center;
-      text-decoration: none; cursor: pointer;
+      font-size: 0.8rem; font-weight: 500; text-align: center; text-decoration: none; cursor: pointer;
     }
     .tour-btn:hover { border-color: var(--accent); }
-
-    /* Nav */
     .nav-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: var(--bg-card); border-top: 1px solid var(--border);
@@ -75,8 +64,8 @@
     }
     .nav-item {
       display: flex; flex-direction: column; align-items: center; gap: 2px;
-      font-size: 1.2rem; opacity: 0.4; cursor: pointer; padding: 0.25rem 0.5rem;
-      text-decoration: none; color: var(--text); transition: opacity 0.2s;
+      font-size: 1.2rem; opacity: 0.4; padding: 0.25rem 0.5rem;
+      text-decoration: none; color: var(--text);
     }
     .nav-item span { font-size: 0.55rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
     .nav-item.active { opacity: 1; }
@@ -88,69 +77,49 @@
     <div class="header-title">More</div>
   </div>
 
-  <!-- Active Tour Info -->
   <div class="tour-info" id="tourInfo" style="display:none;">
     <div class="tour-name" id="tourName"></div>
     <div class="tour-meta" id="tourMeta"></div>
     <div class="tour-actions">
       <a href="create-tour.html" class="tour-btn">+ New Tour</a>
-      <a href="index.html" class="tour-btn">Switch Tour</a>
+      <a href="index.html" class="tour-btn">Dashboard</a>
     </div>
   </div>
 
-  <!-- Tour Operations -->
   <div class="menu-group">
     <div class="menu-group-title">Tour Operations</div>
-    <a href="settlement.html" class="menu-item">
-      <div class="menu-icon">💰</div>
-      <div><div class="menu-label">Settlement Calculator</div><div class="menu-desc">Calculate guarantee vs door deals</div></div>
-      <span class="menu-arrow">›</span>
-    </a>
-    <a href="advance.html" class="menu-item">
-      <div class="menu-icon">📋</div>
-      <div><div class="menu-label">Advance Tracker</div><div class="menu-desc">Track venue advance status</div></div>
-      <span class="menu-arrow">›</span>
-    </a>
-    <a href="market-history.html" class="menu-item">
-      <div class="menu-icon">📈</div>
-      <div><div class="menu-label">Market History</div><div class="menu-desc">Touring history for booking agents</div></div>
-      <span class="menu-arrow">›</span>
-    </a>
+    <a href="settlement.html" class="menu-item"><div class="menu-icon">💰</div><div><div class="menu-label">Settlement Calculator</div><div class="menu-desc">Calculate guarantee vs door deals</div></div><span class="menu-arrow">›</span></a>
+    <a href="advance.html" class="menu-item"><div class="menu-icon">📋</div><div><div class="menu-label">Advance Tracker</div><div class="menu-desc">Track venue advance status</div></div><span class="menu-arrow">›</span></a>
+    <a href="market-history.html" class="menu-item"><div class="menu-icon">📈</div><div><div class="menu-label">Market History</div><div class="menu-desc">Touring history for booking agents</div></div><span class="menu-arrow">›</span></a>
   </div>
 
-  <!-- Team -->
   <div class="menu-group">
     <div class="menu-group-title">Team</div>
-    <a href="crew.html" class="menu-item">
-      <div class="menu-icon">👥</div>
-      <div><div class="menu-label">Crew Board</div><div class="menu-desc">Task coordination for your crew</div></div>
-      <span class="menu-arrow">›</span>
-    </a>
-    <a href="guestlist.html" class="menu-item">
-      <div class="menu-icon">🎟️</div>
-      <div><div class="menu-label">Guest List</div><div class="menu-desc">Request and manage guest passes</div></div>
-      <span class="menu-arrow">›</span>
-    </a>
+    <a href="crew.html" class="menu-item"><div class="menu-icon">👥</div><div><div class="menu-label">Crew Board</div><div class="menu-desc">Task coordination for your crew</div></div><span class="menu-arrow">›</span></a>
   </div>
 
-  <!-- Documents -->
   <div class="menu-group">
     <div class="menu-group-title">Documents</div>
-    <a href="index.html#documents" class="menu-item">
-      <div class="menu-icon">📄</div>
-      <div><div class="menu-label">Document Vault</div><div class="menu-desc">Contracts, riders, hotel confirmations</div></div>
-      <span class="menu-arrow">›</span>
-    </a>
+    <a href="index.html#documents" class="menu-item"><div class="menu-icon">📄</div><div><div class="menu-label">Document Vault</div><div class="menu-desc">Contracts, riders, hotel confirmations</div></div><span class="menu-arrow">›</span></a>
   </div>
 
-  <!-- Account -->
+  <div class="menu-group" id="inviteSection" style="display:none;">
+    <div class="menu-group-title">Crew Management</div>
+    <div class="menu-item" onclick="openInviteModal()" style="cursor:pointer;">
+      <div class="menu-icon">✉️</div>
+      <div><div class="menu-label">Invite Crew Member</div><div class="menu-desc">Email invitation to join this tour</div></div>
+      <span class="menu-arrow">›</span>
+    </div>
+  </div>
+
+  <div class="menu-group" id="myInvites" style="display:none;">
+    <div class="menu-group-title">Your Invitations</div>
+    <div id="inviteList"></div>
+  </div>
+
   <div class="menu-group">
     <div class="menu-group-title">Account</div>
-    <a href="create-tour.html" class="menu-item">
-      <div class="menu-icon">➕</div>
-      <div><div class="menu-label">Create New Tour</div><div class="menu-desc">Start a new tour from scratch</div></div>
-      <span class="menu-arrow">›</span>
-    </a>
+    <a href="create-tour.html" class="menu-item"><div class="menu-icon">➕</div><div><div class="menu-label">Create New Tour</div><div class="menu-desc">Start a new tour from scratch</div></div><span class="menu-arrow">›</span></a>
     <div class="menu-item" onclick="logout()" style="cursor:pointer;">
       <div class="menu-icon">🚪</div>
       <div><div class="menu-label">Log Out</div><div class="menu-desc" id="userEmail"></div></div>
@@ -158,7 +127,6 @@
     </div>
   </div>
 
-  <!-- Nav -->
   <div class="nav-bar">
     <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
     <a href="dates.html" class="nav-item">📅<span>Dates</span></a>
@@ -167,19 +135,60 @@
     <a href="more.html" class="nav-item active">⋯<span>More</span></a>
   </div>
 
+  <div class="modal-overlay" id="inviteModal">
+    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 1.5rem; width: 100%; max-width: 480px; position: fixed; bottom: 0; left: 0; right: 0; margin: 0 auto;">
+      <div style="width: 36px; height: 4px; background: var(--muted); border-radius: 2px; margin: 0 auto 1rem;"></div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Invite Crew Member</h2>
+      <form onsubmit="sendInvite(event)">
+        <div style="margin-bottom: 0.875rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 500; color: var(--dim); margin-bottom: 0.4rem;">Email Address *</label>
+          <input type="email" id="inviteEmail" required placeholder="crewmember@email.com" style="width: 100%; padding: 0.75rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem;">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 500; color: var(--dim); margin-bottom: 0.4rem;">Role</label>
+          <select id="inviteRole" style="width: 100%; padding: 0.75rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.9rem;">
+            <option value="crew">Crew Member</option>
+            <option value="tour_manager">Tour Manager</option>
+          </select>
+        </div>
+        <button type="submit" style="width: 100%; padding: 0.875rem; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">Send Invitation</button>
+        <button type="button" onclick="closeInviteModal()" style="width: 100%; padding: 0.875rem; background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 0.5rem;">Cancel</button>
+      </form>
+    </div>
+  </div>
+
   <script>
     (function() {
       var user = localStorage.getItem('tourhq_current_user');
       if (!user) { window.location.href = 'landing.html'; }
-
       var u = JSON.parse(user);
       if (u.email) document.getElementById('userEmail').textContent = u.email;
-
       var tour = JSON.parse(localStorage.getItem('tourhq_current_tour') || 'null');
       if (tour) {
         document.getElementById('tourInfo').style.display = 'block';
         document.getElementById('tourName').textContent = tour.name;
         document.getElementById('tourMeta').textContent = (tour.artist || tour.artist_name) + ' • ' + (tour.startDate || tour.start_date) + ' to ' + (tour.endDate || tour.end_date);
+      }
+      if (u.role === 'tour_manager') {
+        document.getElementById('inviteSection').style.display = 'block';
+      }
+      var invitations = JSON.parse(localStorage.getItem('tourhq_invitations') || '[]');
+      var myPending = invitations.filter(function(inv) {
+        return inv.email === u.email && inv.status === 'pending';
+      });
+      if (myPending.length > 0) {
+        document.getElementById('myInvites').style.display = 'block';
+        var html = '';
+        myPending.forEach(function(inv) {
+          html += '<div style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem; margin-bottom: 0.5rem;">' +
+            '<div style="font-size: 0.9rem; font-weight: 600;">' + (inv.tour_name || 'Tour Invitation') + '</div>' +
+            '<div style="font-size: 0.75rem; color: var(--dim); margin-top: 2px;">Invited as: ' + inv.role + '</div>' +
+            '<div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">' +
+            '<div onclick="acceptInvite(\'' + inv.id + '\')" style="flex:1; padding: 0.4rem; background: rgba(34,197,94,0.1); border: 1px solid var(--success); border-radius: 6px; text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--success); cursor: pointer;">Accept</div>' +
+            '<div onclick="declineInvite(\'' + inv.id + '\')" style="flex:1; padding: 0.4rem; background: rgba(217,4,41,0.1); border: 1px solid var(--accent); border-radius: 6px; text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--accent); cursor: pointer;">Decline</div>' +
+            '</div></div>';
+        });
+        document.getElementById('inviteList').innerHTML = html;
       }
     })();
 
@@ -190,6 +199,55 @@
         try { await TourHQ.supabase.signOut(); } catch (e) {}
       }
       window.location.href = 'landing.html';
+    }
+
+    function openInviteModal() { document.getElementById('inviteModal').classList.add('active'); }
+    function closeInviteModal() { document.getElementById('inviteModal').classList.remove('active'); }
+
+    function sendInvite(e) {
+      e.preventDefault();
+      var email = document.getElementById('inviteEmail').value;
+      var role = document.getElementById('inviteRole').value;
+      var tour = JSON.parse(localStorage.getItem('tourhq_current_tour') || '{}');
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      var invitations = JSON.parse(localStorage.getItem('tourhq_invitations') || '[]');
+      invitations.push({
+        id: 'inv_' + Date.now(),
+        tour_id: tour.id || 'demo_tour',
+        tour_name: tour.name || 'Demo Tour',
+        invited_by: user.id || user.email,
+        email: email,
+        role: role,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('tourhq_invitations', JSON.stringify(invitations));
+      closeInviteModal();
+      document.getElementById('inviteEmail').value = '';
+      alert('Invitation sent to ' + email + '!');
+    }
+
+    function acceptInvite(id) {
+      var invitations = JSON.parse(localStorage.getItem('tourhq_invitations') || '[]');
+      var inv = invitations.find(function(i) { return i.id === id; });
+      if (inv) {
+        inv.status = 'accepted';
+        localStorage.setItem('tourhq_invitations', JSON.stringify(invitations));
+        var tours = JSON.parse(localStorage.getItem('tourhq_tours') || '[]');
+        var tour = tours.find(function(t) { return t.id === inv.tour_id; });
+        if (tour) localStorage.setItem('tourhq_current_tour', JSON.stringify(tour));
+        window.location.reload();
+      }
+    }
+
+    function declineInvite(id) {
+      var invitations = JSON.parse(localStorage.getItem('tourhq_invitations') || '[]');
+      var inv = invitations.find(function(i) { return i.id === id; });
+      if (inv) {
+        inv.status = 'declined';
+        localStorage.setItem('tourhq_invitations', JSON.stringify(invitations));
+        window.location.reload();
+      }
     }
   </script>
 </body>

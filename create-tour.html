@@ -144,6 +144,15 @@
     <div class="page-subtitle">Set up your tour in under 2 minutes</div>
   </div>
 
+  <!-- Quick Start -->
+  <div style="padding: 1rem; border-bottom: 1px solid var(--border);">
+    <div style="background: rgba(217, 4, 41, 0.06); border: 1px solid rgba(217, 4, 41, 0.2); border-radius: 12px; padding: 1rem;">
+      <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 4px;">⚡ Quick Start: VANA Tour</div>
+      <div style="font-size: 0.75rem; color: var(--dim); margin-bottom: 0.75rem;">Pre-fill with the VANA 46-day tour routing data including all venues and schedules.</div>
+      <button type="button" onclick="loadVanaTour()" style="width: 100%; padding: 0.6rem; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Load VANA Tour</button>
+    </div>
+  </div>
+
   <form id="createTourForm" onsubmit="handleCreateTour(event)">
     <div class="form-section">
       <div class="form-section-title">Tour Details</div>
@@ -180,6 +189,17 @@
       <div class="form-group">
         <label class="form-label">Booking Agent</label>
         <input type="text" class="form-input" id="bookingAgent" placeholder="Agency name">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Routing Data</div>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+          <input type="checkbox" id="loadRouting" style="width: 18px; height: 18px; accent-color: var(--accent);">
+          <span style="font-size: 0.9rem;">Auto-load day sheets from tour routing data</span>
+        </label>
+        <div style="font-size: 0.75rem; color: var(--dim); margin-top: 0.5rem; padding-left: 2.25rem;">Creates a day sheet entry for every date in your tour. You can edit each day after creation.</div>
       </div>
     </div>
 
@@ -280,7 +300,69 @@
       localStorage.setItem('tourhq_tours', JSON.stringify(tours));
       localStorage.setItem('tourhq_current_tour', JSON.stringify(tour));
 
+      // Load routing data if checked
+      if (document.getElementById('loadRouting').checked) {
+        try {
+          var routingRes = await fetch('data/routing_data.json');
+          var routingData = await routingRes.json();
+          var daySheets = {};
+          routingData.routing.forEach(function(day) {
+            var isShow = day.type === 'SHOW';
+            daySheets[day.date] = {
+              date: day.date,
+              venue: day.venue || '',
+              address: '',
+              promoter: '',
+              hotel: '',
+              notes: '',
+              isShow: isShow,
+              entries: isShow ? [
+                { time: '12:00 PM', event: 'Load-In', type: 'logistics', icon: '🚛' },
+                { time: '04:00 PM', event: 'Soundcheck: Support', type: 'support', icon: '🎛️' },
+                { time: '06:00 PM', event: 'Soundcheck: Headliner', type: 'headliner', icon: '🎤' },
+                { time: '07:00 PM', event: 'Doors Open', type: 'logistics', icon: '🚪' },
+                { time: '09:00 PM', event: 'Headliner Set', type: 'headliner', icon: '🎸' },
+                { time: '11:00 PM', event: 'Curfew', type: 'logistics', icon: '🛑' },
+                { time: '01:30 AM', event: 'Bus Call', type: 'travel', icon: '🚌' }
+              ] : [
+                { time: '11:00 AM', event: 'Hotel Checkout', type: 'logistics', icon: '🏨' },
+                { time: '12:00 PM', event: 'Drive Day', type: 'travel', icon: '🚛' },
+                { time: '06:00 PM', event: 'Arrive at Hotel', type: 'logistics', icon: '🏨' }
+              ]
+            };
+          });
+          localStorage.setItem('tourhq_days', JSON.stringify(daySheets));
+        } catch (err) {
+          console.log('Routing data not loaded:', err);
+        }
+      }
+
       window.location.href = 'index.html';
+    }
+
+    // Quick-start: Load VANA Tour
+    async function loadVanaTour() {
+      try {
+        var routingRes = await fetch('data/routing_data.json');
+        var routingData = await routingRes.json();
+        var routing = routingData.routing;
+        var firstShow = routing.find(function(d) { return d.type === 'SHOW'; });
+        var lastShow = routing.filter(function(d) { return d.type === 'SHOW'; }).pop();
+
+        document.getElementById('tourName').value = 'VANA — Spring 2026 Tour';
+        document.getElementById('artistName').value = 'VANA';
+        document.getElementById('startDate').value = firstShow.date;
+        document.getElementById('endDate').value = lastShow.date;
+        document.getElementById('tmName').value = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}').name || '';
+        document.getElementById('vehicleType').value = 'bus';
+        document.getElementById('driveSpeed').value = '55';
+        document.getElementById('loadRouting').checked = true;
+
+        document.getElementById('createTourForm').scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        console.error('Failed to load routing data:', err);
+        alert('Could not load routing data. Make sure data/routing_data.json exists.');
+      }
     }
   </script>
 </body>

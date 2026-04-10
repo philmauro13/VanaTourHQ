@@ -372,6 +372,13 @@
     </div>
     <div style="padding: 1rem;">
       <a href="create-tour.html" class="btn btn-primary" style="text-decoration: none; display: block; margin-bottom: 0.75rem;">+ Create New Tour</a>
+      <div id="quickStartTour" style="display: none; margin-bottom: 0.75rem;">
+        <div style="background: rgba(217,4,41,0.06); border: 1px solid rgba(217,4,41,0.2); border-radius: 12px; padding: 1rem;">
+          <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 4px;">⚡ Quick Start: VANA Tour</div>
+          <div style="font-size: 0.75rem; color: var(--dim); margin-bottom: 0.75rem;">Load the 46-day VANA Spring 2026 tour with all venues and routing.</div>
+          <button onclick="quickStartVana()" style="width: 100%; padding: 0.6rem; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Load VANA Tour</button>
+        </div>
+      </div>
       <div id="tourList"></div>
     </div>
     <div id="scheduleContent" style="display: none;">
@@ -443,6 +450,18 @@
     </div>
     <div style="padding: 0 1rem 1rem;">
       <a href="edit-day.html" class="btn btn-secondary" style="text-decoration: none; display: block; text-align: center;">✏️ Edit Day Sheet (Mobile)</a>
+    </div>
+
+    <!-- Guest List Section -->
+    <div style="padding: 1rem 1rem 0.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim);">🎟️ Guest List</div>
+        <div id="guestListCount" style="font-size: 0.7rem; color: var(--muted);"></div>
+      </div>
+      <div id="guestListSection"></div>
+      <div style="margin-top: 0.75rem;">
+        <button onclick="openGuestModal()" style="width: 100%; padding: 0.6rem; background: none; border: 1px dashed var(--border); border-radius: 8px; color: var(--dim); font-size: 0.8rem; cursor: pointer; transition: all 0.2s;">+ Request Guest Pass</button>
+      </div>
     </div>
     </div>
   </div>
@@ -899,6 +918,186 @@
         console.log('Routing data not loaded:', err);
         document.getElementById('routing-list').innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--dim);">Routing data will load when connected to your tour.</div>';
       });
+
+  // Guest List on Dashboard
+  var guestRequests = JSON.parse(localStorage.getItem('tourhq_guest_requests') || '[]');
+  var currentUser = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+  var isTourManager = currentUser.role === 'tour_manager';
+
+  function renderGuestList() {
+    var pending = guestRequests.filter(function(r) { return r.status === 'pending'; });
+    var resolved = guestRequests.filter(function(r) { return r.status !== 'pending'; });
+    var html = '';
+
+    pending.concat(resolved).forEach(function(req) {
+      var statusColor = req.status === 'approved' ? 'var(--success)' : req.status === 'denied' ? 'var(--accent)' : 'var(--warning)';
+      html += '<div style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 0.5rem;">' +
+        '<div style="display: flex; justify-content: space-between; align-items: center;">' +
+        '<div style="font-size: 0.85rem; font-weight: 600;">' + req.guest_name + '</div>' +
+        '<div style="font-size: 0.65rem; font-weight: 700; color: ' + statusColor + '; text-transform: uppercase; letter-spacing: 0.05em;">' + req.status + '</div>' +
+        '</div>' +
+        '<div style="font-size: 0.75rem; color: var(--dim); margin-top: 2px;">' + req.pass_type.toUpperCase() + ' • ' + req.guest_count + ' pass' + (req.guest_count > 1 ? 'es' : '') + '</div>' +
+        (req.notes ? '<div style="font-size: 0.75rem; color: var(--muted); margin-top: 3px;">' + req.notes + '</div>' : '') +
+        (isTourManager && req.status === 'pending'
+          ? '<div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">' +
+            '<div onclick="handleGuest(' + req.id + ', \"approved\")" style="flex:1; padding: 0.4rem; background: rgba(34,197,94,0.1); border: 1px solid var(--success); border-radius: 6px; text-align: center; font-size: 0.75rem; font-weight: 600; color: var(--success); cursor: pointer;">✓ Approve</div>' +
+            '<div onclick="handleGuest(' + req.id + ', \"denied\")" style="flex:1; padding: 0.4rem; background: rgba(217,4,41,0.1); border: 1px solid var(--accent); border-radius: 6px; text-align: center; font-size: 0.75rem; font-weight: 600; color: var(--accent); cursor: pointer;">✕ Deny</div>' +
+            '</div>'
+          : '') +
+        '</div>';
+    });
+
+    document.getElementById('guestListSection').innerHTML = html || '<div style="font-size: 0.8rem; color: var(--muted); padding: 0.5rem 0;">No guest requests for today</div>';
+    document.getElementById('guestListCount').textContent = pending.length + ' pending';
+  }
+
+  function handleGuest(id, status) {
+    var req = guestRequests.find(function(r) { return r.id === id; });
+    if (req) {
+      req.status = status;
+      localStorage.setItem('tourhq_guest_requests', JSON.stringify(guestRequests));
+      renderGuestList();
+    }
+  }
+
+  function openGuestModal() {
+    document.getElementById('guestModal').classList.add('active');
+  }
+
+  function closeGuestModal() {
+    document.getElementById('guestModal').classList.remove('active');
+  }
+
+  function submitGuestRequest(e) {
+    e.preventDefault();
+    var newReq = {
+      id: Date.now(),
+      guest_name: document.getElementById('glGuestName').value,
+      pass_type: document.getElementById('glPassType').value,
+      guest_count: parseInt(document.getElementById('glGuestCount').value) || 1,
+      guest_email: document.getElementById('glGuestEmail').value,
+      notes: document.getElementById('glNotes').value,
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
+    guestRequests.push(newReq);
+    localStorage.setItem('tourhq_guest_requests', JSON.stringify(guestRequests));
+    closeGuestModal();
+    renderGuestList();
+    document.getElementById('glGuestName').value = '';
+    document.getElementById('glGuestEmail').value = '';
+    document.getElementById('glNotes').value = '';
+    document.getElementById('glGuestCount').value = '1';
+  }
+
+  renderGuestList();
+
+  // Show quick start if no tours exist
+  (function() {
+    var tours = JSON.parse(localStorage.getItem('tourhq_tours') || '[]');
+    if (tours.length === 0) {
+      document.getElementById('quickStartTour').style.display = 'block';
+    }
+  })();
+
+  async function quickStartVana() {
+    try {
+      var routingRes = await fetch('data/routing_data.json');
+      var routingData = await routingRes.json();
+      var routing = routingData.routing;
+      var firstShow = routing.find(function(d) { return d.type === 'SHOW'; });
+      var lastShow = routing.filter(function(d) { return d.type === 'SHOW'; }).pop();
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+
+      var tour = {
+        id: 'tour_vana_2026',
+        name: 'VANA — Spring 2026 Tour',
+        artist: 'VANA',
+        startDate: firstShow.date,
+        endDate: lastShow.date,
+        tmName: user.name || '',
+        tmEmail: user.email || '',
+        bookingAgent: '',
+        vehicleType: 'bus',
+        driveSpeed: 55,
+        createdAt: new Date().toISOString(),
+        userId: user.id || user.email
+      };
+
+      var tours = JSON.parse(localStorage.getItem('tourhq_tours') || '[]');
+      tours.push(tour);
+      localStorage.setItem('tourhq_tours', JSON.stringify(tours));
+      localStorage.setItem('tourhq_current_tour', JSON.stringify(tour));
+
+      // Create day sheets
+      var daySheets = {};
+      routing.forEach(function(day) {
+        var isShow = day.type === 'SHOW';
+        daySheets[day.date] = {
+          date: day.date,
+          venue: day.venue || '',
+          address: '',
+          promoter: '',
+          hotel: '',
+          notes: '',
+          isShow: isShow,
+          entries: isShow ? [
+            { time: '12:00 PM', event: 'Load-In', type: 'logistics', icon: '🚛' },
+            { time: '04:00 PM', event: 'Soundcheck: Support', type: 'support', icon: '🎛️' },
+            { time: '06:00 PM', event: 'Soundcheck: Headliner', type: 'headliner', icon: '🎤' },
+            { time: '07:00 PM', event: 'Doors Open', type: 'logistics', icon: '🚪' },
+            { time: '09:00 PM', event: 'Headliner Set', type: 'headliner', icon: '🎸' },
+            { time: '11:00 PM', event: 'Curfew', type: 'logistics', icon: '🛑' },
+            { time: '01:30 AM', event: 'Bus Call', type: 'travel', icon: '🚌' }
+          ] : [
+            { time: '11:00 AM', event: 'Hotel Checkout', type: 'logistics', icon: '🏨' },
+            { time: '12:00 PM', event: 'Drive Day', type: 'travel', icon: '🚛' },
+            { time: '06:00 PM', event: 'Arrive at Hotel', type: 'logistics', icon: '🏨' }
+          ]
+        };
+      });
+      localStorage.setItem('tourhq_days', JSON.stringify(daySheets));
+
+      window.location.reload();
+    } catch (err) {
+      console.error('Failed to load VANA tour:', err);
+      alert('Could not load routing data. Make sure data/routing_data.json exists.');
+    }
+  }
   </script>
+
+  <!-- Guest List Modal -->
+  <div class="modal-overlay" id="guestModal">
+    <div class="modal" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 1.5rem; width: 100%; max-width: 480px;">
+      <div style="width: 36px; height: 4px; background: var(--muted); border-radius: 2px; margin: 0 auto 1rem;"></div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Request Guest Pass</h2>
+      <form onsubmit="submitGuestRequest(event)">
+        <div class="form-group" style="margin-bottom: 0.875rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 500; color: var(--dim); margin-bottom: 0.4rem;">Guest Name *</label>
+          <input type="text" id="glGuestName" class="form-input" placeholder="Full name" required style="width: 100%; padding: 0.75rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem;">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.875rem;">
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 500; color: var(--dim); margin-bottom: 0.4rem;">Pass Type</label>
+            <select id="glPassType" style="width: 100%; padding: 0.75rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.9rem;"><option value="guest">Guest</option><option value="industry">Industry</option><option value="comp">Comp</option><option value="vip">VIP</option></select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 500; color: var(--dim); margin-bottom: 0.4rem;">Count</label>
+            <input type="number" id="glGuestCount" value="1" min="1" max="10" style="width: 100%; padding: 0.75rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem;">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 0.875rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 500; color: var(--dim); margin-bottom: 0.4rem;">Email</label>
+          <input type="email" id="glGuestEmail" placeholder="guest@email.com" style="width: 100%; padding: 0.75rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem;">
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 500; color: var(--dim); margin-bottom: 0.4rem;">Notes</label>
+          <textarea id="glNotes" rows="2" placeholder="Special requests..." style="width: 100%; padding: 0.75rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.9rem; resize: vertical;"></textarea>
+        </div>
+        <button type="submit" style="width: 100%; padding: 0.875rem; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">Submit Request</button>
+        <button type="button" onclick="closeGuestModal()" style="width: 100%; padding: 0.875rem; background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 0.5rem;">Cancel</button>
+      </form>
+    </div>
+  </div>
 </body>
 </html>

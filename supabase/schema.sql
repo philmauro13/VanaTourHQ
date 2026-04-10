@@ -188,6 +188,34 @@ for update using (
   exists (select 1 from public.profiles where id = auth.uid() and role = 'tour_manager' and tour_id = guest_list_requests.tour_id)
 );
 
+-- Tour Invitations
+create table if not exists public.tour_invitations (
+  id uuid primary key default gen_random_uuid(),
+  tour_id uuid not null references public.tours(id) on delete cascade,
+  invited_by uuid not null references public.profiles(id) on delete cascade,
+  email text not null,
+  role text not null default 'crew' check (role in ('tour_manager', 'crew')),
+  status text not null default 'pending' check (status in ('pending', 'accepted', 'declined')),
+  created_at timestamptz not null default now(),
+  unique(tour_id, email)
+);
+
+alter table public.tour_invitations enable row level security;
+
+drop trigger if exists tour_invitations_set_updated_at on public.tour_invitations;
+create trigger tour_invitations_set_updated_at
+before update on public.tour_invitations
+for each row execute procedure public.handle_updated_at();
+
+create policy "users can view own invitations" on public.tour_invitations
+for select using (auth.uid() = invited_by or email = (select email from public.profiles where id = auth.uid()));
+create policy "tour managers can create invitations" on public.tour_invitations
+for insert with check (
+  exists (select 1 from public.profiles where id = auth.uid() and role = 'tour_manager')
+);
+create policy "users can update own invitations" on public.tour_invitations
+for update using (auth.uid() = invited_by or email = (select email from public.profiles where id = auth.uid()));
+
 -- Storage bucket (run this once manually if not auto-created)
 -- insert into storage.buckets (id, name, public) values ('tour-hq-docs', 'tour-hq-docs', false) on conflict do nothing;
 
