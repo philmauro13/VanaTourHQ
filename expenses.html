@@ -517,6 +517,8 @@
         <input type="text" class="form-input" id="settingsModel" placeholder="gpt-4o-mini">
       </div>
       <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+      <button class="btn" style="background: var(--cyan); color: var(--bg); margin-top: 0.5rem;" onclick="testApiKey()">🧪 Test API Key</button>
+      <div id="testResult" style="margin-top: 0.75rem; display: none; padding: 0.75rem; border-radius: 10px; font-size: 0.8rem;"></div>
       <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
     </div>
   </div>
@@ -588,6 +590,86 @@
     function closeSettings() {
       document.getElementById('settingsModal').classList.remove('active');
     }
+    function testApiKey() {
+      var key = document.getElementById('settingsApiKey').value.trim();
+      var endpoint = document.getElementById('settingsEndpoint').value.trim();
+      var model = document.getElementById('settingsModel').value.trim() || 'gpt-4o-mini';
+      var resultEl = document.getElementById('testResult');
+
+      if (!key) {
+        resultEl.style.display = 'block';
+        resultEl.style.background = 'rgba(217,4,41,0.1)';
+        resultEl.style.border = '1px solid var(--accent)';
+        resultEl.style.color = 'var(--accent)';
+        resultEl.textContent = '⚠️ No API key entered';
+        return;
+      }
+
+      resultEl.style.display = 'block';
+      resultEl.style.background = 'rgba(34,211,238,0.1)';
+      resultEl.style.border = '1px solid var(--cyan)';
+      resultEl.style.color = 'var(--cyan)';
+      resultEl.textContent = '🧪 Testing... key: ' + key.substring(0, 7) + '...' + key.substring(key.length - 4) + ' (' + key.length + ' chars)';
+
+      // Simple test with a tiny request (no image)
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      var testEndpoint = endpoint || 'https://api.openai.com/v1/chat/completions';
+      var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(testEndpoint);
+      var url = isMobile ? proxyUrl : testEndpoint;
+
+      var testPayload = JSON.stringify({
+        model: model,
+        messages: [{ role: 'user', content: 'Say hello in 1 word' }],
+        max_tokens: 5
+      });
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + key);
+      xhr.timeout = 15000;
+
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          resultEl.style.background = 'rgba(34,197,94,0.1)';
+          resultEl.style.border = '1px solid var(--success)';
+          resultEl.style.color = 'var(--success)';
+          try {
+            var data = JSON.parse(xhr.responseText);
+            var reply = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+            resultEl.textContent = '✅ API working! Response: "' + (reply || '').trim() + '"';
+          } catch(e) {
+            resultEl.textContent = '✅ API connected (status ' + xhr.status + ')';
+          }
+        } else {
+          resultEl.style.background = 'rgba(217,4,41,0.1)';
+          resultEl.style.border = '1px solid var(--accent)';
+          resultEl.style.color = 'var(--accent)';
+          resultEl.textContent = '❌ Error ' + xhr.status + ': ' + (xhr.responseText || '').substring(0, 150);
+        }
+      };
+
+      xhr.onerror = function() {
+        resultEl.style.background = 'rgba(217,4,41,0.1)';
+        resultEl.style.border = '1px solid var(--accent)';
+        resultEl.style.color = 'var(--accent)';
+        resultEl.textContent = '❌ Network blocked. Browser is blocking the request.';
+      };
+
+      xhr.ontimeout = function() {
+        resultEl.style.background = 'rgba(217,4,41,0.1)';
+        resultEl.style.border = '1px solid var(--accent)';
+        resultEl.style.color = 'var(--accent)';
+        resultEl.textContent = '❌ Timed out after 15s.';
+      };
+
+      try {
+        xhr.send(testPayload);
+      } catch(e) {
+        resultEl.textContent = '❌ Send failed: ' + e.message;
+      }
+    }
+
     function saveSettings() {
       var data = {
         endpoint: document.getElementById('settingsEndpoint').value.trim(),
