@@ -824,11 +824,27 @@
       var payloadStr = JSON.stringify(payload);
       console.log('Payload size:', payloadStr.length, 'bytes');
 
+      // Detect mobile/Brave and use CORS proxy if needed
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      var isBrave = (navigator.brave && navigator.brave.isBrave) || false;
+      var useProxy = isMobile || isBrave;
+
+      var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(endpoint);
+      var requestUrl = useProxy ? proxyUrl : endpoint;
+
+      console.log('Mobile:', isMobile, 'Brave:', isBrave, 'Using proxy:', useProxy);
+      console.log('Request URL:', requestUrl);
+
       // Use XMLHttpRequest instead of fetch — works better on iOS/Brave
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', endpoint, true);
+      xhr.open('POST', requestUrl, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('Authorization', 'Bearer ' + settings.apiKey);
+      if (!useProxy) {
+        xhr.setRequestHeader('Authorization', 'Bearer ' + settings.apiKey);
+      } else {
+        // When using proxy, send key in body header field or as part of the proxied request
+        xhr.setRequestHeader('Authorization', 'Bearer ' + settings.apiKey);
+      }
       xhr.timeout = 30000;
 
       xhr.onload = function() {
