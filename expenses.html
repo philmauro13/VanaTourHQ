@@ -758,7 +758,7 @@
           role: 'user',
           content: [
             { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: currentReceiptBase64, detail: 'high' } }
+            { type: 'image_url', image_url: { url: 'data:' + mimeType + ';base64,' + base64Data, detail: 'high' } }
           ]
         }],
         max_tokens: 300
@@ -775,8 +775,9 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         document.getElementById('scanBtn').disabled = false;
+        console.log('API response:', JSON.stringify(data).substring(0, 500));
         if (data.error) {
-          setScanStatus('error', '⚠️ ' + (data.error.message || 'API error'));
+          setScanStatus('error', '⚠️ ' + (data.error.message || data.error.type || 'API error — check console'));
           document.getElementById('scanResult').style.display = 'block';
           document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
           return;
@@ -818,8 +819,9 @@
         }
       })
       .catch(function(err) {
+        console.error('Scan error:', err);
         document.getElementById('scanBtn').disabled = false;
-        setScanStatus('error', '⚠️ Network error: ' + err.message);
+        setScanStatus('error', '⚠️ Error: ' + (err.message || 'Check browser console (F12)'));
         document.getElementById('scanResult').style.display = 'block';
         document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
       });
