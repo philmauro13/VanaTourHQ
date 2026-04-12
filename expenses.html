@@ -680,7 +680,7 @@
         if (verify && verify.apiKey === data.apiKey) {
           closeSettings();
           showToast('Settings saved ✓');
-          updateApiStatus();
+          try { updateApiStatus(); } catch(e) { console.log('Status update error:', e); }
         } else {
           alert('Settings could not be saved. Your browser may be blocking localStorage. Try disabling private browsing mode.');
         }
@@ -1118,21 +1118,24 @@
 
     function updateApiStatus() {
       var bar = document.getElementById('apiStatusBar');
+      if (!bar) return;
       var s = getSettings();
       if (s.apiKey) {
         bar.style.display = 'flex';
         bar.style.background = 'rgba(34,197,94,0.08)';
         bar.style.borderBottomColor = 'rgba(34,197,94,0.2)';
-        document.getElementById('apiStatusIcon').textContent = '✅';
-        document.getElementById('apiStatusText').textContent = 'Receipt scanner ready';
-        document.getElementById('apiStatusText').style.color = 'var(--success)';
+        var icon = document.getElementById('apiStatusIcon');
+        var text = document.getElementById('apiStatusText');
+        if (icon) icon.textContent = '✅';
+        if (text) { text.textContent = 'Receipt scanner ready'; text.style.color = 'var(--success)'; }
       } else {
         bar.style.display = 'flex';
         bar.style.background = 'rgba(217,4,41,0.08)';
         bar.style.borderBottomColor = 'rgba(217,4,41,0.2)';
-        document.getElementById('apiStatusIcon').textContent = '⚠️';
-        document.getElementById('apiStatusText').textContent = 'No API key — tap to set up receipt scanner';
-        document.getElementById('apiStatusText').style.color = 'var(--dim)';
+        var icon2 = document.getElementById('apiStatusIcon');
+        var text2 = document.getElementById('apiStatusText');
+        if (icon2) icon2.textContent = '⚠️';
+        if (text2) { text2.textContent = 'No API key — tap to set up receipt scanner'; text2.style.color = 'var(--dim)'; }
       }
     }
 
