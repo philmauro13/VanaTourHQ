@@ -611,11 +611,8 @@
       resultEl.style.color = 'var(--cyan)';
       resultEl.textContent = '🧪 Testing... key: ' + key.substring(0, 7) + '...' + key.substring(key.length - 4) + ' (' + key.length + ' chars)';
 
-      // Simple test with a tiny request (no image)
-      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      // Use the endpoint directly (Worker handles CORS)
       var testEndpoint = endpoint || 'https://api.openai.com/v1/chat/completions';
-      var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(testEndpoint);
-      var url = isMobile ? proxyUrl : testEndpoint;
 
       var testPayload = JSON.stringify({
         model: model,
@@ -624,7 +621,7 @@
       });
 
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', url, true);
+      xhr.open('POST', testEndpoint, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.setRequestHeader('Authorization', 'Bearer ' + key);
       xhr.timeout = 15000;
@@ -922,12 +919,7 @@
       var xhr = new XMLHttpRequest();
       xhr.open('POST', requestUrl, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
-      if (!useProxy) {
-        xhr.setRequestHeader('Authorization', 'Bearer ' + settings.apiKey);
-      } else {
-        // When using proxy, send key in body header field or as part of the proxied request
-        xhr.setRequestHeader('Authorization', 'Bearer ' + settings.apiKey);
-      }
+      xhr.setRequestHeader('Authorization', 'Bearer ' + settings.apiKey);
       xhr.timeout = 30000;
 
       xhr.onload = function() {
