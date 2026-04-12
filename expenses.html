@@ -564,7 +564,15 @@
 
     // ============ SETTINGS ============
     function getSettings() {
-      return JSON.parse(localStorage.getItem('tourhq_scan_settings') || '{}');
+      try {
+        var raw = localStorage.getItem('tourhq_scan_settings');
+        if (!raw) return {};
+        var parsed = JSON.parse(raw);
+        return (parsed && parsed.apiKey) ? parsed : {};
+      } catch(e) {
+        console.error('Settings read error:', e);
+        return {};
+      }
     }
     function openSettings() {
       var s = getSettings();
@@ -572,18 +580,35 @@
       document.getElementById('settingsApiKey').value = s.apiKey || '';
       document.getElementById('settingsModel').value = s.model || 'gpt-4o-mini';
       document.getElementById('settingsModal').classList.add('active');
+      // Focus the API key field if empty
+      if (!s.apiKey) {
+        setTimeout(function() { document.getElementById('settingsApiKey').focus(); }, 300);
+      }
     }
     function closeSettings() {
       document.getElementById('settingsModal').classList.remove('active');
     }
     function saveSettings() {
-      localStorage.setItem('tourhq_scan_settings', JSON.stringify({
-        endpoint: document.getElementById('settingsEndpoint').value,
-        apiKey: document.getElementById('settingsApiKey').value,
-        model: document.getElementById('settingsModel').value
-      }));
-      closeSettings();
-      showToast('Settings saved ✓');
+      var data = {
+        endpoint: document.getElementById('settingsEndpoint').value.trim(),
+        apiKey: document.getElementById('settingsApiKey').value.trim(),
+        model: document.getElementById('settingsModel').value.trim()
+      };
+      // Save and verify
+      try {
+        localStorage.setItem('tourhq_scan_settings', JSON.stringify(data));
+        var verify = JSON.parse(localStorage.getItem('tourhq_scan_settings'));
+        if (verify && verify.apiKey === data.apiKey) {
+          closeSettings();
+          showToast('Settings saved ✓');
+          updateApiStatus();
+        } else {
+          alert('Settings could not be saved. Your browser may be blocking localStorage. Try disabling private browsing mode.');
+        }
+      } catch(e) {
+        console.error('Save error:', e);
+        alert('Could not save settings: ' + e.message);
+      }
     }
     function toggleKeyVisibility() {
       var input = document.getElementById('settingsApiKey');
@@ -965,7 +990,28 @@
       document.getElementById('expenseList').innerHTML = html;
     }
 
+    function updateApiStatus() {
+      var bar = document.getElementById('apiStatusBar');
+      var s = getSettings();
+      if (s.apiKey) {
+        bar.style.display = 'flex';
+        bar.style.background = 'rgba(34,197,94,0.08)';
+        bar.style.borderBottomColor = 'rgba(34,197,94,0.2)';
+        document.getElementById('apiStatusIcon').textContent = '✅';
+        document.getElementById('apiStatusText').textContent = 'Receipt scanner ready';
+        document.getElementById('apiStatusText').style.color = 'var(--success)';
+      } else {
+        bar.style.display = 'flex';
+        bar.style.background = 'rgba(217,4,41,0.08)';
+        bar.style.borderBottomColor = 'rgba(217,4,41,0.2)';
+        document.getElementById('apiStatusIcon').textContent = '⚠️';
+        document.getElementById('apiStatusText').textContent = 'No API key — tap to set up receipt scanner';
+        document.getElementById('apiStatusText').style.color = 'var(--dim)';
+      }
+    }
+
     render();
+    updateApiStatus();
   </script>
 </body>
 </html>
