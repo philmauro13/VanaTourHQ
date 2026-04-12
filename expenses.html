@@ -54,7 +54,6 @@
     .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
     .page-subtitle { color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem; }
 
-    /* Day Selector */
     .day-selector {
       display: flex; gap: 0.5rem; padding: 0.75rem 1rem;
       overflow-x: auto; border-bottom: 1px solid var(--border);
@@ -69,7 +68,6 @@
     }
     .day-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
 
-    /* Stats */
     .stats-bar {
       display: grid; grid-template-columns: repeat(3, 1fr);
       gap: 0.5rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
@@ -87,21 +85,21 @@
       text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;
     }
 
-    /* Quick Add Bar */
     .quick-add {
-      display: grid; grid-template-columns: repeat(4, 1fr);
+      display: grid; grid-template-columns: repeat(5, 1fr);
       gap: 0.4rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
     }
     .quick-btn {
-      padding: 0.6rem 0.25rem; background: var(--bg-elevated);
+      padding: 0.6rem 0.15rem; background: var(--bg-elevated);
       border: 1px solid var(--border); border-radius: 8px;
-      font-size: 0.6rem; font-weight: 600; color: var(--dim);
+      font-size: 0.55rem; font-weight: 600; color: var(--dim);
       cursor: pointer; text-align: center; transition: all 0.2s;
     }
     .quick-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .quick-btn.scan-btn { border-color: var(--cyan); color: var(--cyan); }
+    .quick-btn.scan-btn:hover { background: rgba(34, 211, 238, 0.1); }
     .quick-btn .icon { font-size: 1rem; display: block; margin-bottom: 2px; }
 
-    /* Expense List */
     .expense-section-title {
       padding: 1rem 1.25rem 0.5rem; font-size: 0.7rem; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim);
@@ -132,6 +130,12 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.9rem; font-weight: 700; color: var(--accent);
     }
+    .expense-receipt-badge {
+      position: absolute; top: -4px; right: -4px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--cyan); display: flex; align-items: center;
+      justify-content: center; font-size: 0.55rem;
+    }
     .expense-delete {
       position: absolute; top: 0.5rem; right: 0.5rem;
       width: 20px; height: 20px; border-radius: 50%;
@@ -142,7 +146,6 @@
     }
     .expense-card:hover .expense-delete { opacity: 1; }
 
-    /* Add Expense Modal */
     .modal-overlay {
       display: none; position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -153,7 +156,7 @@
     .modal {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 20px 20px 0 0; padding: 1.5rem;
-      width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
+      width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
     }
     .modal-handle {
       width: 36px; height: 4px; background: var(--muted);
@@ -173,7 +176,6 @@
     .form-input:focus { border-color: var(--accent); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 
-    /* Category Selector */
     .cat-grid {
       display: grid; grid-template-columns: repeat(3, 1fr);
       gap: 0.5rem;
@@ -201,7 +203,6 @@
       border: 1px solid var(--border); margin-top: 0.5rem;
     }
 
-    /* Add button */
     .add-btn {
       position: fixed; bottom: 80px; right: calc(50% - 240px + 1rem);
       width: 56px; height: 56px; border-radius: 50%;
@@ -212,7 +213,6 @@
     }
     .add-btn:hover { transform: scale(1.1); }
 
-    /* Export bar */
     .export-bar {
       margin: 0.75rem 1rem; display: flex; gap: 0.5rem;
     }
@@ -224,13 +224,11 @@
     }
     .export-btn:hover { border-color: var(--cyan); color: var(--cyan); }
 
-    /* Empty */
     .empty-state {
       padding: 3rem 2rem; text-align: center; color: var(--dim);
     }
     .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
 
-    /* Nav */
     .nav-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: var(--bg-card); border-top: 1px solid var(--border);
@@ -246,7 +244,6 @@
     .nav-item.active { opacity: 1; }
     .nav-item.active span { color: var(--accent); }
 
-    /* Toast */
     .toast {
       position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
       background: var(--bg-elevated); border: 1px solid var(--success);
@@ -256,14 +253,81 @@
       pointer-events: none;
     }
     .toast.show { opacity: 1; }
+
+    /* Receipt Scanner Styles */
+    .scan-section {
+      border: 2px dashed var(--border); border-radius: 12px;
+      padding: 1.5rem; text-align: center; margin-bottom: 1rem;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .scan-section:hover { border-color: var(--cyan); background: rgba(34, 211, 238, 0.04); }
+    .scan-section.has-image { border-style: solid; border-color: var(--cyan); padding: 0.75rem; }
+    .scan-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .scan-text { font-size: 0.85rem; font-weight: 600; color: var(--cyan); }
+    .scan-hint { font-size: 0.7rem; color: var(--dim); margin-top: 0.25rem; }
+    .receipt-preview {
+      width: 100%; max-height: 200px; object-fit: contain;
+      border-radius: 8px;
+    }
+    .receipt-actions {
+      display: flex; gap: 0.5rem; margin-top: 0.5rem;
+    }
+    .receipt-action-btn {
+      flex: 1; padding: 0.5rem; border: 1px solid var(--border);
+      border-radius: 8px; background: var(--bg-elevated);
+      color: var(--dim); font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; text-align: center; transition: all 0.2s;
+    }
+    .receipt-action-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .scan-status {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem; margin-bottom: 1rem;
+      border-radius: 10px; font-size: 0.8rem; font-weight: 500;
+    }
+    .scan-status.scanning {
+      background: rgba(34, 211, 238, 0.1); border: 1px solid var(--cyan); color: var(--cyan);
+    }
+    .scan-status.success {
+      background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); color: var(--success);
+    }
+    .scan-status.error {
+      background: rgba(217, 4, 41, 0.1); border: 1px solid var(--accent); color: var(--accent);
+    }
+    .scan-spinner {
+      width: 16px; height: 16px; border: 2px solid var(--cyan);
+      border-top-color: transparent; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Settings gear */
+    .settings-btn {
+      position: absolute; top: 0.75rem; right: 3.5rem;
+      background: none; border: none; font-size: 1.2rem;
+      cursor: pointer; opacity: 0.4; transition: opacity 0.2s;
+    }
+    .settings-btn:hover { opacity: 1; }
+
+    .api-key-row {
+      display: flex; gap: 0.5rem; align-items: center;
+    }
+    .api-key-row input { flex: 1; }
+    .api-key-row button {
+      padding: 0.75rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--dim); font-size: 0.8rem; cursor: pointer;
+    }
+    .api-key-row button:hover { border-color: var(--cyan); color: var(--cyan); }
   </style>
 </head>
 <body>
-  <div class="user-bar">
+  <div class="user-bar" style="position:relative;">
     <div class="user-info">
       <div class="user-avatar" id="userAvatar">P</div>
       <span class="user-name" id="userName">Loading...</span>
     </div>
+    <button class="settings-btn" onclick="openSettings()" title="API Settings">⚙️</button>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 
@@ -277,7 +341,6 @@
     <div class="day-chip active" data-date="all" onclick="filterDay('all')">All Days</div>
   </div>
 
-  <!-- Stats -->
   <div class="stats-bar">
     <div class="stat-item">
       <div class="stat-number" id="statToday" style="color: var(--accent);">$0</div>
@@ -293,8 +356,10 @@
     </div>
   </div>
 
-  <!-- Quick Add -->
   <div class="quick-add">
+    <div class="quick-btn scan-btn" onclick="openScanModal()">
+      <span class="icon">📷</span>Scan
+    </div>
     <div class="quick-btn" onclick="quickAdd('fuel', 'Gas', 60)">
       <span class="icon">⛽</span>Fuel
     </div>
@@ -311,7 +376,6 @@
 
   <div id="expenseList"></div>
 
-  <!-- Export -->
   <div class="export-bar">
     <button class="export-btn" onclick="exportCSV()">📄 Export CSV</button>
     <a href="budget.html" class="export-btn" style="text-decoration:none; display:block;">💰 View Budget</a>
@@ -321,7 +385,7 @@
 
   <div class="toast" id="toast">Saved!</div>
 
-  <!-- Modal -->
+  <!-- Add Expense Modal -->
   <div class="modal-overlay" id="addModal">
     <div class="modal">
       <div class="modal-handle"></div>
@@ -374,6 +438,89 @@
     </div>
   </div>
 
+  <!-- Scan Receipt Modal -->
+  <div class="modal-overlay" id="scanModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>📷 Scan Receipt</h2>
+      <div id="scanStatus"></div>
+      <div class="scan-section" id="scanArea" onclick="document.getElementById('receiptInput').click()">
+        <div class="scan-icon">📸</div>
+        <div class="scan-text">Tap to capture or upload</div>
+        <div class="scan-hint">Take a photo of your receipt or pick from gallery</div>
+        <input type="file" id="receiptInput" accept="image/*" capture="environment" style="display:none;" onchange="handleReceiptImage(event)">
+      </div>
+      <div id="receiptPreview" style="display:none;">
+        <img id="receiptImg" class="receipt-preview" alt="Receipt">
+        <div class="receipt-actions">
+          <button class="receipt-action-btn" onclick="document.getElementById('receiptInput').click()">🔄 Retake</button>
+          <button class="receipt-action-btn" onclick="scanReceipt()" id="scanBtn">🔍 Scan Receipt</button>
+        </div>
+      </div>
+      <div id="scanResult" style="display:none; margin-top:1rem;">
+        <div class="form-group">
+          <label class="form-label">Merchant</label>
+          <input type="text" class="form-input" id="scanMerchant">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Amount</label>
+            <input type="number" class="form-input" id="scanAmount" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="scanDate">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <div class="cat-grid" id="scanCatGrid">
+            <div class="cat-option" data-cat="fuel" onclick="selectScanCat(this)"><span class="cat-emoji">⛽</span>Fuel</div>
+            <div class="cat-option" data-cat="food" onclick="selectScanCat(this)"><span class="cat-emoji">🍔</span>Food</div>
+            <div class="cat-option" data-cat="lodging" onclick="selectScanCat(this)"><span class="cat-emoji">🏨</span>Lodging</div>
+            <div class="cat-option" data-cat="perdiem" onclick="selectScanCat(this)"><span class="cat-emoji">💵</span>Per Diem</div>
+            <div class="cat-option" data-cat="production" onclick="selectScanCat(this)"><span class="cat-emoji">🎛️</span>Production</div>
+            <div class="cat-option" data-cat="misc" onclick="selectScanCat(this)"><span class="cat-emoji">📦</span>Misc</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <input type="text" class="form-input" id="scanNotes">
+        </div>
+        <button class="btn btn-primary" onclick="saveScannedExpense()">💾 Save Expense</button>
+        <button class="btn btn-secondary" onclick="closeScanModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>⚙️ Receipt Scanner Settings</h2>
+      <p style="font-size:0.8rem; color:var(--dim); margin-bottom:1rem; line-height:1.5;">
+        To enable AI receipt scanning, provide an API key for any OpenAI-compatible vision endpoint. This stays on your device only.
+      </p>
+      <div class="form-group">
+        <label class="form-label">API Endpoint</label>
+        <input type="text" class="form-input" id="settingsEndpoint" placeholder="https://api.openai.com/v1/chat/completions">
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Key</label>
+        <div class="api-key-row">
+          <input type="password" class="form-input" id="settingsApiKey" placeholder="sk-...">
+          <button type="button" onclick="toggleKeyVisibility()">👁️</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Model</label>
+        <input type="text" class="form-input" id="settingsModel" placeholder="gpt-4o-mini">
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+      <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
+    </div>
+  </div>
+
   <div class="nav-bar">
     <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
     <a href="dates.html" class="nav-item">📅<span>Dates</span></a>
@@ -401,6 +548,8 @@
     var expenses = JSON.parse(localStorage.getItem('tourhq_expenses') || '[]');
     var filterDate = 'all';
     var selectedCat = 'fuel';
+    var scanSelectedCat = 'misc';
+    var currentReceiptBase64 = null;
 
     var catMeta = {
       fuel: { icon: '⛽', color: '#f59e0b', name: 'Fuel & Transport' },
@@ -411,13 +560,46 @@
       misc: { icon: '📦', color: '#8888a0', name: 'Miscellaneous' }
     };
 
-    // Set default date
     document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
 
+    // ============ SETTINGS ============
+    function getSettings() {
+      return JSON.parse(localStorage.getItem('tourhq_scan_settings') || '{}');
+    }
+    function openSettings() {
+      var s = getSettings();
+      document.getElementById('settingsEndpoint').value = s.endpoint || 'https://api.openai.com/v1/chat/completions';
+      document.getElementById('settingsApiKey').value = s.apiKey || '';
+      document.getElementById('settingsModel').value = s.model || 'gpt-4o-mini';
+      document.getElementById('settingsModal').classList.add('active');
+    }
+    function closeSettings() {
+      document.getElementById('settingsModal').classList.remove('active');
+    }
+    function saveSettings() {
+      localStorage.setItem('tourhq_scan_settings', JSON.stringify({
+        endpoint: document.getElementById('settingsEndpoint').value,
+        apiKey: document.getElementById('settingsApiKey').value,
+        model: document.getElementById('settingsModel').value
+      }));
+      closeSettings();
+      showToast('Settings saved ✓');
+    }
+    function toggleKeyVisibility() {
+      var input = document.getElementById('settingsApiKey');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    // ============ CATEGORY SELECT ============
     function selectCat(el) {
-      document.querySelectorAll('.cat-option').forEach(function(c) { c.classList.remove('selected'); });
+      document.querySelectorAll('#addModal .cat-option').forEach(function(c) { c.classList.remove('selected'); });
       el.classList.add('selected');
       selectedCat = el.dataset.cat;
+    }
+    function selectScanCat(el) {
+      document.querySelectorAll('#scanCatGrid .cat-option').forEach(function(c) { c.classList.remove('selected'); });
+      el.classList.add('selected');
+      scanSelectedCat = el.dataset.cat;
     }
 
     function formatCurrency(amount) {
@@ -491,7 +673,7 @@
       var toast = document.getElementById('toast');
       toast.textContent = msg;
       toast.classList.add('show');
-      setTimeout(function() { toast.classList.remove('show'); }, 2000);
+      setTimeout(function() { toast.classList.remove('show'); }, 2500);
     }
 
     function exportCSV() {
@@ -510,11 +692,174 @@
       showToast('CSV exported ✓');
     }
 
+    // ============ RECEIPT SCANNER ============
+    function openScanModal() {
+      currentReceiptBase64 = null;
+      document.getElementById('scanStatus').innerHTML = '';
+      document.getElementById('scanArea').style.display = 'block';
+      document.getElementById('scanArea').classList.remove('has-image');
+      document.getElementById('scanArea').innerHTML = '<div class="scan-icon">📸</div>' +
+        '<div class="scan-text">Tap to capture or upload</div>' +
+        '<div class="scan-hint">Take a photo of your receipt or pick from gallery</div>' +
+        '<input type="file" id="receiptInput" accept="image/*" capture="environment" style="display:none;" onchange="handleReceiptImage(event)">';
+      document.getElementById('receiptPreview').style.display = 'none';
+      document.getElementById('scanResult').style.display = 'none';
+      document.getElementById('scanModal').classList.add('active');
+    }
+    function closeScanModal() {
+      document.getElementById('scanModal').classList.remove('active');
+    }
+
+    function handleReceiptImage(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        currentReceiptBase64 = e.target.result;
+        document.getElementById('scanArea').style.display = 'none';
+        document.getElementById('receiptImg').src = currentReceiptBase64;
+        document.getElementById('receiptPreview').style.display = 'block';
+        // Auto-scan
+        scanReceipt();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function scanReceipt() {
+      var settings = getSettings();
+      if (!settings.apiKey) {
+        setScanStatus('error', '⚠️ No API key configured. Tap ⚙️ in the top bar to set up.');
+        document.getElementById('scanResult').style.display = 'block';
+        // Pre-fill with today's date
+        document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
+        return;
+      }
+
+      if (!currentReceiptBase64) {
+        setScanStatus('error', '⚠️ No image loaded.');
+        return;
+      }
+
+      setScanStatus('scanning', '<div class="scan-spinner"></div> Scanning receipt...');
+      document.getElementById('scanBtn').disabled = true;
+
+      var base64Data = currentReceiptBase64.split(',')[1];
+      var mimeType = currentReceiptBase64.split(';')[0].split(':')[1];
+
+      var endpoint = settings.endpoint || 'https://api.openai.com/v1/chat/completions';
+      var model = settings.model || 'gpt-4o-mini';
+
+      var prompt = 'Analyze this receipt image and extract the following information. Return ONLY valid JSON, no markdown fences, no explanation.\n\n{\n  "merchant": "store or business name",\n  "amount": "total amount as a number (e.g. 42.50)",\n  "date": "date on receipt in YYYY-MM-DD format",\n  "category": "one of: fuel, food, lodging, perdiem, production, misc",\n  "items": "brief description of what was purchased"\n}\n\nRules:\n- amount should be the TOTAL including tax\n- date: if no date visible, use today\n- category: fuel=gas stations, food=restaurants/groceries, lodging=hotels, perdiem=cash advances, production=equipment/gear, misc=anything else\n- merchant: use the actual business name from the receipt';
+
+      var payload = {
+        model: model,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: currentReceiptBase64, detail: 'high' } }
+          ]
+        }],
+        max_tokens: 300
+      };
+
+      fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + settings.apiKey
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        document.getElementById('scanBtn').disabled = false;
+        if (data.error) {
+          setScanStatus('error', '⚠️ ' + (data.error.message || 'API error'));
+          document.getElementById('scanResult').style.display = 'block';
+          document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
+          return;
+        }
+
+        var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        if (!content) {
+          setScanStatus('error', '⚠️ No response from API');
+          document.getElementById('scanResult').style.display = 'block';
+          document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
+          return;
+        }
+
+        // Parse JSON from response
+        try {
+          // Strip markdown fences if present
+          var jsonStr = content.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+          var parsed = JSON.parse(jsonStr);
+
+          document.getElementById('scanMerchant').value = parsed.merchant || '';
+          document.getElementById('scanAmount').value = parsed.amount || '';
+          document.getElementById('scanDate').value = parsed.date || new Date().toISOString().split('T')[0];
+          document.getElementById('scanNotes').value = parsed.items || '';
+
+          // Select the detected category
+          var detectedCat = parsed.category || 'misc';
+          scanSelectedCat = detectedCat;
+          document.querySelectorAll('#scanCatGrid .cat-option').forEach(function(c) {
+            c.classList.toggle('selected', c.dataset.cat === detectedCat);
+          });
+
+          setScanStatus('success', '✅ Receipt scanned — review and save');
+          document.getElementById('scanResult').style.display = 'block';
+
+        } catch(parseErr) {
+          setScanStatus('error', '⚠️ Could not parse receipt data. Fill in manually.');
+          document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
+          document.getElementById('scanResult').style.display = 'block';
+        }
+      })
+      .catch(function(err) {
+        document.getElementById('scanBtn').disabled = false;
+        setScanStatus('error', '⚠️ Network error: ' + err.message);
+        document.getElementById('scanResult').style.display = 'block';
+        document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
+      });
+    }
+
+    function setScanStatus(type, html) {
+      var el = document.getElementById('scanStatus');
+      el.className = 'scan-status ' + type;
+      el.innerHTML = html;
+    }
+
+    function saveScannedExpense() {
+      var merchant = document.getElementById('scanMerchant').value || 'Receipt';
+      var amount = parseFloat(document.getElementById('scanAmount').value) || 0;
+      var date = document.getElementById('scanDate').value || new Date().toISOString().split('T')[0];
+      var notes = document.getElementById('scanNotes').value || '';
+
+      expenses.push({
+        id: 'exp_' + Date.now(),
+        category: scanSelectedCat,
+        description: merchant,
+        amount: amount,
+        date: date,
+        notes: notes,
+        receipt: currentReceiptBase64 ? currentReceiptBase64.substring(0, 100) + '...' : null,
+        has_receipt: !!currentReceiptBase64,
+        created_at: new Date().toISOString()
+      });
+
+      localStorage.setItem('tourhq_expenses', JSON.stringify(expenses));
+      closeScanModal();
+      showToast('Expense saved ✓ ' + merchant + ' — ' + formatCurrency(amount));
+      render();
+    }
+
+    // ============ RENDER ============
     function render() {
       var today = new Date().toISOString().split('T')[0];
       var filtered = filterDate === 'all' ? expenses : expenses.filter(function(e) { return e.date === filterDate; });
 
-      // Stats
       var todayTotal = 0, totalAll = 0;
       expenses.forEach(function(e) {
         totalAll += e.amount || 0;
@@ -525,7 +870,7 @@
       document.getElementById('statTotal').textContent = formatCurrency(totalAll);
       document.getElementById('statCount').textContent = expenses.length;
 
-      // Build day selector
+      // Day selector
       var dates = [];
       expenses.forEach(function(e) {
         if (dates.indexOf(e.date) === -1) dates.push(e.date);
@@ -540,7 +885,6 @@
       });
       document.getElementById('daySelector').innerHTML = dayHtml;
 
-      // Group by date
       var grouped = {};
       filtered.forEach(function(e) {
         if (!grouped[e.date]) grouped[e.date] = [];
@@ -551,7 +895,7 @@
       var html = '';
 
       if (datesToShow.length === 0) {
-        html = '<div class="empty-state"><div class="empty-icon">🧾</div><div style="font-size:0.9rem; color:var(--dim);">No expenses yet.<br>Tap + to add your first expense.</div></div>';
+        html = '<div class="empty-state"><div class="empty-icon">🧾</div><div style="font-size:0.9rem; color:var(--dim);">No expenses yet.<br>Tap + or 📷 to add your first expense.</div></div>';
       }
 
       datesToShow.forEach(function(date) {
@@ -562,10 +906,7 @@
         var dt = new Date(date + 'T12:00:00');
         var label = dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-        html += '<div class="expense-section-title">' +
-          '<span>' + label + '</span>' +
-          '<span class="expense-day-total">' + formatCurrency(dayTotal) + '</span>' +
-          '</div>';
+        html += '<div class="expense-section-title"><span>' + label + '</span><span class="expense-day-total">' + formatCurrency(dayTotal) + '</span></div>';
 
         dayExpenses.forEach(function(exp) {
           var cat = catMeta[exp.category] || catMeta.misc;
@@ -576,6 +917,7 @@
             '<div class="expense-meta">' + cat.name + (exp.notes ? ' • ' + exp.notes : '') + '</div>' +
             '</div>' +
             '<div class="expense-amount">' + formatCurrency(exp.amount) + '</div>' +
+            (exp.has_receipt ? '<div class="expense-receipt-badge">📎</div>' : '') +
             '<button class="expense-delete" onclick="deleteExpense(\'' + exp.id + '\')">✕</button>' +
             '</div>';
         });
