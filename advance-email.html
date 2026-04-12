@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Advance Email Generator</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070c; --bg-card: #101018; --bg-elevated: #181822;
+      --border: #1f1f2e; --text: #f0f0f5; --dim: #8888a0;
+      --muted: #555570; --accent: #d90429; --cyan: #22d3ee;
+      --success: #22c55e; --warning: #f59e0b; --support-blue: #0077b6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 100px;
+    }
+
+    .user-bar {
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.5rem; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--dim); padding: 0.4rem 0.8rem;
+      border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .page-header {
+      padding: 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.85rem; margin-bottom: 0.75rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-subtitle { color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    /* Stats */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .stat-item {
+      text-align: center; padding: 0.5rem;
+      background: var(--bg-elevated); border-radius: 10px;
+    }
+    .stat-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem; font-weight: 700;
+    }
+    .stat-number.ready { color: var(--warning); }
+    .stat-number.sent { color: var(--cyan); }
+    .stat-number.complete { color: var(--success); }
+    .stat-label {
+      font-size: 0.6rem; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;
+    }
+
+    /* Template Selector */
+    .template-bar {
+      display: flex; gap: 0.5rem; padding: 1rem 1.5rem;
+      overflow-x: auto; border-bottom: 1px solid var(--border);
+      scrollbar-width: none;
+    }
+    .template-bar::-webkit-scrollbar { display: none; }
+    .template-chip {
+      flex-shrink: 0; padding: 0.5rem 1rem;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 100px; font-size: 0.75rem; font-weight: 600;
+      color: var(--dim); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .template-chip.active {
+      background: rgba(217, 4, 41, 0.1);
+      border-color: var(--accent); color: var(--accent);
+    }
+
+    /* Venue Cards */
+    .venue-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      margin: 0.75rem 1rem; border-radius: 14px; overflow: hidden;
+      transition: all 0.2s;
+    }
+    .venue-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem; cursor: pointer;
+    }
+    .venue-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem; color: var(--cyan);
+    }
+    .venue-name { font-size: 0.95rem; font-weight: 600; margin-top: 2px; }
+    .venue-city { font-size: 0.8rem; color: var(--dim); }
+    .venue-status {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 0.25rem 0.6rem;
+      border-radius: 4px; flex-shrink: 0;
+    }
+    .venue-status.ready { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .venue-status.sent { background: rgba(34, 211, 238, 0.15); color: var(--cyan); }
+    .venue-status.complete { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+
+    /* Email Preview */
+    .email-preview {
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+      border-top: 1px solid transparent;
+    }
+    .email-preview.open {
+      max-height: 800px; border-top-color: var(--border);
+    }
+    .email-content { padding: 1rem; }
+    .email-field { margin-bottom: 0.75rem; }
+    .email-field label {
+      display: block; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--dim); margin-bottom: 0.3rem;
+    }
+    .email-field input, .email-field textarea {
+      width: 100%; padding: 0.6rem 0.75rem;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text);
+      font-size: 0.85rem; font-family: inherit; outline: none;
+    }
+    .email-field input:focus, .email-field textarea:focus { border-color: var(--accent); }
+    .email-field textarea { min-height: 200px; resize: vertical; line-height: 1.6; }
+
+    .email-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .btn-send {
+      flex: 1; padding: 0.75rem; background: var(--accent);
+      color: white; border: none; border-radius: 10px;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-send:hover { background: #b8031f; }
+    .btn-copy {
+      flex: 1; padding: 0.75rem;
+      background: var(--bg-elevated); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-copy:hover { border-color: var(--cyan); color: var(--cyan); }
+    .btn-mark {
+      width: 100%; padding: 0.6rem; background: none;
+      border: 1px dashed var(--border); border-radius: 8px;
+      color: var(--dim); font-size: 0.8rem; cursor: pointer;
+      margin-top: 0.5rem; transition: all 0.2s;
+    }
+    .btn-mark:hover { border-color: var(--success); color: var(--success); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-elevated); border: 1px solid var(--success);
+      color: var(--success); padding: 0.75rem 1.5rem;
+      border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+      z-index: 200; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    /* Nav */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; padding: 0.65rem 0.5rem;
+      max-width: 480px; margin: 0 auto; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 1.2rem; opacity: 0.4; cursor: pointer; padding: 0.25rem 0.5rem;
+      text-decoration: none; color: var(--text); transition: opacity 0.2s;
+    }
+    .nav-item span { font-size: 0.55rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-item.active { opacity: 1; }
+    .nav-item.active span { color: var(--accent); }
+
+    /* Empty state */
+    .empty-state {
+      padding: 3rem 2rem; text-align: center; color: var(--dim);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-text { font-size: 0.9rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="page-header">
+    <a href="more.html" class="back-btn">← Back to More</a>
+    <div class="page-title">📧 Advance Emails</div>
+    <div class="page-subtitle">Generate & send venue advances in seconds</div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-number ready" id="statReady">0</div>
+      <div class="stat-label">Ready</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number sent" id="statSent">0</div>
+      <div class="stat-label">Sent</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number complete" id="statComplete">0</div>
+      <div class="stat-label">Done</div>
+    </div>
+  </div>
+
+  <div class="template-bar">
+    <div class="template-chip active" onclick="selectTemplate('initial')">📨 Initial Advance</div>
+    <div class="template-chip" onclick="selectTemplate('followup')">🔔 Follow-Up</div>
+    <div class="template-chip" onclick="selectTemplate('dayof')">📋 Day-Of Confirm</div>
+  </div>
+
+  <div id="venueList"></div>
+
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <div class="nav-bar">
+    <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
+    <a href="dates.html" class="nav-item">📅<span>Dates</span></a>
+    <a href="schedule.html" class="nav-item">⏱️<span>Schedule</span></a>
+    <a href="route.html" class="nav-item">🗺️<span>Route</span></a>
+    <a href="more.html" class="nav-item active">⋯<span>More</span></a>
+  </div>
+
+  <script>
+    // User info
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      localStorage.removeItem('tourhq_current_tour');
+      window.location.href = 'landing.html';
+    }
+
+    var currentTemplate = 'initial';
+    var openCard = null;
+    var routing = [];
+    var emailStatuses = JSON.parse(localStorage.getItem('tourhq_email_statuses') || '{}');
+
+    // Tour info for templates
+    var tour = JSON.parse(localStorage.getItem('tourhq_current_tour') || '{}');
+    var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+    var tourName = tour.name || 'VANA Lady in Red Tour 2026';
+    var artistName = tour.artist || tour.artist_name || 'VANA';
+    var tmName = user.name || 'Tour Manager';
+    var tmEmail = user.email || '';
+    var tmPhone = user.phone || '';
+
+    function selectTemplate(type) {
+      currentTemplate = type;
+      document.querySelectorAll('.template-chip').forEach(function(c) { c.classList.remove('active'); });
+      event.target.classList.add('active');
+      // Re-render all open cards
+      if (openCard !== null) renderEmail(openCard);
+    }
+
+    function generateEmail(day, template) {
+      var venue = day.venue || day.city;
+      var city = day.city || '';
+      var date = day.date;
+      var d = new Date(date + 'T12:00:00');
+      var dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      var shortDate = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+      var subject, body;
+
+      if (template === 'initial') {
+        subject = tourName + ' — Advance for ' + venue + ' | ' + shortDate;
+        body = 'Hi,\n\n' +
+          'Hope this finds you well. I\'m writing to advance the upcoming show for ' + artistName + ' at ' + venue + ' in ' + city + ' on ' + dateStr + '.\n\n' +
+          'TOUR: ' + tourName + '\n' +
+          'ARTIST: ' + artistName + '\n' +
+          'DATE: ' + dateStr + '\n' +
+          'VENUE: ' + venue + ', ' + city + '\n\n' +
+          '--- CONFIRM THE FOLLOWING ---\n\n' +
+          '1. CONTRACT: Please confirm the performance contract has been signed and returned.\n\n' +
+          '2. TECHNICAL RIDER: Please confirm our tech rider has been received and all requirements can be met. If there are any issues, let us know ASAP.\n\n' +
+          '3. HOSPITALITY RIDER: Please confirm our hospitality rider has been received and will be fulfilled.\n\n' +
+          '4. LOAD-IN: Please confirm the load-in time and location (stage door address, parking for truck/bus).\n\n' +
+          '5. SOUNDCHECK: Please confirm the soundcheck time window.\n\n' +
+          '6. DOORS & SET TIME: Please confirm doors open time and ' + artistName + ' set time.\n\n' +
+          '7. CURFEW: Please confirm venue curfew / hard stop time.\n\n' +
+          '8. SETTLEMENT: Please confirm settlement location, method of payment (cash/check/wire), and timing (night-of vs. net terms).\n\n' +
+          '9. PARKING: Please confirm parking for the tour bus and/or van.\n\n' +
+          '10. GUEST LIST: How many guest list spots are available? What is the guest list policy?\n\n' +
+          '11. HOTEL: Do you have any recommended hotels nearby with tour rates?\n\n' +
+          '12. LOCAL CONTACT: Please provide a day-of-show contact name and cell number.\n\n' +
+          '---\n\n' +
+          'Please let me know if you need anything from our end (updated rider, stage plot, etc.).\n\n' +
+          'Looking forward to a great show!\n\n' +
+          'Best,\n' +
+          tmName + '\n' +
+          'Tour Manager — ' + tourName + '\n' +
+          (tmEmail ? tmEmail + '\n' : '') +
+          (tmPhone ? tmPhone + '\n' : '');
+
+      } else if (template === 'followup') {
+        subject = 'RE: ' + tourName + ' — Advance for ' + venue + ' | ' + shortDate;
+        body = 'Hi,\n\n' +
+          'Just following up on my advance email for the ' + artistName + ' show at ' + venue + ' on ' + dateStr + '.\n\n' +
+          'We\'re ' + getDaysUntil(date) + ' days out and I want to make sure we\'re all set.\n\n' +
+          'Could you please confirm:\n' +
+          '• Load-in time and door/soundcheck schedule\n' +
+          '• Rider fulfillment status\n' +
+          '• Settlement terms and payment method\n' +
+          '• Guest list allocation\n' +
+          '• Day-of contact name and cell\n\n' +
+          'If everything is confirmed and I\'ve missed your reply, just let me know and we\'re good.\n\n' +
+          'Thanks!\n\n' +
+          tmName + '\n' +
+          (tmEmail ? tmEmail + '\n' : '');
+
+      } else if (template === 'dayof') {
+        subject = 'DAY-OF: ' + artistName + ' @ ' + venue + ' | ' + shortDate;
+        body = 'Hi,\n\n' +
+          'Good morning! We\'re arriving today for the ' + artistName + ' show at ' + venue + '.\n\n' +
+          'Just want to confirm the day-of schedule:\n\n' +
+          '🚛 LOAD-IN: [TIME]\n' +
+          '🎛️ SOUNDCHECK: [TIME]\n' +
+          '🚪 DOORS: [TIME]\n' +
+          '🎤 ' + artistName + ' SET: [TIME]\n' +
+          '🛑 CURFEW: [TIME]\n\n' +
+          'QUESTIONS:\n' +
+          '• Where should we park the bus/truck?\n' +
+          '• Where is the load-in door?\n' +
+          '• Is the green room ready?\n' +
+          '• Guest list — how many spots and where do guests check in?\n' +
+          '• Settlement — where and when?\n\n' +
+          'My cell is ' + (tmPhone || '[YOUR PHONE]') + ' — text me when you\'re ready for us.\n\n' +
+          'See you soon!\n\n' +
+          tmName;
+      }
+
+      return { subject: subject, body: body };
+    }
+
+    function getDaysUntil(dateStr) {
+      var target = new Date(dateStr + 'T00:00:00');
+      var today = new Date();
+      today.setHours(0, 0, 0, 0);
+      var diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+      return diff > 0 ? diff : 0;
+    }
+
+    function renderEmail(index) {
+      var day = routing[index];
+      var card = document.getElementById('card-' + index);
+      var preview = document.getElementById('preview-' + index);
+      var email = generateEmail(day, currentTemplate);
+
+      var html = '<div class="email-content">' +
+        '<div class="email-field">' +
+        '<label>To</label>' +
+        '<input type="email" id="to-' + index + '" placeholder="promoter@venue.com" value="' + (day.promoterEmail || '') + '">' +
+        '</div>' +
+        '<div class="email-field">' +
+        '<label>Subject</label>' +
+        '<input type="text" id="subject-' + index + '" value="' + escapeHtml(email.subject) + '">' +
+        '</div>' +
+        '<div class="email-field">' +
+        '<label>Body</label>' +
+        '<textarea id="body-' + index + '">' + escapeHtml(email.body) + '</textarea>' +
+        '</div>' +
+        '<div class="email-actions">' +
+        '<button class="btn-send" onclick="sendEmail(' + index + ')">📨 Open in Email</button>' +
+        '<button class="btn-copy" onclick="copyEmail(' + index + ')">📋 Copy</button>' +
+        '</div>' +
+        '<button class="btn-mark" onclick="markSent(' + index + ')">✓ Mark as Sent</button>' +
+        '</div>';
+
+      preview.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function toggleCard(index) {
+      var preview = document.getElementById('preview-' + index);
+      var wasOpen = preview.classList.contains('open');
+
+      // Close all
+      document.querySelectorAll('.email-preview').forEach(function(p) { p.classList.remove('open'); });
+
+      if (!wasOpen) {
+        preview.classList.add('open');
+        openCard = index;
+        renderEmail(index);
+      } else {
+        openCard = null;
+      }
+    }
+
+    function sendEmail(index) {
+      var to = document.getElementById('to-' + index).value;
+      var subject = encodeURIComponent(document.getElementById('subject-' + index).value);
+      var body = encodeURIComponent(document.getElementById('body-' + index).value);
+      window.open('mailto:' + to + '?subject=' + subject + '&body=' + body, '_blank');
+      markSent(index);
+    }
+
+    function copyEmail(index) {
+      var subject = document.getElementById('subject-' + index).value;
+      var body = document.getElementById('body-' + index).value;
+      var text = 'Subject: ' + subject + '\n\n' + body;
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('Copied to clipboard!');
+      });
+    }
+
+    function markSent(index) {
+      var day = routing[index];
+      emailStatuses[day.date] = 'sent';
+      localStorage.setItem('tourhq_email_statuses', JSON.stringify(emailStatuses));
+      renderVenues();
+      showToast('Marked as sent ✓');
+    }
+
+    function markComplete(index) {
+      var day = routing[index];
+      emailStatuses[day.date] = 'complete';
+      localStorage.setItem('tourhq_email_statuses', JSON.stringify(emailStatuses));
+      renderVenues();
+      showToast('Advance complete ✓');
+    }
+
+    function getStatus(day) {
+      return emailStatuses[day.date] || 'ready';
+    }
+
+    function showToast(msg) {
+      var toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(function() { toast.classList.remove('show'); }, 2000);
+    }
+
+    function renderVenues() {
+      var html = '';
+      var counts = { ready: 0, sent: 0, complete: 0 };
+
+      routing.forEach(function(day, i) {
+        if (day.type !== 'SHOW') return;
+
+        var status = getStatus(day);
+        counts[status]++;
+
+        var d = new Date(day.date + 'T12:00:00');
+        var dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        var venue = day.venue || day.city;
+        var daysUntil = getDaysUntil(day.date);
+        var urgency = daysUntil <= 3 && status === 'ready' ? ' ⚡' : '';
+
+        html += '<div class="venue-card" id="card-' + i + '">' +
+          '<div class="venue-header" onclick="toggleCard(' + i + ')">' +
+          '<div>' +
+          '<div class="venue-date">' + dateStr + (daysUntil > 0 ? ' • ' + daysUntil + 'd away' : '') + urgency + '</div>' +
+          '<div class="venue-name">' + venue + '</div>' +
+          '<div class="venue-city">' + (day.city || '') + '</div>' +
+          '</div>' +
+          '<span class="venue-status ' + status + '">' + status + '</span>' +
+          '</div>' +
+          '<div class="email-preview" id="preview-' + i + '"></div>' +
+          '</div>';
+      });
+
+      document.getElementById('venueList').innerHTML = html || '<div class="empty-state"><div class="empty-icon">📧</div><div class="empty-text">No show dates found.<br>Create a tour first to generate advance emails.</div></div>';
+
+      document.getElementById('statReady').textContent = counts.ready;
+      document.getElementById('statSent').textContent = counts.sent;
+      document.getElementById('statComplete').textContent = counts.complete;
+    }
+
+    // Load routing data
+    fetch('data/routing_data.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        routing = data.routing;
+        renderVenues();
+      })
+      .catch(function() {
+        document.getElementById('venueList').innerHTML = '<div class="empty-state"><div class="empty-icon">📧</div><div class="empty-text">Could not load tour data.<br>Create a tour first.</div></div>';
+      });
+  </script>
+</body>
+</html>

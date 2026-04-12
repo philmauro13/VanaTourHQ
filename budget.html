@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Tour Budget</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070c; --bg-card: #101018; --bg-elevated: #181822;
+      --border: #1f1f2e; --text: #f0f0f5; --dim: #8888a0;
+      --muted: #555570; --accent: #d90429; --cyan: #22d3ee;
+      --success: #22c55e; --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 100px;
+    }
+
+    .user-bar {
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.5rem; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--dim); padding: 0.4rem 0.8rem;
+      border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .page-header {
+      padding: 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.85rem; margin-bottom: 0.75rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-subtitle { color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    /* Budget Overview Card */
+    .budget-overview {
+      margin: 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 16px;
+      overflow: hidden;
+    }
+    .budget-header {
+      padding: 1.25rem; text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .budget-label {
+      font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--dim); margin-bottom: 0.5rem;
+    }
+    .budget-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.2rem; font-weight: 700;
+    }
+    .budget-amount.under { color: var(--success); }
+    .budget-amount.over { color: var(--accent); }
+    .budget-amount.on-track { color: var(--cyan); }
+    .budget-sub {
+      font-size: 0.8rem; color: var(--dim); margin-top: 0.25rem;
+    }
+
+    /* Progress Bar */
+    .budget-progress {
+      padding: 1rem 1.25rem;
+    }
+    .progress-bar {
+      height: 12px; background: var(--bg-elevated);
+      border-radius: 6px; overflow: hidden; position: relative;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 6px;
+      transition: width 0.5s ease;
+    }
+    .progress-fill.under { background: linear-gradient(90deg, var(--success), #4ade80); }
+    .progress-fill.over { background: linear-gradient(90deg, var(--accent), #ff6b6b); }
+    .progress-fill.on-track { background: linear-gradient(90deg, var(--cyan), #67e8f9); }
+    .progress-markers {
+      display: flex; justify-content: space-between;
+      margin-top: 0.4rem; font-size: 0.65rem; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; border-top: 1px solid var(--border);
+    }
+    .stat-cell {
+      text-align: center; padding: 0.75rem 0.5rem;
+      background: var(--bg-elevated);
+    }
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem; font-weight: 700;
+    }
+    .stat-label {
+      font-size: 0.55rem; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;
+    }
+
+    /* Forecast */
+    .forecast-card {
+      margin: 0.75rem 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 1rem; display: flex; align-items: center; gap: 0.75rem;
+    }
+    .forecast-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .forecast-icon.under { background: rgba(34, 197, 94, 0.12); }
+    .forecast-icon.over { background: rgba(217, 4, 41, 0.12); }
+    .forecast-text { flex: 1; }
+    .forecast-title { font-size: 0.85rem; font-weight: 600; }
+    .forecast-detail { font-size: 0.75rem; color: var(--dim); margin-top: 2px; }
+
+    /* Category Cards */
+    .section-title {
+      padding: 1rem 1.25rem 0.5rem; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim);
+    }
+    .category-card {
+      margin: 0.5rem 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden;
+    }
+    .category-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.875rem 1rem; cursor: pointer;
+    }
+    .category-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .category-info { flex: 1; }
+    .category-name { font-size: 0.85rem; font-weight: 600; }
+    .category-bar {
+      height: 4px; background: var(--bg-elevated);
+      border-radius: 2px; margin-top: 0.4rem; overflow: hidden;
+    }
+    .category-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+    .category-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem; font-weight: 700; text-align: right;
+    }
+    .category-budget {
+      font-size: 0.6rem; color: var(--dim); text-align: right;
+    }
+
+    /* Category Detail */
+    .category-detail {
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+      border-top: 1px solid transparent;
+    }
+    .category-detail.open {
+      max-height: 500px; border-top-color: var(--border);
+    }
+    .detail-content { padding: 1rem; }
+    .budget-input-row {
+      display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;
+    }
+    .budget-input-label {
+      font-size: 0.75rem; color: var(--dim); width: 70px; flex-shrink: 0;
+    }
+    .budget-input {
+      flex: 1; padding: 0.6rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem; text-align: right; outline: none;
+    }
+    .budget-input:focus { border-color: var(--accent); }
+
+    /* Edit Total Budget */
+    .edit-budget-bar {
+      margin: 0.75rem 1rem; display: flex; gap: 0.5rem; align-items: center;
+    }
+    .edit-budget-bar label {
+      font-size: 0.75rem; color: var(--dim); white-space: nowrap;
+    }
+    .edit-budget-bar input {
+      flex: 1; padding: 0.6rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem; text-align: right; outline: none;
+    }
+    .edit-budget-bar input:focus { border-color: var(--accent); }
+
+    /* Nav */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; padding: 0.65rem 0.5rem;
+      max-width: 480px; margin: 0 auto; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 1.2rem; opacity: 0.4; cursor: pointer; padding: 0.25rem 0.5rem;
+      text-decoration: none; color: var(--text); transition: opacity 0.2s;
+    }
+    .nav-item span { font-size: 0.55rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-item.active { opacity: 1; }
+    .nav-item.active span { color: var(--accent); }
+
+    /* Link to expenses */
+    .link-card {
+      margin: 0.75rem 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 1rem; display: flex; align-items: center; gap: 0.75rem;
+      text-decoration: none; color: var(--text); transition: all 0.2s;
+    }
+    .link-card:hover { border-color: var(--accent); }
+    .link-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: rgba(217, 4, 41, 0.1); display: flex;
+      align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .link-info { flex: 1; }
+    .link-title { font-size: 0.9rem; font-weight: 600; }
+    .link-desc { font-size: 0.75rem; color: var(--dim); margin-top: 2px; }
+    .link-arrow { color: var(--muted); font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="page-header">
+    <a href="more.html" class="back-btn">← Back to More</a>
+    <div class="page-title">💰 Tour Budget</div>
+    <div class="page-subtitle">Track spending against your tour budget</div>
+  </div>
+
+  <!-- Budget Overview -->
+  <div class="budget-overview">
+    <div class="budget-header">
+      <div class="budget-label">Remaining Budget</div>
+      <div class="budget-amount" id="remainingAmount">$0</div>
+      <div class="budget-sub" id="budgetSub">of $0 total</div>
+    </div>
+    <div class="budget-progress">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+      <div class="progress-markers">
+        <span>$0</span>
+        <span id="markerHalf">--</span>
+        <span id="markerFull">--</span>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-cell">
+        <div class="stat-value" id="statSpent" style="color: var(--accent);">$0</div>
+        <div class="stat-label">Spent</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value" id="statDaily" style="color: var(--cyan);">$0</div>
+        <div class="stat-label">Daily Avg</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value" id="statDays" style="color: var(--dim);">0</div>
+        <div class="stat-label">Days Left</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forecast -->
+  <div class="forecast-card" id="forecastCard">
+    <div class="forecast-icon" id="forecastIcon">📊</div>
+    <div class="forecast-text">
+      <div class="forecast-title" id="forecastTitle">Add expenses to see forecast</div>
+      <div class="forecast-detail" id="forecastDetail">Log expenses in the Expense Tracker</div>
+    </div>
+  </div>
+
+  <!-- Quick link to expenses -->
+  <a href="expenses.html" class="link-card">
+    <div class="link-icon">🧾</div>
+    <div class="link-info">
+      <div class="link-title">Expense Tracker</div>
+      <div class="link-desc">Log daily expenses to update budget</div>
+    </div>
+    <div class="link-arrow">›</div>
+  </a>
+
+  <!-- Set Budget -->
+  <div class="edit-budget-bar">
+    <label>Total Budget: $</label>
+    <input type="number" id="totalBudget" value="10000" onchange="saveBudget()">
+  </div>
+
+  <!-- Categories -->
+  <div class="section-title">Budget Categories</div>
+  <div id="categoryList"></div>
+
+  <div class="nav-bar">
+    <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
+    <a href="dates.html" class="nav-item">📅<span>Dates</span></a>
+    <a href="schedule.html" class="nav-item">⏱️<span>Schedule</span></a>
+    <a href="route.html" class="nav-item">🗺️<span>Route</span></a>
+    <a href="more.html" class="nav-item active">⋯<span>More</span></a>
+  </div>
+
+  <script>
+    // User info
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      localStorage.removeItem('tourhq_current_tour');
+      window.location.href = 'landing.html';
+    }
+
+    // Budget categories config
+    var categories = [
+      { id: 'fuel', name: 'Fuel & Transport', icon: '⛽', color: '#f59e0b', budget: 2500 },
+      { id: 'food', name: 'Food & Dining', icon: '🍔', color: '#22c55e', budget: 2000 },
+      { id: 'lodging', name: 'Hotels & Lodging', icon: '🏨', color: '#22d3ee', budget: 3000 },
+      { id: 'perdiem', name: 'Per Diems', icon: '💵', color: '#a78bfa', budget: 1500 },
+      { id: 'production', name: 'Production & Gear', icon: '🎛️', color: '#d90429', budget: 500 },
+      { id: 'misc', name: 'Miscellaneous', icon: '📦', color: '#8888a0', budget: 500 }
+    ];
+
+    var budgetData = JSON.parse(localStorage.getItem('tourhq_budget') || '{}');
+    var totalBudget = budgetData.totalBudget || 10000;
+    var categoryBudgets = budgetData.categoryBudgets || {};
+    var openCat = null;
+
+    // Init category budgets
+    categories.forEach(function(cat) {
+      if (!categoryBudgets[cat.id]) categoryBudgets[cat.id] = cat.budget;
+    });
+
+    document.getElementById('totalBudget').value = totalBudget;
+
+    function getExpenses() {
+      return JSON.parse(localStorage.getItem('tourhq_expenses') || '[]');
+    }
+
+    function getCategorySpent(catId) {
+      var expenses = getExpenses();
+      var total = 0;
+      expenses.forEach(function(e) {
+        if (e.category === catId) total += (parseFloat(e.amount) || 0);
+      });
+      return total;
+    }
+
+    function getTotalSpent() {
+      var expenses = getExpenses();
+      var total = 0;
+      expenses.forEach(function(e) { total += (parseFloat(e.amount) || 0); });
+      return total;
+    }
+
+    function formatCurrency(amount) {
+      return '$' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function getDaysRemaining() {
+      var routing = JSON.parse(localStorage.getItem('tourhq_routing_meta') || '{}');
+      if (routing.endDate) {
+        var end = new Date(routing.endDate + 'T00:00:00');
+        var today = new Date(); today.setHours(0, 0, 0, 0);
+        var diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+        return Math.max(diff, 0);
+      }
+      // Estimate from routing_data
+      return 30; // fallback
+    }
+
+    function getDaysElapsed() {
+      var routing = JSON.parse(localStorage.getItem('tourhq_routing_meta') || '{}');
+      if (routing.startDate) {
+        var start = new Date(routing.startDate + 'T00:00:00');
+        var today = new Date(); today.setHours(0, 0, 0, 0);
+        var diff = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
+        return Math.max(diff, 1);
+      }
+      return 10; // fallback
+    }
+
+    function render() {
+      var spent = getTotalSpent();
+      var remaining = totalBudget - spent;
+      var pct = totalBudget > 0 ? (spent / totalBudget) * 100 : 0;
+      var daysElapsed = getDaysElapsed();
+      var daysRemaining = getDaysRemaining();
+      var dailyAvg = daysElapsed > 0 ? spent / daysElapsed : 0;
+      var projected = dailyAvg * (daysElapsed + daysRemaining);
+
+      // Overview
+      var remainingEl = document.getElementById('remainingAmount');
+      remainingEl.textContent = formatCurrency(remaining);
+      remainingEl.className = 'budget-amount ' + (remaining >= 0 ? (pct < 80 ? 'on-track' : 'under') : 'over');
+
+      document.getElementById('budgetSub').textContent = 'of ' + formatCurrency(totalBudget) + ' total (' + pct.toFixed(0) + '% used)';
+
+      var fill = document.getElementById('progressFill');
+      fill.style.width = Math.min(pct, 100) + '%';
+      fill.className = 'progress-fill ' + (pct > 100 ? 'over' : pct > 80 ? 'under' : 'on-track');
+
+      document.getElementById('markerHalf').textContent = formatCurrency(totalBudget / 2);
+      document.getElementById('markerFull').textContent = formatCurrency(totalBudget);
+
+      document.getElementById('statSpent').textContent = formatCurrency(spent);
+      document.getElementById('statDaily').textContent = formatCurrency(dailyAvg) + '/d';
+      document.getElementById('statDays').textContent = daysRemaining;
+
+      // Forecast
+      var forecastIcon = document.getElementById('forecastIcon');
+      var forecastTitle = document.getElementById('forecastTitle');
+      var forecastDetail = document.getElementById('forecastDetail');
+
+      if (spent === 0) {
+        forecastIcon.textContent = '📊';
+        forecastIcon.className = 'forecast-icon';
+        forecastTitle.textContent = 'Add expenses to see forecast';
+        forecastDetail.textContent = 'Log expenses in the Expense Tracker';
+      } else if (projected <= totalBudget) {
+        var underBy = totalBudget - projected;
+        forecastIcon.textContent = '✅';
+        forecastIcon.className = 'forecast-icon under';
+        forecastTitle.textContent = 'On track — ' + formatCurrency(underBy) + ' under budget';
+        forecastDetail.textContent = 'Projected total: ' + formatCurrency(projected) + ' at ' + formatCurrency(dailyAvg) + '/day';
+      } else {
+        var overBy = projected - totalBudget;
+        forecastIcon.textContent = '⚠️';
+        forecastIcon.className = 'forecast-icon over';
+        forecastTitle.textContent = 'Over budget by ' + formatCurrency(overBy);
+        forecastDetail.textContent = 'Projected total: ' + formatCurrency(projected) + ' at ' + formatCurrency(dailyAvg) + '/day — slow down!';
+      }
+
+      // Categories
+      var html = '';
+      categories.forEach(function(cat, i) {
+        var catSpent = getCategorySpent(cat.id);
+        var catBudget = categoryBudgets[cat.id] || cat.budget;
+        var catPct = catBudget > 0 ? (catSpent / catBudget) * 100 : 0;
+        var catColor = catPct > 100 ? 'var(--accent)' : cat.color;
+
+        html += '<div class="category-card" id="cat-' + cat.id + '">' +
+          '<div class="category-header" onclick="toggleCat(\'' + cat.id + '\')">' +
+          '<div class="category-icon" style="background: ' + cat.color + '15;">' + cat.icon + '</div>' +
+          '<div class="category-info">' +
+          '<div class="category-name">' + cat.name + '</div>' +
+          '<div class="category-bar"><div class="category-fill" style="width:' + Math.min(catPct, 100) + '%; background:' + catColor + ';"></div></div>' +
+          '</div>' +
+          '<div>' +
+          '<div class="category-amount" style="color:' + catColor + ';">' + formatCurrency(catSpent) + '</div>' +
+          '<div class="category-budget">of ' + formatCurrency(catBudget) + '</div>' +
+          '</div>' +
+          '</div>' +
+          '<div class="category-detail" id="detail-' + cat.id + '">' +
+          '<div class="detail-content">' +
+          '<div class="budget-input-row">' +
+          '<span class="budget-input-label">Budget:</span>' +
+          '<input type="number" class="budget-input" value="' + catBudget + '" onchange="updateCatBudget(\'' + cat.id + '\', this.value)">' +
+          '</div>' +
+          '</div>' +
+          '</div>' +
+          '</div>';
+      });
+
+      document.getElementById('categoryList').innerHTML = html;
+    }
+
+    function toggleCat(catId) {
+      var detail = document.getElementById('detail-' + catId);
+      var wasOpen = detail.classList.contains('open');
+      document.querySelectorAll('.category-detail').forEach(function(d) { d.classList.remove('open'); });
+      if (!wasOpen) {
+        detail.classList.add('open');
+        openCat = catId;
+      } else {
+        openCat = null;
+      }
+    }
+
+    function updateCatBudget(catId, value) {
+      categoryBudgets[catId] = parseFloat(value) || 0;
+      saveAll();
+      render();
+    }
+
+    function saveBudget() {
+      totalBudget = parseFloat(document.getElementById('totalBudget').value) || 0;
+      saveAll();
+      render();
+    }
+
+    function saveAll() {
+      budgetData = { totalBudget: totalBudget, categoryBudgets: categoryBudgets };
+      localStorage.setItem('tourhq_budget', JSON.stringify(budgetData));
+    }
+
+    // Load routing meta for date calculations
+    fetch('data/routing_data.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.routing && data.routing.length > 0) {
+          var firstShow = data.routing.find(function(d) { return d.type === 'SHOW'; });
+          var lastDay = data.routing[data.routing.length - 1];
+          localStorage.setItem('tourhq_routing_meta', JSON.stringify({
+            startDate: firstShow ? firstShow.date : data.routing[0].date,
+            endDate: lastDay.date
+          }));
+        }
+        render();
+      })
+      .catch(function() { render(); });
+  </script>
+</body>
+</html>

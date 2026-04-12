@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Expense Tracker</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070c; --bg-card: #101018; --bg-elevated: #181822;
+      --border: #1f1f2e; --text: #f0f0f5; --dim: #8888a0;
+      --muted: #555570; --accent: #d90429; --cyan: #22d3ee;
+      --success: #22c55e; --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 100px;
+    }
+
+    .user-bar {
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.5rem; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--dim); padding: 0.4rem 0.8rem;
+      border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .page-header {
+      padding: 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.85rem; margin-bottom: 0.75rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-subtitle { color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    /* Day Selector */
+    .day-selector {
+      display: flex; gap: 0.5rem; padding: 0.75rem 1rem;
+      overflow-x: auto; border-bottom: 1px solid var(--border);
+      scrollbar-width: none;
+    }
+    .day-selector::-webkit-scrollbar { display: none; }
+    .day-chip {
+      flex-shrink: 0; padding: 0.4rem 0.8rem;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 100px; font-size: 0.65rem; font-weight: 500;
+      color: var(--dim); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .day-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+    /* Stats */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .stat-item {
+      text-align: center; padding: 0.5rem;
+      background: var(--bg-elevated); border-radius: 10px;
+    }
+    .stat-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem; font-weight: 700;
+    }
+    .stat-label {
+      font-size: 0.55rem; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;
+    }
+
+    /* Quick Add Bar */
+    .quick-add {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 0.4rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+    }
+    .quick-btn {
+      padding: 0.6rem 0.25rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.6rem; font-weight: 600; color: var(--dim);
+      cursor: pointer; text-align: center; transition: all 0.2s;
+    }
+    .quick-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .quick-btn .icon { font-size: 1rem; display: block; margin-bottom: 2px; }
+
+    /* Expense List */
+    .expense-section-title {
+      padding: 1rem 1.25rem 0.5rem; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .expense-day-total {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem; color: var(--accent);
+    }
+
+    .expense-card {
+      margin: 0.4rem 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 10px;
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 1rem; position: relative;
+    }
+    .expense-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .expense-info { flex: 1; }
+    .expense-desc { font-size: 0.85rem; font-weight: 500; }
+    .expense-meta {
+      font-size: 0.7rem; color: var(--dim); margin-top: 2px;
+    }
+    .expense-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem; font-weight: 700; color: var(--accent);
+    }
+    .expense-delete {
+      position: absolute; top: 0.5rem; right: 0.5rem;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(217, 4, 41, 0.1); border: none;
+      color: var(--accent); font-size: 0.7rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .expense-card:hover .expense-delete { opacity: 1; }
+
+    /* Add Expense Modal */
+    .modal-overlay {
+      display: none; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7); z-index: 1000;
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0; padding: 1.5rem;
+      width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
+    }
+    .modal-handle {
+      width: 36px; height: 4px; background: var(--muted);
+      border-radius: 2px; margin: 0 auto 1rem;
+    }
+    .modal h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+      display: block; font-size: 0.8rem; font-weight: 500;
+      color: var(--dim); margin-bottom: 0.4rem;
+    }
+    .form-input {
+      width: 100%; padding: 0.75rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-size: 0.95rem; font-family: inherit; outline: none;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+    /* Category Selector */
+    .cat-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+    .cat-option {
+      padding: 0.6rem 0.25rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.65rem; font-weight: 600; color: var(--dim);
+      cursor: pointer; text-align: center; transition: all 0.2s;
+    }
+    .cat-option:hover { border-color: var(--accent); }
+    .cat-option.selected {
+      background: rgba(217, 4, 41, 0.1);
+      border-color: var(--accent); color: var(--accent);
+    }
+    .cat-option .cat-emoji { font-size: 1.1rem; display: block; margin-bottom: 2px; }
+
+    .btn {
+      width: 100%; padding: 0.875rem; border: none; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-secondary {
+      background: var(--bg-elevated); color: var(--text);
+      border: 1px solid var(--border); margin-top: 0.5rem;
+    }
+
+    /* Add button */
+    .add-btn {
+      position: fixed; bottom: 80px; right: calc(50% - 240px + 1rem);
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--accent); color: white; border: none;
+      font-size: 1.5rem; cursor: pointer; z-index: 50;
+      box-shadow: 0 4px 20px rgba(217, 4, 41, 0.4);
+      transition: transform 0.2s;
+    }
+    .add-btn:hover { transform: scale(1.1); }
+
+    /* Export bar */
+    .export-bar {
+      margin: 0.75rem 1rem; display: flex; gap: 0.5rem;
+    }
+    .export-btn {
+      flex: 1; padding: 0.6rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; text-align: center; transition: all 0.2s;
+    }
+    .export-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* Empty */
+    .empty-state {
+      padding: 3rem 2rem; text-align: center; color: var(--dim);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    /* Nav */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; padding: 0.65rem 0.5rem;
+      max-width: 480px; margin: 0 auto; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 1.2rem; opacity: 0.4; cursor: pointer; padding: 0.25rem 0.5rem;
+      text-decoration: none; color: var(--text); transition: opacity 0.2s;
+    }
+    .nav-item span { font-size: 0.55rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-item.active { opacity: 1; }
+    .nav-item.active span { color: var(--accent); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-elevated); border: 1px solid var(--success);
+      color: var(--success); padding: 0.75rem 1.5rem;
+      border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+      z-index: 200; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="page-header">
+    <a href="more.html" class="back-btn">← Back to More</a>
+    <div class="page-title">🧾 Expense Tracker</div>
+    <div class="page-subtitle">Log daily tour expenses</div>
+  </div>
+
+  <div class="day-selector" id="daySelector">
+    <div class="day-chip active" data-date="all" onclick="filterDay('all')">All Days</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-number" id="statToday" style="color: var(--accent);">$0</div>
+      <div class="stat-label">Today</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="statTotal" style="color: var(--cyan);">$0</div>
+      <div class="stat-label">Tour Total</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="statCount" style="color: var(--dim);">0</div>
+      <div class="stat-label">Entries</div>
+    </div>
+  </div>
+
+  <!-- Quick Add -->
+  <div class="quick-add">
+    <div class="quick-btn" onclick="quickAdd('fuel', 'Gas', 60)">
+      <span class="icon">⛽</span>Fuel
+    </div>
+    <div class="quick-btn" onclick="quickAdd('food', 'Meal', 15)">
+      <span class="icon">🍔</span>Food
+    </div>
+    <div class="quick-btn" onclick="quickAdd('lodging', 'Hotel', 120)">
+      <span class="icon">🏨</span>Hotel
+    </div>
+    <div class="quick-btn" onclick="quickAdd('misc', 'Misc', 10)">
+      <span class="icon">📦</span>Misc
+    </div>
+  </div>
+
+  <div id="expenseList"></div>
+
+  <!-- Export -->
+  <div class="export-bar">
+    <button class="export-btn" onclick="exportCSV()">📄 Export CSV</button>
+    <a href="budget.html" class="export-btn" style="text-decoration:none; display:block;">💰 View Budget</a>
+  </div>
+
+  <button class="add-btn" onclick="openModal()">+</button>
+
+  <div class="toast" id="toast">Saved!</div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>Add Expense</h2>
+      <form onsubmit="addExpense(event)">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <div class="cat-grid">
+            <div class="cat-option selected" data-cat="fuel" onclick="selectCat(this)">
+              <span class="cat-emoji">⛽</span>Fuel
+            </div>
+            <div class="cat-option" data-cat="food" onclick="selectCat(this)">
+              <span class="cat-emoji">🍔</span>Food
+            </div>
+            <div class="cat-option" data-cat="lodging" onclick="selectCat(this)">
+              <span class="cat-emoji">🏨</span>Lodging
+            </div>
+            <div class="cat-option" data-cat="perdiem" onclick="selectCat(this)">
+              <span class="cat-emoji">💵</span>Per Diem
+            </div>
+            <div class="cat-option" data-cat="production" onclick="selectCat(this)">
+              <span class="cat-emoji">🎛️</span>Production
+            </div>
+            <div class="cat-option" data-cat="misc" onclick="selectCat(this)">
+              <span class="cat-emoji">📦</span>Misc
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description *</label>
+          <input type="text" class="form-input" id="expDesc" placeholder="Gas fill-up" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Amount *</label>
+            <input type="number" class="form-input" id="expAmount" step="0.01" placeholder="0.00" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="expDate">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <input type="text" class="form-input" id="expNotes" placeholder="Optional notes">
+        </div>
+        <button type="submit" class="btn btn-primary">Add Expense</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
+    <a href="dates.html" class="nav-item">📅<span>Dates</span></a>
+    <a href="schedule.html" class="nav-item">⏱️<span>Schedule</span></a>
+    <a href="route.html" class="nav-item">🗺️<span>Route</span></a>
+    <a href="more.html" class="nav-item active">⋯<span>More</span></a>
+  </div>
+
+  <script>
+    // User info
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      localStorage.removeItem('tourhq_current_tour');
+      window.location.href = 'landing.html';
+    }
+
+    var expenses = JSON.parse(localStorage.getItem('tourhq_expenses') || '[]');
+    var filterDate = 'all';
+    var selectedCat = 'fuel';
+
+    var catMeta = {
+      fuel: { icon: '⛽', color: '#f59e0b', name: 'Fuel & Transport' },
+      food: { icon: '🍔', color: '#22c55e', name: 'Food & Dining' },
+      lodging: { icon: '🏨', color: '#22d3ee', name: 'Hotels & Lodging' },
+      perdiem: { icon: '💵', color: '#a78bfa', name: 'Per Diems' },
+      production: { icon: '🎛️', color: '#d90429', name: 'Production & Gear' },
+      misc: { icon: '📦', color: '#8888a0', name: 'Miscellaneous' }
+    };
+
+    // Set default date
+    document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
+
+    function selectCat(el) {
+      document.querySelectorAll('.cat-option').forEach(function(c) { c.classList.remove('selected'); });
+      el.classList.add('selected');
+      selectedCat = el.dataset.cat;
+    }
+
+    function formatCurrency(amount) {
+      return '$' + parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function openModal() {
+      document.getElementById('addModal').classList.add('active');
+    }
+    function closeModal() {
+      document.getElementById('addModal').classList.remove('active');
+    }
+
+    function addExpense(e) {
+      e.preventDefault();
+      var desc = document.getElementById('expDesc').value;
+      var amount = parseFloat(document.getElementById('expAmount').value) || 0;
+      var date = document.getElementById('expDate').value;
+      var notes = document.getElementById('expNotes').value;
+
+      expenses.push({
+        id: 'exp_' + Date.now(),
+        category: selectedCat,
+        description: desc,
+        amount: amount,
+        date: date,
+        notes: notes,
+        created_at: new Date().toISOString()
+      });
+
+      localStorage.setItem('tourhq_expenses', JSON.stringify(expenses));
+      closeModal();
+      document.getElementById('expDesc').value = '';
+      document.getElementById('expAmount').value = '';
+      document.getElementById('expNotes').value = '';
+      showToast('Expense added ✓');
+      render();
+    }
+
+    function quickAdd(cat, desc, amount) {
+      var today = new Date().toISOString().split('T')[0];
+      expenses.push({
+        id: 'exp_' + Date.now(),
+        category: cat,
+        description: desc,
+        amount: amount,
+        date: today,
+        notes: '',
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('tourhq_expenses', JSON.stringify(expenses));
+      showToast(desc + ' — ' + formatCurrency(amount));
+      render();
+    }
+
+    function deleteExpense(id) {
+      expenses = expenses.filter(function(e) { return e.id !== id; });
+      localStorage.setItem('tourhq_expenses', JSON.stringify(expenses));
+      render();
+    }
+
+    function filterDay(date) {
+      filterDate = date;
+      document.querySelectorAll('.day-chip').forEach(function(c) {
+        c.classList.toggle('active', c.dataset.date === date);
+      });
+      render();
+    }
+
+    function showToast(msg) {
+      var toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(function() { toast.classList.remove('show'); }, 2000);
+    }
+
+    function exportCSV() {
+      var filtered = filterDate === 'all' ? expenses : expenses.filter(function(e) { return e.date === filterDate; });
+      var csv = 'Date,Category,Description,Amount,Notes\n';
+      filtered.forEach(function(e) {
+        csv += e.date + ',' + (catMeta[e.category] || {}).name + ',"' + e.description + '",' + e.amount.toFixed(2) + ',"' + (e.notes || '') + '"\n';
+      });
+      var blob = new Blob([csv], { type: 'text/csv' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'tour-expenses-' + (filterDate === 'all' ? 'all' : filterDate) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV exported ✓');
+    }
+
+    function render() {
+      var today = new Date().toISOString().split('T')[0];
+      var filtered = filterDate === 'all' ? expenses : expenses.filter(function(e) { return e.date === filterDate; });
+
+      // Stats
+      var todayTotal = 0, totalAll = 0;
+      expenses.forEach(function(e) {
+        totalAll += e.amount || 0;
+        if (e.date === today) todayTotal += e.amount || 0;
+      });
+
+      document.getElementById('statToday').textContent = formatCurrency(todayTotal);
+      document.getElementById('statTotal').textContent = formatCurrency(totalAll);
+      document.getElementById('statCount').textContent = expenses.length;
+
+      // Build day selector
+      var dates = [];
+      expenses.forEach(function(e) {
+        if (dates.indexOf(e.date) === -1) dates.push(e.date);
+      });
+      dates.sort().reverse();
+
+      var dayHtml = '<div class="day-chip' + (filterDate === 'all' ? ' active' : '') + '" data-date="all" onclick="filterDay(\'all\')">All Days</div>';
+      dates.forEach(function(d) {
+        var dt = new Date(d + 'T12:00:00');
+        var label = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        dayHtml += '<div class="day-chip' + (filterDate === d ? ' active' : '') + '" data-date="' + d + '" onclick="filterDay(\'' + d + '\')">' + label + '</div>';
+      });
+      document.getElementById('daySelector').innerHTML = dayHtml;
+
+      // Group by date
+      var grouped = {};
+      filtered.forEach(function(e) {
+        if (!grouped[e.date]) grouped[e.date] = [];
+        grouped[e.date].push(e);
+      });
+
+      var datesToShow = Object.keys(grouped).sort().reverse();
+      var html = '';
+
+      if (datesToShow.length === 0) {
+        html = '<div class="empty-state"><div class="empty-icon">🧾</div><div style="font-size:0.9rem; color:var(--dim);">No expenses yet.<br>Tap + to add your first expense.</div></div>';
+      }
+
+      datesToShow.forEach(function(date) {
+        var dayExpenses = grouped[date];
+        var dayTotal = 0;
+        dayExpenses.forEach(function(e) { dayTotal += e.amount || 0; });
+
+        var dt = new Date(date + 'T12:00:00');
+        var label = dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+        html += '<div class="expense-section-title">' +
+          '<span>' + label + '</span>' +
+          '<span class="expense-day-total">' + formatCurrency(dayTotal) + '</span>' +
+          '</div>';
+
+        dayExpenses.forEach(function(exp) {
+          var cat = catMeta[exp.category] || catMeta.misc;
+          html += '<div class="expense-card">' +
+            '<div class="expense-icon" style="background:' + cat.color + '15;">' + cat.icon + '</div>' +
+            '<div class="expense-info">' +
+            '<div class="expense-desc">' + exp.description + '</div>' +
+            '<div class="expense-meta">' + cat.name + (exp.notes ? ' • ' + exp.notes : '') + '</div>' +
+            '</div>' +
+            '<div class="expense-amount">' + formatCurrency(exp.amount) + '</div>' +
+            '<button class="expense-delete" onclick="deleteExpense(\'' + exp.id + '\')">✕</button>' +
+            '</div>';
+        });
+      });
+
+      document.getElementById('expenseList').innerHTML = html;
+    }
+
+    render();
+  </script>
+</body>
+</html>
