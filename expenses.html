@@ -829,7 +829,8 @@
       var isBrave = (navigator.brave && navigator.brave.isBrave) || false;
       var useProxy = isMobile || isBrave;
 
-      var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(endpoint);
+      // Try multiple CORS proxies in order of reliability
+      var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(endpoint);
       var requestUrl = useProxy ? proxyUrl : endpoint;
 
       console.log('Mobile:', isMobile, 'Brave:', isBrave, 'Using proxy:', useProxy);
@@ -922,6 +923,12 @@
         document.getElementById('scanResult').style.display = 'block';
         document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
       };
+
+      // Debug: log key info (not the full key)
+      console.log('API key length:', settings.apiKey.length);
+      console.log('API key prefix:', settings.apiKey.substring(0, 7) + '...');
+      console.log('API key suffix:', '...' + settings.apiKey.substring(settings.apiKey.length - 4));
+      console.log('Authorization header:', 'Bearer ' + settings.apiKey.substring(0, 7) + '...');
 
       try {
         xhr.send(payloadStr);
