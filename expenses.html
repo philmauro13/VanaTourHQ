@@ -620,51 +620,34 @@
         max_tokens: 5
       });
 
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', testEndpoint, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('Authorization', 'Bearer ' + key);
-      xhr.timeout = 15000;
-
-      xhr.onload = function() {
-        if (xhr.status === 200) {
-          resultEl.style.background = 'rgba(34,197,94,0.1)';
-          resultEl.style.border = '1px solid var(--success)';
-          resultEl.style.color = 'var(--success)';
-          try {
-            var data = JSON.parse(xhr.responseText);
-            var reply = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-            resultEl.textContent = '✅ API working! Response: "' + (reply || '').trim() + '"';
-          } catch(e) {
-            resultEl.textContent = '✅ API connected (status ' + xhr.status + ')';
-          }
-        } else {
-          resultEl.style.background = 'rgba(217,4,41,0.1)';
-          resultEl.style.border = '1px solid var(--accent)';
-          resultEl.style.color = 'var(--accent)';
-          resultEl.textContent = '❌ Error ' + xhr.status + ': ' + (xhr.responseText || '').substring(0, 150);
+      fetch(testEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + key
+        },
+        body: testPayload,
+        mode: 'cors'
+      })
+      .then(function(r) {
+        if (!r.ok) {
+          return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ': ' + t.substring(0, 150)); });
         }
-      };
-
-      xhr.onerror = function() {
+        return r.json();
+      })
+      .then(function(data) {
+        resultEl.style.background = 'rgba(34,197,94,0.1)';
+        resultEl.style.border = '1px solid var(--success)';
+        resultEl.style.color = 'var(--success)';
+        var reply = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        resultEl.textContent = '✅ API working! Response: "' + (reply || '').trim() + '"';
+      })
+      .catch(function(err) {
         resultEl.style.background = 'rgba(217,4,41,0.1)';
         resultEl.style.border = '1px solid var(--accent)';
         resultEl.style.color = 'var(--accent)';
-        resultEl.textContent = '❌ Network blocked. Browser is blocking the request.';
-      };
-
-      xhr.ontimeout = function() {
-        resultEl.style.background = 'rgba(217,4,41,0.1)';
-        resultEl.style.border = '1px solid var(--accent)';
-        resultEl.style.color = 'var(--accent)';
-        resultEl.textContent = '❌ Timed out after 15s.';
-      };
-
-      try {
-        xhr.send(testPayload);
-      } catch(e) {
-        resultEl.textContent = '❌ Send failed: ' + e.message;
-      }
+        resultEl.textContent = '❌ ' + (err.message || 'Network error');
+      });
     }
 
     function saveSettings() {
