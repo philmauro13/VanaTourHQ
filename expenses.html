@@ -774,9 +774,8 @@
     function scanReceipt() {
       var settings = getSettings();
       if (!settings.apiKey) {
-        setScanStatus('error', '⚠️ No API key configured. Tap ⚙️ in the top bar to set up.');
+        setScanStatus('error', '⚠️ No API key configured. Tap the status bar above to set up.');
         document.getElementById('scanResult').style.display = 'block';
-        // Pre-fill with today's date
         document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
         return;
       }
@@ -795,6 +794,17 @@
       var endpoint = settings.endpoint || 'https://api.openai.com/v1/chat/completions';
       var model = settings.model || 'gpt-4o-mini';
 
+      // Size check
+      var imgSizeKB = Math.round((base64Data.length * 3) / 4 / 1024);
+      console.log('Image size: ~' + imgSizeKB + 'KB, MIME: ' + mimeType);
+      if (imgSizeKB > 5000) {
+        setScanStatus('error', '⚠️ Image too large (' + imgSizeKB + 'KB). Try a smaller photo.');
+        document.getElementById('scanBtn').disabled = false;
+        document.getElementById('scanResult').style.display = 'block';
+        document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
+        return;
+      }
+
       var prompt = 'Analyze this receipt image and extract the following information. Return ONLY valid JSON, no markdown fences, no explanation.\n\n{\n  "merchant": "store or business name",\n  "amount": "total amount as a number (e.g. 42.50)",\n  "date": "date on receipt in YYYY-MM-DD format",\n  "category": "one of: fuel, food, lodging, perdiem, production, misc",\n  "items": "brief description of what was purchased"\n}\n\nRules:\n- amount should be the TOTAL including tax\n- date: if no date visible, use today\n- category: fuel=gas stations, food=restaurants/groceries, lodging=hotels, perdiem=cash advances, production=equipment/gear, misc=anything else\n- merchant: use the actual business name from the receipt';
 
       var payload = {
@@ -809,8 +819,15 @@
         max_tokens: 300
       };
 
+      console.log('Sending to:', endpoint);
+      console.log('Model:', model);
+      console.log('Payload size:', JSON.stringify(payload).length, 'bytes');
+
       var controller = new AbortController();
-      var timeout = setTimeout(function() { controller.abort(); }, 30000);
+      var timeout = setTimeout(function() {
+        controller.abort();
+        console.error('Request timed out after 30s');
+      }, 30000);
 
       fetch(endpoint, {
         method: 'POST',
@@ -819,12 +836,17 @@
           'Authorization': 'Bearer ' + settings.apiKey
         },
         body: JSON.stringify(payload),
-        signal: controller.signal
+        signal: controller.signal,
+        mode: 'cors'
       })
       .then(function(r) {
         clearTimeout(timeout);
+        console.log('Response status:', r.status);
         if (!r.ok) {
-          return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ': ' + t.substring(0, 200)); });
+          return r.text().then(function(t) {
+            console.error('API error body:', t);
+            throw new Error('HTTP ' + r.status + ': ' + t.substring(0, 300));
+          });
         }
         return r.json();
       })
@@ -874,14 +896,20 @@
         }
       })
       .catch(function(err) {
+        clearTimeout(timeout);
         console.error('Scan error:', err);
+        console.error('Error name:', err.name);
+        console.error('Error message:', err.message);
         document.getElementById('scanBtn').disabled = false;
-        var msg = err.name === 'AbortError'
-          ? '⚠️ Request timed out. Check your internet connection.'
-          : '⚠️ ' + (err.message || 'Unknown error');
-        // Check for common mobile issues
-        if (err.message && err.message.includes('Failed to fetch')) {
-          msg = '⚠️ Network error. On mobile, try: 1) Switch to WiFi, 2) Allow cross-site tracking in browser settings, 3) Try Chrome instead of Safari.';
+        var msg = '⚠️ Scan failed';
+        if (err.name === 'AbortError') {
+          msg = '⚠️ Request timed out after 30s. Check your internet connection.';
+        } else if (err.message && err.message.includes('Load failed')) {
+          msg = '⚠️ Network blocked. Try: 1) Open in Chrome (not Safari), 2) Turn off private browsing, 3) Check browser settings allow cross-site requests.';
+        } else if (err.message && err.message.includes('Failed to fetch')) {
+          msg = '⚠️ Could not connect to API. Check: 1) Internet connection, 2) API endpoint URL is correct, 3) Not in private browsing mode.';
+        } else if (err.message) {
+          msg = '⚠️ ' + err.message.substring(0, 150);
         }
         setScanStatus('error', msg);
         document.getElementById('scanResult').style.display = 'block';
