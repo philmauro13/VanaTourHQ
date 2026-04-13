@@ -11,6 +11,7 @@
     })();
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     :root {
       --bg: #07070c; --bg-card: #101018; --bg-elevated: #181822;
@@ -123,9 +124,7 @@
     }
     .expense-info { flex: 1; }
     .expense-desc { font-size: 0.85rem; font-weight: 500; }
-    .expense-meta {
-      font-size: 0.7rem; color: var(--dim); margin-top: 2px;
-    }
+    .expense-meta { font-size: 0.7rem; color: var(--dim); margin-top: 2px; }
     .expense-amount {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.9rem; font-weight: 700; color: var(--accent);
@@ -177,8 +176,7 @@
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 
     .cat-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 0.5rem;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
     }
     .cat-option {
       padding: 0.6rem 0.25rem; background: var(--bg-elevated);
@@ -301,33 +299,22 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Settings gear */
-    .settings-btn {
-      position: absolute; top: 0.75rem; right: 3.5rem;
-      background: none; border: none; font-size: 1.2rem;
-      cursor: pointer; opacity: 0.4; transition: opacity 0.2s;
+    .progress-bar-ocr {
+      height: 6px; background: var(--bg-elevated); border-radius: 3px;
+      overflow: hidden; margin-top: 0.5rem;
     }
-    .settings-btn:hover { opacity: 1; }
-
-    .api-key-row {
-      display: flex; gap: 0.5rem; align-items: center;
+    .progress-bar-ocr .fill {
+      height: 100%; background: var(--cyan); border-radius: 3px;
+      transition: width 0.3s;
     }
-    .api-key-row input { flex: 1; }
-    .api-key-row button {
-      padding: 0.75rem; background: var(--bg-elevated);
-      border: 1px solid var(--border); border-radius: 10px;
-      color: var(--dim); font-size: 0.8rem; cursor: pointer;
-    }
-    .api-key-row button:hover { border-color: var(--cyan); color: var(--cyan); }
   </style>
 </head>
 <body>
-  <div class="user-bar" style="position:relative;">
+  <div class="user-bar">
     <div class="user-info">
       <div class="user-avatar" id="userAvatar">P</div>
       <span class="user-name" id="userName">Loading...</span>
     </div>
-    <button class="settings-btn" onclick="openSettings()" title="API Settings">⚙️</button>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 
@@ -443,18 +430,23 @@
     <div class="modal">
       <div class="modal-handle"></div>
       <h2>📷 Scan Receipt</h2>
+      <p style="font-size:0.75rem; color:var(--dim); margin-bottom:1rem;">Uses built-in text recognition — no API key needed!</p>
       <div id="scanStatus"></div>
       <div class="scan-section" id="scanArea" onclick="document.getElementById('receiptInput').click()">
         <div class="scan-icon">📸</div>
         <div class="scan-text">Tap to capture or upload</div>
-        <div class="scan-hint">Take a photo of your receipt or pick from gallery</div>
+        <div class="scan-hint">Take a photo of your receipt</div>
         <input type="file" id="receiptInput" accept="image/*" capture="environment" style="display:none;" onchange="handleReceiptImage(event)">
       </div>
       <div id="receiptPreview" style="display:none;">
         <img id="receiptImg" class="receipt-preview" alt="Receipt">
+        <div id="ocrProgress" style="display:none;">
+          <div class="progress-bar-ocr"><div class="fill" id="ocrFill" style="width:0%"></div></div>
+          <div style="font-size:0.7rem; color:var(--dim); margin-top:4px;" id="ocrLabel">Recognizing text...</div>
+        </div>
         <div class="receipt-actions">
           <button class="receipt-action-btn" onclick="document.getElementById('receiptInput').click()">🔄 Retake</button>
-          <button class="receipt-action-btn" onclick="scanReceipt()" id="scanBtn">🔍 Scan Receipt</button>
+          <button class="receipt-action-btn" onclick="resetScanModal()">✖ Cancel</button>
         </div>
       </div>
       <div id="scanResult" style="display:none; margin-top:1rem;">
@@ -484,42 +476,12 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Notes</label>
-          <input type="text" class="form-input" id="scanNotes">
+          <label class="form-label">Notes (raw text from receipt)</label>
+          <textarea class="form-input" id="scanNotes" rows="3" style="resize:vertical; min-height:60px; font-size:0.8rem;"></textarea>
         </div>
         <button class="btn btn-primary" onclick="saveScannedExpense()">💾 Save Expense</button>
         <button class="btn btn-secondary" onclick="closeScanModal()">Cancel</button>
       </div>
-    </div>
-  </div>
-
-  <!-- Settings Modal -->
-  <div class="modal-overlay" id="settingsModal">
-    <div class="modal">
-      <div class="modal-handle"></div>
-      <h2>⚙️ Receipt Scanner Settings</h2>
-      <p style="font-size:0.8rem; color:var(--dim); margin-bottom:1rem; line-height:1.5;">
-        To enable AI receipt scanning, provide an API key for any OpenAI-compatible vision endpoint. This stays on your device only.
-      </p>
-      <div class="form-group">
-        <label class="form-label">API Endpoint</label>
-        <input type="text" class="form-input" id="settingsEndpoint" placeholder="https://api.openai.com/v1/chat/completions">
-      </div>
-      <div class="form-group">
-        <label class="form-label">API Key</label>
-        <div class="api-key-row">
-          <input type="password" class="form-input" id="settingsApiKey" placeholder="sk-...">
-          <button type="button" onclick="toggleKeyVisibility()">👁️</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Model</label>
-        <input type="text" class="form-input" id="settingsModel" placeholder="gpt-4o-mini">
-      </div>
-      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
-      <button class="btn" style="background: var(--cyan); color: var(--bg); margin-top: 0.5rem;" onclick="testApiKey()">🧪 Test API Key</button>
-      <div id="testResult" style="margin-top: 0.75rem; display: none; padding: 0.75rem; border-radius: 10px; font-size: 0.8rem;"></div>
-      <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
     </div>
   </div>
 
@@ -532,7 +494,6 @@
   </div>
 
   <script>
-    // User info
     (function() {
       var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
       if (user.name) {
@@ -564,120 +525,6 @@
 
     document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
 
-    // ============ SETTINGS ============
-    function getSettings() {
-      try {
-        var raw = localStorage.getItem('tourhq_scan_settings');
-        if (!raw) return {};
-        var parsed = JSON.parse(raw);
-        return (parsed && parsed.apiKey) ? parsed : {};
-      } catch(e) {
-        console.error('Settings read error:', e);
-        return {};
-      }
-    }
-    function openSettings() {
-      var s = getSettings();
-      document.getElementById('settingsEndpoint').value = s.endpoint || 'https://api.openai.com/v1/chat/completions';
-      document.getElementById('settingsApiKey').value = s.apiKey || '';
-      document.getElementById('settingsModel').value = s.model || 'gpt-4o-mini';
-      document.getElementById('settingsModal').classList.add('active');
-      // Focus the API key field if empty
-      if (!s.apiKey) {
-        setTimeout(function() { document.getElementById('settingsApiKey').focus(); }, 300);
-      }
-    }
-    function closeSettings() {
-      document.getElementById('settingsModal').classList.remove('active');
-    }
-    function testApiKey() {
-      var key = document.getElementById('settingsApiKey').value.trim();
-      var endpoint = document.getElementById('settingsEndpoint').value.trim();
-      var model = document.getElementById('settingsModel').value.trim() || 'gpt-4o-mini';
-      var resultEl = document.getElementById('testResult');
-
-      if (!key) {
-        resultEl.style.display = 'block';
-        resultEl.style.background = 'rgba(217,4,41,0.1)';
-        resultEl.style.border = '1px solid var(--accent)';
-        resultEl.style.color = 'var(--accent)';
-        resultEl.textContent = '⚠️ No API key entered';
-        return;
-      }
-
-      resultEl.style.display = 'block';
-      resultEl.style.background = 'rgba(34,211,238,0.1)';
-      resultEl.style.border = '1px solid var(--cyan)';
-      resultEl.style.color = 'var(--cyan)';
-      resultEl.textContent = '🧪 Testing... key: ' + key.substring(0, 7) + '...' + key.substring(key.length - 4) + ' (' + key.length + ' chars)';
-
-      // Use the endpoint directly (Worker handles CORS)
-      var testEndpoint = endpoint || 'https://api.openai.com/v1/chat/completions';
-
-      var testPayload = JSON.stringify({
-        model: model,
-        messages: [{ role: 'user', content: 'Say hello in 1 word' }],
-        max_tokens: 5
-      });
-
-      fetch(testEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + key
-        },
-        body: testPayload,
-        mode: 'cors'
-      })
-      .then(function(r) {
-        if (!r.ok) {
-          return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ': ' + t.substring(0, 150)); });
-        }
-        return r.json();
-      })
-      .then(function(data) {
-        resultEl.style.background = 'rgba(34,197,94,0.1)';
-        resultEl.style.border = '1px solid var(--success)';
-        resultEl.style.color = 'var(--success)';
-        var reply = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-        resultEl.textContent = '✅ API working! Response: "' + (reply || '').trim() + '"';
-      })
-      .catch(function(err) {
-        resultEl.style.background = 'rgba(217,4,41,0.1)';
-        resultEl.style.border = '1px solid var(--accent)';
-        resultEl.style.color = 'var(--accent)';
-        resultEl.textContent = '❌ ' + (err.message || 'Network error');
-      });
-    }
-
-    function saveSettings() {
-      var data = {
-        endpoint: document.getElementById('settingsEndpoint').value.trim(),
-        apiKey: document.getElementById('settingsApiKey').value.trim(),
-        model: document.getElementById('settingsModel').value.trim()
-      };
-      // Save and verify
-      try {
-        localStorage.setItem('tourhq_scan_settings', JSON.stringify(data));
-        var verify = JSON.parse(localStorage.getItem('tourhq_scan_settings'));
-        if (verify && verify.apiKey === data.apiKey) {
-          closeSettings();
-          showToast('Settings saved ✓');
-          try { updateApiStatus(); } catch(e) { console.log('Status update error:', e); }
-        } else {
-          alert('Settings could not be saved. Your browser may be blocking localStorage. Try disabling private browsing mode.');
-        }
-      } catch(e) {
-        console.error('Save error:', e);
-        alert('Could not save settings: ' + e.message);
-      }
-    }
-    function toggleKeyVisibility() {
-      var input = document.getElementById('settingsApiKey');
-      input.type = input.type === 'password' ? 'text' : 'password';
-    }
-
-    // ============ CATEGORY SELECT ============
     function selectCat(el) {
       document.querySelectorAll('#addModal .cat-option').forEach(function(c) { c.classList.remove('selected'); });
       el.classList.add('selected');
@@ -693,12 +540,8 @@
       return '$' + parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
-    function openModal() {
-      document.getElementById('addModal').classList.add('active');
-    }
-    function closeModal() {
-      document.getElementById('addModal').classList.remove('active');
-    }
+    function openModal() { document.getElementById('addModal').classList.add('active'); }
+    function closeModal() { document.getElementById('addModal').classList.remove('active'); }
 
     function addExpense(e) {
       e.preventDefault();
@@ -706,17 +549,11 @@
       var amount = parseFloat(document.getElementById('expAmount').value) || 0;
       var date = document.getElementById('expDate').value;
       var notes = document.getElementById('expNotes').value;
-
       expenses.push({
-        id: 'exp_' + Date.now(),
-        category: selectedCat,
-        description: desc,
-        amount: amount,
-        date: date,
-        notes: notes,
-        created_at: new Date().toISOString()
+        id: 'exp_' + Date.now(), category: selectedCat,
+        description: desc, amount: amount, date: date,
+        notes: notes, created_at: new Date().toISOString()
       });
-
       localStorage.setItem('tourhq_expenses', JSON.stringify(expenses));
       closeModal();
       document.getElementById('expDesc').value = '';
@@ -729,13 +566,8 @@
     function quickAdd(cat, desc, amount) {
       var today = new Date().toISOString().split('T')[0];
       expenses.push({
-        id: 'exp_' + Date.now(),
-        category: cat,
-        description: desc,
-        amount: amount,
-        date: today,
-        notes: '',
-        created_at: new Date().toISOString()
+        id: 'exp_' + Date.now(), category: cat, description: desc,
+        amount: amount, date: today, notes: '', created_at: new Date().toISOString()
       });
       localStorage.setItem('tourhq_expenses', JSON.stringify(expenses));
       showToast(desc + ' — ' + formatCurrency(amount));
@@ -770,238 +602,184 @@
         csv += e.date + ',' + (catMeta[e.category] || {}).name + ',"' + e.description + '",' + e.amount.toFixed(2) + ',"' + (e.notes || '') + '"\n';
       });
       var blob = new Blob([csv], { type: 'text/csv' });
-      var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
-      a.href = url;
+      a.href = URL.createObjectURL(blob);
       a.download = 'tour-expenses-' + (filterDate === 'all' ? 'all' : filterDate) + '.csv';
       a.click();
-      URL.revokeObjectURL(url);
       showToast('CSV exported ✓');
     }
 
-    // ============ RECEIPT SCANNER ============
+    // ============ RECEIPT SCANNER (Tesseract.js — no API needed!) ============
     function openScanModal() {
       currentReceiptBase64 = null;
       document.getElementById('scanStatus').innerHTML = '';
       document.getElementById('scanArea').style.display = 'block';
-      document.getElementById('scanArea').classList.remove('has-image');
-      document.getElementById('scanArea').innerHTML = '<div class="scan-icon">📸</div>' +
-        '<div class="scan-text">Tap to capture or upload</div>' +
-        '<div class="scan-hint">Take a photo of your receipt or pick from gallery</div>' +
-        '<input type="file" id="receiptInput" accept="image/*" capture="environment" style="display:none;" onchange="handleReceiptImage(event)">';
       document.getElementById('receiptPreview').style.display = 'none';
       document.getElementById('scanResult').style.display = 'none';
+      document.getElementById('ocrProgress').style.display = 'none';
       document.getElementById('scanModal').classList.add('active');
     }
-    function closeScanModal() {
-      document.getElementById('scanModal').classList.remove('active');
+    function closeScanModal() { document.getElementById('scanModal').classList.remove('active'); }
+    function resetScanModal() {
+      currentReceiptBase64 = null;
+      document.getElementById('scanArea').style.display = 'block';
+      document.getElementById('receiptPreview').style.display = 'none';
+      document.getElementById('scanResult').style.display = 'none';
+      document.getElementById('ocrProgress').style.display = 'none';
+      document.getElementById('scanStatus').innerHTML = '';
     }
 
     function handleReceiptImage(event) {
       var file = event.target.files[0];
       if (!file) return;
 
-      setScanStatus('scanning', '<div class="scan-spinner"></div> Loading image...');
+      document.getElementById('scanArea').style.display = 'none';
+      document.getElementById('receiptPreview').style.display = 'block';
+      document.getElementById('ocrProgress').style.display = 'block';
+      document.getElementById('scanResult').style.display = 'none';
 
-      // Use canvas to resize large images (mobile photos can be 10-20MB)
+      // Resize for better OCR
       var img = new Image();
       var reader = new FileReader();
       reader.onload = function(e) {
         img.onload = function() {
           var canvas = document.createElement('canvas');
-          var MAX = 1024; // max dimension
+          var MAX = 1500; // Higher res for better OCR
           var w = img.width, h = img.height;
           if (w > MAX || h > MAX) {
             if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
             else { w = Math.round(w * MAX / h); h = MAX; }
           }
-          canvas.width = w;
-          canvas.height = h;
+          canvas.width = w; canvas.height = h;
           var ctx = canvas.getContext('2d');
+          // Boost contrast for better OCR
+          ctx.filter = 'contrast(1.3) brightness(1.1)';
           ctx.drawImage(img, 0, 0, w, h);
-          currentReceiptBase64 = canvas.toDataURL('image/jpeg', 0.7);
-          document.getElementById('scanArea').style.display = 'none';
+          currentReceiptBase64 = canvas.toDataURL('image/png');
           document.getElementById('receiptImg').src = currentReceiptBase64;
-          document.getElementById('receiptPreview').style.display = 'block';
-          scanReceipt();
-        };
-        img.onerror = function() {
-          setScanStatus('error', '⚠️ Could not load image. Try a smaller photo.');
+          runOCR();
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     }
 
-    function scanReceipt() {
-      var settings = getSettings();
-      if (!settings.apiKey) {
-        setScanStatus('error', '⚠️ No API key configured. Tap the status bar above to set up.');
-        document.getElementById('scanResult').style.display = 'block';
-        document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
-        return;
-      }
+    function runOCR() {
+      document.getElementById('ocrFill').style.width = '10%';
+      document.getElementById('ocrLabel').textContent = 'Loading OCR engine...';
 
-      if (!currentReceiptBase64) {
-        setScanStatus('error', '⚠️ No image loaded.');
-        return;
-      }
-
-      setScanStatus('scanning', '<div class="scan-spinner"></div> Scanning receipt...');
-      document.getElementById('scanBtn').disabled = true;
-
-      var base64Data = currentReceiptBase64.split(',')[1];
-      var mimeType = currentReceiptBase64.split(';')[0].split(':')[1];
-
-      var endpoint = settings.endpoint || 'https://api.openai.com/v1/chat/completions';
-      var model = settings.model || 'gpt-4o-mini';
-
-      // Size check
-      var imgSizeKB = Math.round((base64Data.length * 3) / 4 / 1024);
-      console.log('Image size: ~' + imgSizeKB + 'KB, MIME: ' + mimeType);
-      if (imgSizeKB > 5000) {
-        setScanStatus('error', '⚠️ Image too large (' + imgSizeKB + 'KB). Try a smaller photo.');
-        document.getElementById('scanBtn').disabled = false;
-        document.getElementById('scanResult').style.display = 'block';
-        document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
-        return;
-      }
-
-      var prompt = 'Analyze this receipt image and extract the following information. Return ONLY valid JSON, no markdown fences, no explanation.\n\n{\n  "merchant": "store or business name",\n  "amount": "total amount as a number (e.g. 42.50)",\n  "date": "date on receipt in YYYY-MM-DD format",\n  "category": "one of: fuel, food, lodging, perdiem, production, misc",\n  "items": "brief description of what was purchased"\n}\n\nRules:\n- amount should be the TOTAL including tax\n- date: if no date visible, use today\n- category: fuel=gas stations, food=restaurants/groceries, lodging=hotels, perdiem=cash advances, production=equipment/gear, misc=anything else\n- merchant: use the actual business name from the receipt';
-
-      var payload = {
-        model: model,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: 'data:' + mimeType + ';base64,' + base64Data, detail: 'high' } }
-          ]
-        }],
-        max_tokens: 300
-      };
-
-      console.log('Sending to:', endpoint);
-      console.log('Model:', model);
-      var payloadStr = JSON.stringify(payload);
-      console.log('Payload size:', payloadStr.length, 'bytes');
-
-      // Detect mobile/Brave and use CORS proxy if needed
-      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      var isBrave = (navigator.brave && navigator.brave.isBrave) || false;
-      var useProxy = isMobile || isBrave;
-
-      // Try multiple CORS proxies in order of reliability
-      var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(endpoint);
-      var requestUrl = useProxy ? proxyUrl : endpoint;
-
-      console.log('Mobile:', isMobile, 'Brave:', isBrave, 'Using proxy:', useProxy);
-      console.log('Request URL:', requestUrl);
-
-      // Use XMLHttpRequest instead of fetch — works better on iOS/Brave
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', requestUrl, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('Authorization', 'Bearer ' + settings.apiKey);
-      xhr.timeout = 30000;
-
-      xhr.onload = function() {
-        console.log('XHR status:', xhr.status);
-        document.getElementById('scanBtn').disabled = false;
-
-        if (xhr.status < 200 || xhr.status >= 300) {
-          setScanStatus('error', '⚠️ API error ' + xhr.status + ': ' + (xhr.responseText || '').substring(0, 200));
-          document.getElementById('scanResult').style.display = 'block';
-          document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
-          return;
+      Tesseract.recognize(currentReceiptBase64, 'eng', {
+        logger: function(m) {
+          if (m.status === 'recognizing text') {
+            var pct = Math.round(m.progress * 100);
+            document.getElementById('ocrFill').style.width = pct + '%';
+            document.getElementById('ocrLabel').textContent = 'Recognizing text... ' + pct + '%';
+          } else if (m.status === 'loading language traineddata') {
+            document.getElementById('ocrFill').style.width = '5%';
+            document.getElementById('ocrLabel').textContent = 'Loading language data (first time may take a moment)...';
+          }
         }
-
-        try {
-          var data = JSON.parse(xhr.responseText);
-        } catch(e) {
-          setScanStatus('error', '⚠️ Invalid response from API');
-          document.getElementById('scanResult').style.display = 'block';
-          document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
-          return;
-        }
-
-        if (data.error) {
-          setScanStatus('error', '⚠️ ' + (data.error.message || data.error.type || 'API error'));
-          document.getElementById('scanResult').style.display = 'block';
-          document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
-          return;
-        }
-
-        var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-        if (!content) {
-          setScanStatus('error', '⚠️ No response from API');
-          document.getElementById('scanResult').style.display = 'block';
-          document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
-          return;
-        }
-
-        try {
-          var jsonStr = content.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
-          var parsed = JSON.parse(jsonStr);
-
-          document.getElementById('scanMerchant').value = parsed.merchant || '';
-          document.getElementById('scanAmount').value = parsed.amount || '';
-          document.getElementById('scanDate').value = parsed.date || new Date().toISOString().split('T')[0];
-          document.getElementById('scanNotes').value = parsed.items || '';
-
-          var detectedCat = parsed.category || 'misc';
-          scanSelectedCat = detectedCat;
-          document.querySelectorAll('#scanCatGrid .cat-option').forEach(function(c) {
-            c.classList.toggle('selected', c.dataset.cat === detectedCat);
-          });
-
-          setScanStatus('success', '✅ Receipt scanned — review and save');
-          document.getElementById('scanResult').style.display = 'block';
-
-        } catch(parseErr) {
-          setScanStatus('error', '⚠️ Could not parse receipt. Fill in manually.');
-          document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
-          document.getElementById('scanResult').style.display = 'block';
-        }
-      };
-
-      xhr.onerror = function() {
-        console.error('XHR network error');
-        document.getElementById('scanBtn').disabled = false;
-        setScanStatus('error', '⚠️ Network blocked by browser. On Brave/iOS: tap the Brave icon (🦁) in the address bar → toggle Shields OFF → reload the page and try again.');
-        document.getElementById('scanResult').style.display = 'block';
+      }).then(function(result) {
+        document.getElementById('ocrProgress').style.display = 'none';
+        var text = result.data.text;
+        console.log('OCR result:', text);
+        parseReceiptText(text);
+      }).catch(function(err) {
+        document.getElementById('ocrProgress').style.display = 'none';
+        document.getElementById('scanStatus').innerHTML = '<div class="scan-status error">⚠️ OCR failed: ' + err.message + '</div>';
+        // Still show the form for manual entry
         document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
-      };
-
-      xhr.ontimeout = function() {
-        console.error('XHR timeout');
-        document.getElementById('scanBtn').disabled = false;
-        setScanStatus('error', '⚠️ Request timed out after 30s. Check your internet connection.');
         document.getElementById('scanResult').style.display = 'block';
-        document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
-      };
-
-      // Debug: log key info (not the full key)
-      console.log('API key length:', settings.apiKey.length);
-      console.log('API key prefix:', settings.apiKey.substring(0, 7) + '...');
-      console.log('API key suffix:', '...' + settings.apiKey.substring(settings.apiKey.length - 4));
-      console.log('Authorization header:', 'Bearer ' + settings.apiKey.substring(0, 7) + '...');
-
-      try {
-        xhr.send(payloadStr);
-      } catch(e) {
-        console.error('XHR send error:', e);
-        document.getElementById('scanBtn').disabled = false;
-        setScanStatus('error', '⚠️ Could not send request: ' + e.message);
-        document.getElementById('scanResult').style.display = 'block';
-        document.getElementById('scanDate').value = new Date().toISOString().split('T')[0];
-      }
+      });
     }
 
-    function setScanStatus(type, html) {
-      var el = document.getElementById('scanStatus');
-      el.className = 'scan-status ' + type;
-      el.innerHTML = html;
+    function parseReceiptText(text) {
+      var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+      var fullText = lines.join(' ');
+
+      // Extract total amount — look for patterns like TOTAL, GRAND TOTAL, etc.
+      var amount = null;
+      var totalPatterns = [
+        /(?:grand\s*)?total[:\s]*\$?\s*([\d]+\.\d{2})/i,
+        /(?:amount\s*due|amount\s*owed|balance\s*due)[:\s]*\$?\s*([\d]+\.\d{2})/i,
+        /(?:subtotal|sub\s*total)[:\s]*\$?\s*([\d]+\.\d{2})/i
+      ];
+      for (var i = 0; i < totalPatterns.length; i++) {
+        var match = fullText.match(totalPatterns[i]);
+        if (match) { amount = parseFloat(match[1]); break; }
+      }
+      // Fallback: find the largest dollar amount (likely the total)
+      if (!amount) {
+        var allAmounts = fullText.match(/\d+\.\d{2}/g);
+        if (allAmounts) {
+          allAmounts = allAmounts.map(parseFloat).filter(function(n) { return n > 0 && n < 100000; });
+          if (allAmounts.length > 0) amount = Math.max.apply(null, allAmounts);
+        }
+      }
+
+      // Extract date
+      var date = null;
+      var datePatterns = [
+        /(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/,
+        /(\w{3,9})\s+(\d{1,2}),?\s*(\d{4})/
+      ];
+      for (var j = 0; j < datePatterns.length; j++) {
+        var dm = fullText.match(datePatterns[j]);
+        if (dm) {
+          try {
+            var d = new Date(dm[0]);
+            if (!isNaN(d.getTime()) && d.getFullYear() > 2020 && d.getFullYear() < 2030) {
+              date = d.toISOString().split('T')[0];
+              break;
+            }
+          } catch(e) {}
+        }
+      }
+
+      // Extract merchant — usually the first non-empty line or two
+      var merchant = '';
+      // Skip common header noise
+      var skipWords = ['receipt', 'invoice', 'welcome', 'thank you', 'tel:', 'phone:', 'www.', 'http'];
+      for (var k = 0; k < Math.min(lines.length, 6); k++) {
+        var line = lines[k].toLowerCase();
+        var isSkip = skipWords.some(function(w) { return line.indexOf(w) !== -1; });
+        if (!isSkip && lines[k].length > 2 && lines[k].length < 40 && !/^\d/.test(lines[k])) {
+          merchant = lines[k];
+          break;
+        }
+      }
+      if (!merchant && lines.length > 0) merchant = lines[0].substring(0, 30);
+
+      // Guess category from keywords
+      var category = 'misc';
+      var lower = fullText.toLowerCase();
+      if (/gas|fuel|shell|exxon|bp|chevron|valero|speedway|circle k|pilot|love.s|flying j/i.test(lower)) category = 'fuel';
+      else if (/restaurant|cafe|diner|pizza|burger|taco|subway|mcdonald|wendy|chipotle|starbucks|coffee|grill|kitchen|bar\b|pub\b|eat/i.test(lower)) category = 'food';
+      else if (/hotel|motel|inn\b|suites|marriott|hilton|hyatt|holiday|best western|airbnb|lodging/i.test(lower)) category = 'lodging';
+      else if (/walmart|target|cvs|walgreens|grocery|supermarket|costco/i.test(lower)) category = 'food';
+
+      // Fill in the form
+      document.getElementById('scanMerchant').value = merchant;
+      document.getElementById('scanAmount').value = amount || '';
+      document.getElementById('scanDate').value = date || new Date().toISOString().split('T')[0];
+      document.getElementById('scanNotes').value = lines.slice(0, 5).join(' | ');
+
+      scanSelectedCat = category;
+      document.querySelectorAll('#scanCatGrid .cat-option').forEach(function(c) {
+        c.classList.toggle('selected', c.dataset.cat === category);
+      });
+
+      document.getElementById('scanResult').style.display = 'block';
+
+      var statusMsg = '✅ Text recognized — ';
+      var parts = [];
+      if (merchant) parts.push(merchant);
+      if (amount) parts.push(formatCurrency(amount));
+      if (date) parts.push(date);
+      if (parts.length === 0) parts.push('review and fill in manually');
+      statusMsg += parts.join(' • ');
+
+      document.getElementById('scanStatus').innerHTML = '<div class="scan-status success">' + statusMsg + '</div>';
     }
 
     function saveScannedExpense() {
@@ -1017,8 +795,7 @@
         amount: amount,
         date: date,
         notes: notes,
-        receipt: currentReceiptBase64 ? currentReceiptBase64.substring(0, 100) + '...' : null,
-        has_receipt: !!currentReceiptBase64,
+        has_receipt: true,
         created_at: new Date().toISOString()
       });
 
@@ -1043,11 +820,8 @@
       document.getElementById('statTotal').textContent = formatCurrency(totalAll);
       document.getElementById('statCount').textContent = expenses.length;
 
-      // Day selector
       var dates = [];
-      expenses.forEach(function(e) {
-        if (dates.indexOf(e.date) === -1) dates.push(e.date);
-      });
+      expenses.forEach(function(e) { if (dates.indexOf(e.date) === -1) dates.push(e.date); });
       dates.sort().reverse();
 
       var dayHtml = '<div class="day-chip' + (filterDate === 'all' ? ' active' : '') + '" data-date="all" onclick="filterDay(\'all\')">All Days</div>';
@@ -1059,11 +833,7 @@
       document.getElementById('daySelector').innerHTML = dayHtml;
 
       var grouped = {};
-      filtered.forEach(function(e) {
-        if (!grouped[e.date]) grouped[e.date] = [];
-        grouped[e.date].push(e);
-      });
-
+      filtered.forEach(function(e) { if (!grouped[e.date]) grouped[e.date] = []; grouped[e.date].push(e); });
       var datesToShow = Object.keys(grouped).sort().reverse();
       var html = '';
 
@@ -1075,7 +845,6 @@
         var dayExpenses = grouped[date];
         var dayTotal = 0;
         dayExpenses.forEach(function(e) { dayTotal += e.amount || 0; });
-
         var dt = new Date(date + 'T12:00:00');
         var label = dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
@@ -1087,7 +856,7 @@
             '<div class="expense-icon" style="background:' + cat.color + '15;">' + cat.icon + '</div>' +
             '<div class="expense-info">' +
             '<div class="expense-desc">' + exp.description + '</div>' +
-            '<div class="expense-meta">' + cat.name + (exp.notes ? ' • ' + exp.notes : '') + '</div>' +
+            '<div class="expense-meta">' + cat.name + (exp.notes ? ' • ' + exp.notes.substring(0, 30) : '') + '</div>' +
             '</div>' +
             '<div class="expense-amount">' + formatCurrency(exp.amount) + '</div>' +
             (exp.has_receipt ? '<div class="expense-receipt-badge">📎</div>' : '') +
@@ -1099,31 +868,7 @@
       document.getElementById('expenseList').innerHTML = html;
     }
 
-    function updateApiStatus() {
-      var bar = document.getElementById('apiStatusBar');
-      if (!bar) return;
-      var s = getSettings();
-      if (s.apiKey) {
-        bar.style.display = 'flex';
-        bar.style.background = 'rgba(34,197,94,0.08)';
-        bar.style.borderBottomColor = 'rgba(34,197,94,0.2)';
-        var icon = document.getElementById('apiStatusIcon');
-        var text = document.getElementById('apiStatusText');
-        if (icon) icon.textContent = '✅';
-        if (text) { text.textContent = 'Receipt scanner ready'; text.style.color = 'var(--success)'; }
-      } else {
-        bar.style.display = 'flex';
-        bar.style.background = 'rgba(217,4,41,0.08)';
-        bar.style.borderBottomColor = 'rgba(217,4,41,0.2)';
-        var icon2 = document.getElementById('apiStatusIcon');
-        var text2 = document.getElementById('apiStatusText');
-        if (icon2) icon2.textContent = '⚠️';
-        if (text2) { text2.textContent = 'No API key — tap to set up receipt scanner'; text2.style.color = 'var(--dim)'; }
-      }
-    }
-
     render();
-    updateApiStatus();
   </script>
 </body>
 </html>
