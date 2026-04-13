@@ -727,6 +727,26 @@
       setScanMode(scanMode);
     })();
 
+    function startScan() {
+      if (!currentReceiptBase64) {
+        setStatus('error', '⚠️ No image loaded');
+        return;
+      }
+
+      var btn = document.getElementById('mainScanBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Scanning...';
+
+      if (scanMode === 'gemini') {
+        document.getElementById('ocrProgress').style.display = 'none';
+        scanWithGemini();
+      } else {
+        document.getElementById('ocrProgress').style.display = 'block';
+        document.getElementById('ocrFill').style.width = '0%';
+        runOCR();
+      }
+    }
+
     function scanWithGemini() {
       var settings = JSON.parse(localStorage.getItem('tq_scan_settings') || '{}');
       var apiKey = settings.geminiKey || 'AIzaSyAJc1rCl2zWcTQos4w1jqzAWFP1bf5Elb0';
@@ -795,6 +815,8 @@
 
         document.getElementById('scanResult').style.display = 'block';
         setStatus('success', '✅ AI scanned — ' + (parsed.merchant || 'Receipt') + ' • $' + (parsed.amount || '?'));
+        var btn = document.getElementById('mainScanBtn');
+        if (btn) { btn.disabled = false; btn.textContent = '🔍 Scan Receipt'; }
       })
       .catch(function(err) {
         console.error('Gemini error:', err);
@@ -809,6 +831,9 @@
 
         setStatus('error', '⚠️ ' + errMsg.substring(0, 120));
 
+        // Re-enable button
+        var btn = document.getElementById('mainScanBtn');
+        if (btn) { btn.disabled = false; btn.textContent = '🔍 Scan Receipt'; }
         // Wait a moment then fallback to Tesseract
         setTimeout(function() {
           setStatus('scanning', '<div class="scan-spinner"></div> Trying OCR fallback...');
