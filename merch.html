@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Merch Tracker</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070c; --bg-card: #101018; --bg-elevated: #181822;
+      --border: #1f1f2e; --text: #f0f0f5; --dim: #8888a0;
+      --muted: #555570; --accent: #d90429; --cyan: #22d3ee;
+      --success: #22c55e; --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 100px;
+    }
+
+    .user-bar {
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.5rem; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--dim); padding: 0.4rem 0.8rem;
+      border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .page-header {
+      padding: 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.85rem; margin-bottom: 0.75rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-subtitle { color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    /* Tour Stats */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .stat-item {
+      text-align: center; padding: 0.5rem;
+      background: var(--bg-elevated); border-radius: 10px;
+    }
+    .stat-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem; font-weight: 700;
+    }
+    .stat-label {
+      font-size: 0.55rem; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex; border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      flex: 1; padding: 0.75rem; text-align: center;
+      font-size: 0.75rem; font-weight: 600; color: var(--dim);
+      cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* Tab content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Inventory */
+    .inv-card {
+      margin: 0.75rem 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden;
+    }
+    .inv-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.875rem 1rem; cursor: pointer;
+    }
+    .inv-name { font-size: 0.9rem; font-weight: 600; }
+    .inv-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem; color: var(--cyan);
+    }
+    .inv-stock {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem; font-weight: 700;
+    }
+    .inv-stock.low { color: var(--warning); }
+    .inv-stock.out { color: var(--accent); }
+
+    .inv-detail {
+      max-height: 0; overflow: hidden; transition: max-height 0.3s;
+      border-top: 1px solid transparent;
+    }
+    .inv-detail.open {
+      max-height: 300px; border-top-color: var(--border);
+    }
+    .inv-detail-inner { padding: 1rem; }
+    .inv-adjust {
+      display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;
+    }
+    .inv-adjust-btn {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      color: var(--text); font-size: 1.2rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .inv-adjust-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .inv-adjust-input {
+      flex: 1; text-align: center; padding: 0.5rem;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text);
+      font-family: 'JetBrains Mono', monospace; font-size: 1.1rem;
+      font-weight: 700; outline: none;
+    }
+    .inv-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.75rem; padding: 0.25rem 0;
+    }
+    .inv-row-label { color: var(--dim); }
+    .inv-row-value { font-weight: 600; }
+
+    /* Sales Log */
+    .sale-card {
+      margin: 0.4rem 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 10px;
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 1rem; position: relative;
+    }
+    .sale-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(34, 197, 94, 0.1); display: flex;
+      align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .sale-info { flex: 1; }
+    .sale-venue { font-size: 0.85rem; font-weight: 500; }
+    .sale-meta { font-size: 0.7rem; color: var(--dim); margin-top: 2px; }
+    .sale-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem; font-weight: 700; color: var(--success);
+    }
+    .sale-delete {
+      position: absolute; top: 0.5rem; right: 0.5rem;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(217, 4, 41, 0.1); border: none;
+      color: var(--accent); font-size: 0.7rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .sale-card:hover .sale-delete { opacity: 1; }
+
+    .section-title {
+      padding: 1rem 1.25rem 0.5rem; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7); z-index: 1000;
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0; padding: 1.5rem;
+      width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
+    }
+    .modal-handle {
+      width: 36px; height: 4px; background: var(--muted);
+      border-radius: 2px; margin: 0 auto 1rem;
+    }
+    .modal h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+      display: block; font-size: 0.8rem; font-weight: 500;
+      color: var(--dim); margin-bottom: 0.4rem;
+    }
+    .form-input {
+      width: 100%; padding: 0.75rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-size: 0.95rem; font-family: inherit; outline: none;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .btn {
+      width: 100%; padding: 0.875rem; border: none; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-secondary {
+      background: var(--bg-elevated); color: var(--text);
+      border: 1px solid var(--border); margin-top: 0.5rem;
+    }
+
+    .add-btn {
+      position: fixed; bottom: 80px; right: calc(50% - 240px + 1rem);
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--accent); color: white; border: none;
+      font-size: 1.5rem; cursor: pointer; z-index: 50;
+      box-shadow: 0 4px 20px rgba(217, 4, 41, 0.4);
+      transition: transform 0.2s;
+    }
+    .add-btn:hover { transform: scale(1.1); }
+
+    .export-bar {
+      margin: 0.75rem 1rem; display: flex; gap: 0.5rem;
+    }
+    .export-btn {
+      flex: 1; padding: 0.6rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; text-align: center; transition: all 0.2s;
+    }
+    .export-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .empty-state {
+      padding: 3rem 2rem; text-align: center; color: var(--dim);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-elevated); border: 1px solid var(--success);
+      color: var(--success); padding: 0.75rem 1.5rem;
+      border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+      z-index: 200; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; padding: 0.65rem 0.5rem;
+      max-width: 480px; margin: 0 auto; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 1.2rem; opacity: 0.4; cursor: pointer; padding: 0.25rem 0.5rem;
+      text-decoration: none; color: var(--text); transition: opacity 0.2s;
+    }
+    .nav-item span { font-size: 0.55rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-item.active { opacity: 1; }
+    .nav-item.active span { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="page-header">
+    <a href="more.html" class="back-btn">← Back to More</a>
+    <div class="page-title">👕 Merch Tracker</div>
+    <div class="page-subtitle">Track inventory, sales & venue splits</div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-number" id="statRevenue" style="color: var(--success);">$0</div>
+      <div class="stat-label">Revenue</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="statSold" style="color: var(--cyan);">0</div>
+      <div class="stat-label">Items Sold</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="statProfit" style="color: var(--warning);">$0</div>
+      <div class="stat-label">After Splits</div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" data-tab="inventory" onclick="switchTab('inventory')">📦 Inventory</div>
+    <div class="tab" data-tab="sales" onclick="switchTab('sales')">💰 Sales Log</div>
+  </div>
+
+  <!-- Inventory Tab -->
+  <div class="tab-content active" id="tab-inventory">
+    <div id="inventoryList"></div>
+  </div>
+
+  <!-- Sales Tab -->
+  <div class="tab-content" id="tab-sales">
+    <div id="salesList"></div>
+  </div>
+
+  <div class="export-bar">
+    <button class="export-btn" onclick="exportCSV()">📄 Export CSV</button>
+  </div>
+
+  <button class="add-btn" onclick="openModal()" id="addBtn">+</button>
+
+  <div class="toast" id="toast">Saved!</div>
+
+  <!-- Add Inventory Modal -->
+  <div class="modal-overlay" id="invModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>Add Merch Item</h2>
+      <form onsubmit="addInventoryItem(event)">
+        <div class="form-group">
+          <label class="form-label">Item Name *</label>
+          <input type="text" class="form-input" id="invName" placeholder="Tour T-Shirt (Black)" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Price *</label>
+            <input type="number" class="form-input" id="invPrice" step="0.01" placeholder="35.00" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Starting Stock *</label>
+            <input type="number" class="form-input" id="invStock" placeholder="100" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Cost Per Unit</label>
+            <input type="number" class="form-input" id="invCost" step="0.01" placeholder="12.00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-input" id="invCategory">
+              <option value="apparel">Apparel</option>
+              <option value="music">Music (Vinyl/CD)</option>
+              <option value="accessories">Accessories</option>
+              <option value="poster">Posters</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Item</button>
+        <button type="button" class="btn btn-secondary" onclick="closeInvModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Record Sale Modal -->
+  <div class="modal-overlay" id="saleModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>Record Sale</h2>
+      <form onsubmit="recordSale(event)">
+        <div class="form-group">
+          <label class="form-label">Item</label>
+          <select class="form-input" id="saleItem"></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Quantity Sold *</label>
+            <input type="number" class="form-input" id="saleQty" value="1" min="1" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Venue</label>
+            <input type="text" class="form-input" id="saleVenue" placeholder="The Masquerade">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="saleDate">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Venue Split %</label>
+            <input type="number" class="form-input" id="saleSplit" value="0" min="0" max="100">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Method</label>
+          <select class="form-input" id="salePayment">
+            <option value="cash">Cash</option>
+            <option value="card">Card</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Record Sale</button>
+        <button type="button" class="btn btn-secondary" onclick="closeSaleModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
+    <a href="dates.html" class="nav-item">📅<span>Dates</span></a>
+    <a href="schedule.html" class="nav-item">⏱️<span>Schedule</span></a>
+    <a href="route.html" class="nav-item">🗺️<span>Route</span></a>
+    <a href="more.html" class="nav-item active">⋯<span>More</span></a>
+  </div>
+
+  <script>
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      localStorage.removeItem('tourhq_current_tour');
+      window.location.href = 'landing.html';
+    }
+
+    var inventory = JSON.parse(localStorage.getItem('tourhq_merch_inventory') || '[]');
+    var sales = JSON.parse(localStorage.getItem('tourhq_merch_sales') || '[]');
+    var currentTab = 'inventory';
+    var openInv = null;
+
+    function formatCurrency(n) { return '$' + parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(function() { t.classList.remove('show'); }, 2000);
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(function(t) {
+        t.classList.toggle('active', t.dataset.tab === tab);
+      });
+      document.querySelectorAll('.tab-content').forEach(function(c) {
+        c.classList.toggle('active', c.id === 'tab-' + tab);
+      });
+      // Change + button behavior
+      document.getElementById('addBtn').onclick = tab === 'inventory' ? openModal : openSaleModal;
+    }
+
+    function openModal() { document.getElementById('invModal').classList.add('active'); }
+    function closeInvModal() { document.getElementById('invModal').classList.remove('active'); }
+    function openSaleModal() {
+      // Populate item dropdown
+      var sel = document.getElementById('saleItem');
+      sel.innerHTML = '';
+      inventory.forEach(function(item) {
+        var opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = item.name + ' ($' + item.price.toFixed(2) + ') — ' + item.stock + ' left';
+        sel.appendChild(opt);
+      });
+      if (inventory.length === 0) {
+        var opt = document.createElement('option');
+        opt.value = ''; opt.textContent = '-- Add inventory items first --';
+        sel.appendChild(opt);
+      }
+      document.getElementById('saleDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('saleModal').classList.add('active');
+    }
+    function closeSaleModal() { document.getElementById('saleModal').classList.remove('active'); }
+
+    function addInventoryItem(e) {
+      e.preventDefault();
+      inventory.push({
+        id: 'item_' + Date.now(),
+        name: document.getElementById('invName').value,
+        price: parseFloat(document.getElementById('invPrice').value) || 0,
+        stock: parseInt(document.getElementById('invStock').value) || 0,
+        startingStock: parseInt(document.getElementById('invStock').value) || 0,
+        cost: parseFloat(document.getElementById('invCost').value) || 0,
+        category: document.getElementById('invCategory').value,
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('tourhq_merch_inventory', JSON.stringify(inventory));
+      closeInvModal();
+      document.getElementById('invName').value = '';
+      document.getElementById('invPrice').value = '';
+      document.getElementById('invStock').value = '';
+      document.getElementById('invCost').value = '';
+      showToast('Item added ✓');
+      render();
+    }
+
+    function recordSale(e) {
+      e.preventDefault();
+      var itemId = document.getElementById('saleItem').value;
+      var item = inventory.find(function(i) { return i.id === itemId; });
+      if (!item) { alert('Select an item'); return; }
+
+      var qty = parseInt(document.getElementById('saleQty').value) || 1;
+      if (qty > item.stock) { alert('Not enough stock! Only ' + item.stock + ' left.'); return; }
+
+      var splitPct = parseFloat(document.getElementById('saleSplit').value) || 0;
+      var gross = qty * item.price;
+      var venueCut = gross * (splitPct / 100);
+      var net = gross - venueCut;
+
+      // Deduct stock
+      item.stock -= qty;
+      localStorage.setItem('tourhq_merch_inventory', JSON.stringify(inventory));
+
+      sales.push({
+        id: 'sale_' + Date.now(),
+        itemId: itemId,
+        itemName: item.name,
+        qty: qty,
+        unitPrice: item.price,
+        gross: gross,
+        venueSplitPct: splitPct,
+        venueCut: venueCut,
+        net: net,
+        venue: document.getElementById('saleVenue').value || 'Walk-up',
+        date: document.getElementById('saleDate').value,
+        payment: document.getElementById('salePayment').value,
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('tourhq_merch_sales', JSON.stringify(sales));
+
+      closeSaleModal();
+      showToast('Sale recorded ✓ ' + qty + 'x ' + item.name);
+      render();
+    }
+
+    function deleteSale(id) {
+      var sale = sales.find(function(s) { return s.id === id; });
+      if (sale) {
+        // Restore stock
+        var item = inventory.find(function(i) { return i.id === sale.itemId; });
+        if (item) item.stock += sale.qty;
+        localStorage.setItem('tourhq_merch_inventory', JSON.stringify(inventory));
+      }
+      sales = sales.filter(function(s) { return s.id !== id; });
+      localStorage.setItem('tourhq_merch_sales', JSON.stringify(sales));
+      render();
+    }
+
+    function adjustStock(itemId, delta) {
+      var item = inventory.find(function(i) { return i.id === itemId; });
+      if (item) {
+        item.stock = Math.max(0, item.stock + delta);
+        localStorage.setItem('tourhq_merch_inventory', JSON.stringify(inventory));
+        render();
+      }
+    }
+
+    function deleteItem(id) {
+      inventory = inventory.filter(function(i) { return i.id !== id; });
+      localStorage.setItem('tourhq_merch_inventory', JSON.stringify(inventory));
+      render();
+    }
+
+    function exportCSV() {
+      var csv = 'Date,Item,Qty,Unit Price,Gross,Venue Split %,Venue Cut,Net,Venue,Payment\n';
+      sales.forEach(function(s) {
+        csv += s.date + ',"' + s.itemName + '",' + s.qty + ',' + s.unitPrice.toFixed(2) + ',' +
+          s.gross.toFixed(2) + ',' + s.venueSplitPct + '%,' + s.venueCut.toFixed(2) + ',' +
+          s.net.toFixed(2) + ',"' + s.venue + '",' + s.payment + '\n';
+      });
+      var blob = new Blob([csv], { type: 'text/csv' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'merch-sales.csv';
+      a.click();
+      showToast('CSV exported ✓');
+    }
+
+    function toggleInv(id) {
+      document.querySelectorAll('.inv-detail').forEach(function(d) { d.classList.remove('open'); });
+      if (openInv !== id) {
+        document.getElementById('detail-' + id).classList.add('open');
+        openInv = id;
+      } else {
+        openInv = null;
+      }
+    }
+
+    function render() {
+      // Stats
+      var totalRevenue = 0, totalSold = 0, totalNet = 0;
+      sales.forEach(function(s) {
+        totalRevenue += s.gross || 0;
+        totalSold += s.qty || 0;
+        totalNet += s.net || 0;
+      });
+      document.getElementById('statRevenue').textContent = formatCurrency(totalRevenue);
+      document.getElementById('statSold').textContent = totalSold;
+      document.getElementById('statProfit').textContent = formatCurrency(totalNet);
+
+      // Inventory
+      var invHtml = '';
+      if (inventory.length === 0) {
+        invHtml = '<div class="empty-state"><div class="empty-icon">👕</div><div style="font-size:0.9rem; color:var(--dim);">No merch items yet.<br>Tap + to add your first item.</div></div>';
+      }
+      inventory.forEach(function(item) {
+        var sold = 0;
+        sales.forEach(function(s) { if (s.itemId === item.id) sold += s.qty; });
+        var revenue = sold * item.price;
+        var stockClass = item.stock <= 0 ? 'out' : (item.stock <= 10 ? 'low' : '');
+
+        invHtml += '<div class="inv-card">' +
+          '<div class="inv-header" onclick="toggleInv(\'' + item.id + '\')">' +
+          '<div><div class="inv-name">' + item.name + '</div>' +
+          '<div class="inv-price">$' + item.price.toFixed(2) + ' each</div></div>' +
+          '<div class="inv-stock ' + stockClass + '">' + item.stock + ' left</div>' +
+          '</div>' +
+          '<div class="inv-detail" id="detail-' + item.id + '">' +
+          '<div class="inv-detail-inner">' +
+          '<div class="inv-adjust">' +
+          '<button class="inv-adjust-btn" onclick="adjustStock(\'' + item.id + '\', -10)">−10</button>' +
+          '<button class="inv-adjust-btn" onclick="adjustStock(\'' + item.id + '\', -1)">−</button>' +
+          '<input class="inv-adjust-input" type="number" value="' + item.stock + '" onchange="setStock(\'' + item.id + '\', this.value)">' +
+          '<button class="inv-adjust-btn" onclick="adjustStock(\'' + item.id + '\', 1)">+</button>' +
+          '<button class="inv-adjust-btn" onclick="adjustStock(\'' + item.id + '\', 10)">+10</button>' +
+          '</div>' +
+          '<div class="inv-row"><span class="inv-row-label">Starting Stock</span><span class="inv-row-value">' + item.startingStock + '</span></div>' +
+          '<div class="inv-row"><span class="inv-row-label">Total Sold</span><span class="inv-row-value">' + sold + '</span></div>' +
+          '<div class="inv-row"><span class="inv-row-label">Revenue</span><span class="inv-row-value" style="color:var(--success);">' + formatCurrency(revenue) + '</span></div>' +
+          (item.cost ? '<div class="inv-row"><span class="inv-row-label">Cost/unit</span><span class="inv-row-value">$' + item.cost.toFixed(2) + '</span></div>' +
+          '<div class="inv-row"><span class="inv-row-label">Profit</span><span class="inv-row-value" style="color:var(--success);">' + formatCurrency(revenue - (sold * item.cost)) + '</span></div>' : '') +
+          '</div></div></div>';
+      });
+      document.getElementById('inventoryList').innerHTML = invHtml;
+
+      // Sales
+      var salesHtml = '';
+      var sorted = sales.slice().reverse();
+      if (sorted.length === 0) {
+        salesHtml = '<div class="empty-state"><div class="empty-icon">💰</div><div style="font-size:0.9rem; color:var(--dim);">No sales recorded yet.</div></div>';
+      }
+      sorted.forEach(function(s) {
+        salesHtml += '<div class="sale-card">' +
+          '<div class="sale-icon">🏷️</div>' +
+          '<div class="sale-info">' +
+          '<div class="sale-venue">' + s.qty + 'x ' + s.itemName + '</div>' +
+          '<div class="sale-meta">' + s.venue + ' • ' + s.date + (s.venueSplitPct > 0 ? ' • ' + s.venueSplitPct + '% split' : '') + '</div>' +
+          '</div>' +
+          '<div class="sale-amount">' + formatCurrency(s.net) + '</div>' +
+          '<button class="sale-delete" onclick="deleteSale(\'' + s.id + '\')">✕</button>' +
+          '</div>';
+      });
+      document.getElementById('salesList').innerHTML = salesHtml;
+    }
+
+    function setStock(itemId, val) {
+      var item = inventory.find(function(i) { return i.id === itemId; });
+      if (item) {
+        item.stock = Math.max(0, parseInt(val) || 0);
+        localStorage.setItem('tourhq_merch_inventory', JSON.stringify(inventory));
+        render();
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>

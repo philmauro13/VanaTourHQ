@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tour HQ — Daily Briefing</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070c; --bg-card: #101018; --bg-elevated: #181822;
+      --border: #1f1f2e; --text: #f0f0f5; --dim: #8888a0;
+      --muted: #555570; --accent: #d90429; --cyan: #22d3ee;
+      --success: #22c55e; --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 100px;
+    }
+
+    .user-bar {
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.5rem; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .logout-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--dim); padding: 0.4rem 0.8rem;
+      border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .page-header {
+      padding: 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.85rem; margin-bottom: 0.75rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-subtitle { color: var(--dim); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    /* Day Selector */
+    .day-selector {
+      display: flex; gap: 0.5rem; padding: 0.75rem 1rem;
+      overflow-x: auto; border-bottom: 1px solid var(--border);
+      scrollbar-width: none;
+    }
+    .day-selector::-webkit-scrollbar { display: none; }
+    .day-chip {
+      flex-shrink: 0; padding: 0.45rem 0.9rem;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 100px; font-size: 0.65rem; font-weight: 500;
+      color: var(--dim); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .day-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .day-chip.show { border-color: rgba(217, 4, 41, 0.3); }
+    .day-chip.travel { border-color: rgba(34, 197, 94, 0.3); }
+
+    /* Briefing Preview */
+    .briefing-card {
+      margin: 1rem; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 14px;
+      overflow: hidden;
+    }
+    .briefing-header {
+      padding: 1rem 1.25rem; text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .briefing-date {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      color: var(--accent); letter-spacing: 0.05em; margin-bottom: 0.25rem;
+    }
+    .briefing-venue { font-size: 1.25rem; font-weight: 700; }
+    .briefing-city { font-size: 0.85rem; color: var(--dim); margin-top: 2px; }
+
+    .briefing-body {
+      padding: 1rem 1.25rem; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem; line-height: 1.8; color: var(--dim);
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .briefing-body .highlight { color: var(--cyan); font-weight: 600; }
+    .briefing-body .event-name { color: var(--text); }
+
+    /* Action Buttons */
+    .action-bar {
+      display: flex; gap: 0.5rem; padding: 0 1rem 1rem;
+    }
+    .action-btn {
+      flex: 1; padding: 0.75rem; border: 1px solid var(--border);
+      border-radius: 10px; background: var(--bg-elevated);
+      color: var(--text); font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; text-align: center; transition: all 0.2s;
+      text-decoration: none; display: block;
+    }
+    .action-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .action-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .action-btn.primary:hover { background: #b8031f; }
+
+    /* Share options */
+    .share-section {
+      padding: 0 1rem 1rem;
+    }
+    .share-title {
+      font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); padding: 0.5rem 0;
+    }
+    .share-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
+    }
+    .share-btn {
+      padding: 0.6rem 0.25rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.65rem; font-weight: 600; color: var(--dim);
+      cursor: pointer; text-align: center; transition: all 0.2s;
+    }
+    .share-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .share-btn .share-icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
+
+    /* Custom message */
+    .custom-msg {
+      margin: 0 1rem 1rem;
+    }
+    .custom-msg textarea {
+      width: 100%; padding: 0.75rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-size: 0.85rem; font-family: inherit;
+      resize: vertical; min-height: 80px; outline: none;
+    }
+    .custom-msg textarea:focus { border-color: var(--accent); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-elevated); border: 1px solid var(--success);
+      color: var(--success); padding: 0.75rem 1.5rem;
+      border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+      z-index: 200; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; padding: 0.65rem 0.5rem;
+      max-width: 480px; margin: 0 auto; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 1.2rem; opacity: 0.4; cursor: pointer; padding: 0.25rem 0.5rem;
+      text-decoration: none; color: var(--text); transition: opacity 0.2s;
+    }
+    .nav-item span { font-size: 0.55rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-item.active { opacity: 1; }
+    .nav-item.active span { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="user-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span class="user-name" id="userName">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="page-header">
+    <a href="more.html" class="back-btn">← Back to More</a>
+    <div class="page-title">📋 Daily Briefing</div>
+    <div class="page-subtitle">One-tap daily summary for your crew</div>
+  </div>
+
+  <div class="day-selector" id="daySelector"></div>
+
+  <div class="briefing-card">
+    <div class="briefing-header">
+      <div class="briefing-date" id="briefingDate">Loading...</div>
+      <div class="briefing-venue" id="briefingVenue">Loading...</div>
+      <div class="briefing-city" id="briefingCity"></div>
+    </div>
+    <div class="briefing-body" id="briefingBody">Generating briefing...</div>
+  </div>
+
+  <div class="action-bar">
+    <button class="action-btn primary" onclick="copyBriefing()">📋 Copy Briefing</button>
+    <button class="action-btn" onclick="openInWhatsApp()">💬 WhatsApp</button>
+  </div>
+
+  <div class="custom-msg">
+    <div style="font-size:0.7rem; color:var(--dim); margin-bottom:0.4rem; font-weight:600;">ADD A MESSAGE (optional)</div>
+    <textarea id="customMsg" placeholder="e.g. Great show last night! Let's keep the energy going."></textarea>
+  </div>
+
+  <div class="share-section">
+    <div class="share-title">Quick Share</div>
+    <div class="share-grid">
+      <button class="share-btn" onclick="shareVia('sms')"><span class="share-icon">💬</span>SMS</button>
+      <button class="share-btn" onclick="shareVia('email')"><span class="share-icon">📧</span>Email</button>
+      <button class="share-btn" onclick="shareVia('native')"><span class="share-icon">📤</span>Share...</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied!</div>
+
+  <div class="nav-bar">
+    <a href="index.html" class="nav-item">🏠<span>Dashboard</span></a>
+    <a href="dates.html" class="nav-item">📅<span>Dates</span></a>
+    <a href="schedule.html" class="nav-item">⏱️<span>Schedule</span></a>
+    <a href="route.html" class="nav-item">🗺️<span>Route</span></a>
+    <a href="more.html" class="nav-item active">⋯<span>More</span></a>
+  </div>
+
+  <script>
+    (function() {
+      var user = JSON.parse(localStorage.getItem('tourhq_current_user') || '{}');
+      if (user.name) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      }
+    })();
+
+    function logout() {
+      localStorage.removeItem('tourhq_current_user');
+      localStorage.removeItem('tourhq_current_tour');
+      window.location.href = 'landing.html';
+    }
+
+    var allDays = [];
+    var currentIndex = 0;
+    var tour = JSON.parse(localStorage.getItem('tourhq_current_tour') || '{}');
+    var tourName = tour.name || 'VANA Lady in Red Tour';
+
+    function showToast(msg) {
+      var toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(function() { toast.classList.remove('show'); }, 2000);
+    }
+
+    function renderDaySelector() {
+      var html = '';
+      allDays.forEach(function(day, i) {
+        var cls = 'day-chip' + (i === currentIndex ? ' active' : '') + ' ' + day.type.toLowerCase();
+        var d = new Date(day.date + 'T12:00:00');
+        var label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        html += '<div class="' + cls + '" onclick="selectDay(' + i + ')">' + label + '</div>';
+      });
+      document.getElementById('daySelector').innerHTML = html;
+    }
+
+    function selectDay(i) {
+      currentIndex = i;
+      renderDaySelector();
+      renderBriefing();
+    }
+
+    function getSavedDay(date) {
+      var savedDays = JSON.parse(localStorage.getItem('tourhq_days') || '{}');
+      return savedDays[date] || {};
+    }
+
+    function getDefaultEntries(isShow) {
+      if (isShow) {
+        return [
+          { time: '12:00 PM', event: 'Load-In', type: 'logistics' },
+          { time: '04:00 PM', event: 'Soundcheck: Support', type: 'support' },
+          { time: '06:00 PM', event: 'Soundcheck: Headliner', type: 'headliner' },
+          { time: '06:30 PM', event: 'VIP Meet & Greet', type: 'headliner' },
+          { time: '07:00 PM', event: 'Doors Open', type: 'logistics' },
+          { time: '09:00 PM', event: 'Headliner Set', type: 'headliner' },
+          { time: '11:00 PM', event: 'Curfew / Hard Stop', type: 'logistics' },
+          { time: '01:30 AM', event: 'Bus Call / Wheels Up', type: 'travel' }
+        ];
+      }
+      return [
+        { time: '11:00 AM', event: 'Hotel Checkout', type: 'logistics' },
+        { time: '12:00 PM', event: 'Drive Day', type: 'travel' },
+        { time: '06:00 PM', event: 'Arrive at Hotel', type: 'logistics' }
+      ];
+    }
+
+    function generateBriefingText(day) {
+      var isShow = day.type === 'SHOW';
+      var saved = getSavedDay(day.date);
+      var entries = (saved.entries) ? saved.entries : getDefaultEntries(isShow);
+      var d = new Date(day.date + 'T12:00:00');
+      var dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+      var lines = [];
+      lines.push('📋 ' + tourName.toUpperCase());
+      lines.push('📅 ' + dateStr);
+      lines.push('');
+
+      if (isShow) {
+        var venue = saved.venue || day.venue || 'TBD';
+        var city = saved.address || day.city || '';
+        lines.push('📍 VENUE: ' + venue);
+        if (city) lines.push('   ' + city);
+        if (saved.promoter) lines.push('   Promoter: ' + saved.promoter);
+        if (saved.hotel) lines.push('🏨 Hotel: ' + saved.hotel);
+        lines.push('');
+
+        lines.push('⏰ SCHEDULE:');
+        entries.forEach(function(e) {
+          var prefix = '';
+          if (e.type === 'headliner') prefix = '🎤 ';
+          else if (e.type === 'support') prefix = '🎛️ ';
+          else if (e.type === 'travel') prefix = '🚌 ';
+          else prefix = '• ';
+          lines.push('  ' + prefix + e.time + ' — ' + e.event);
+        });
+
+        if (day.next_city && day.next_city !== 'End of Tour') {
+          lines.push('');
+          lines.push('🚛 NEXT LEG: ' + day.next_city);
+          lines.push('   ' + day.next_distance + ' • ' + day.next_drive_time);
+        }
+      } else {
+        lines.push('🚛 TRAVEL DAY');
+        lines.push('   ' + day.from + ' → ' + day.to);
+        lines.push('   ' + day.distance + ' • ' + day.drive_time);
+        if (day.stopover) {
+          lines.push('');
+          lines.push('🏨 STOPOVER: ' + day.stopover.city);
+        }
+      }
+
+      if (saved.notes) {
+        lines.push('');
+        lines.push('📝 NOTES: ' + saved.notes);
+      }
+
+      return lines.join('\n');
+    }
+
+    function renderBriefing() {
+      var day = allDays[currentIndex];
+      if (!day) return;
+
+      var d = new Date(day.date + 'T12:00:00');
+      var dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      var saved = getSavedDay(day.date);
+      var isShow = day.type === 'SHOW';
+
+      document.getElementById('briefingDate').textContent = dateStr;
+      document.getElementById('briefingVenue').textContent = isShow ? (saved.venue || day.venue || 'Show Day') : 'Travel Day';
+      document.getElementById('briefingCity').textContent = isShow ? (saved.address || day.city || '') : (day.from + ' → ' + day.to);
+
+      var text = generateBriefingText(day);
+      document.getElementById('briefingBody').textContent = text;
+    }
+
+    function getFullText() {
+      var custom = document.getElementById('customMsg').value.trim();
+      var briefing = document.getElementById('briefingBody').textContent;
+      if (custom) return custom + '\n\n---\n\n' + briefing;
+      return briefing;
+    }
+
+    function copyBriefing() {
+      navigator.clipboard.writeText(getFullText()).then(function() {
+        showToast('Copied to clipboard ✓');
+      }).catch(function() {
+        // Fallback
+        var ta = document.createElement('textarea');
+        ta.value = getFullText();
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Copied to clipboard ✓');
+      });
+    }
+
+    function openInWhatsApp() {
+      var text = encodeURIComponent(getFullText());
+      window.open('https://wa.me/?text=' + text, '_blank');
+    }
+
+    function shareVia(method) {
+      var text = getFullText();
+      if (method === 'sms') {
+        window.open('sms:?body=' + encodeURIComponent(text), '_blank');
+      } else if (method === 'email') {
+        var day = allDays[currentIndex];
+        var d = new Date(day.date + 'T12:00:00');
+        var dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        window.open('mailto:?subject=' + encodeURIComponent(tourName + ' — ' + dateStr) + '&body=' + encodeURIComponent(text), '_blank');
+      } else if (navigator.share) {
+        navigator.share({ title: tourName + ' Daily Briefing', text: text }).catch(function() {});
+      } else {
+        copyBriefing();
+      }
+    }
+
+    // Load routing data
+    fetch('data/routing_data.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        allDays = data.routing;
+
+        // Find today or first upcoming show
+        var today = new Date().toISOString().split('T')[0];
+        var todayIdx = allDays.findIndex(function(d) { return d.date >= today; });
+        if (todayIdx >= 0) currentIndex = todayIdx;
+
+        renderDaySelector();
+        renderBriefing();
+      })
+      .catch(function() {
+        document.getElementById('briefingBody').textContent = 'Could not load tour data.';
+      });
+  </script>
+</body>
+</html>
