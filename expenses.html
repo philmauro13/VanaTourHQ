@@ -299,6 +299,10 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Toggle switch styles */
+    #geminiToggle:checked + span { background: var(--cyan); }
+    #geminiToggle:checked ~ #geminiSlider { transform: translateX(20px); background: white; }
+
     .progress-bar-ocr {
       height: 6px; background: var(--bg-elevated); border-radius: 3px;
       overflow: hidden; margin-top: 0.5rem;
@@ -430,7 +434,6 @@
     <div class="modal">
       <div class="modal-handle"></div>
       <h2>📷 Scan Receipt</h2>
-      <p style="font-size:0.75rem; color:var(--dim); margin-bottom:1rem;">Uses built-in text recognition — no API key needed!</p>
       <div id="scanStatus"></div>
       <div class="scan-section" id="scanArea" onclick="document.getElementById('receiptInput').click()">
         <div class="scan-icon">📸</div>
@@ -635,16 +638,23 @@
 
       document.getElementById('scanArea').style.display = 'none';
       document.getElementById('receiptPreview').style.display = 'block';
-      document.getElementById('ocrProgress').style.display = 'block';
       document.getElementById('scanResult').style.display = 'none';
 
-      // Resize for better OCR
+      var useGemini = document.getElementById('geminiToggle').checked;
+
+      if (useGemini) {
+        document.getElementById('ocrProgress').style.display = 'none';
+      } else {
+        document.getElementById('ocrProgress').style.display = 'block';
+      }
+
+      // Resize image
       var img = new Image();
       var reader = new FileReader();
       reader.onload = function(e) {
         img.onload = function() {
           var canvas = document.createElement('canvas');
-          var MAX = 1500; // Higher res for better OCR
+          var MAX = useGemini ? 1024 : 1500;
           var w = img.width, h = img.height;
           if (w > MAX || h > MAX) {
             if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -652,16 +662,128 @@
           }
           canvas.width = w; canvas.height = h;
           var ctx = canvas.getContext('2d');
-          // Boost contrast for better OCR
-          ctx.filter = 'contrast(1.3) brightness(1.1)';
+          if (!useGemini) ctx.filter = 'contrast(1.3) brightness(1.1)';
           ctx.drawImage(img, 0, 0, w, h);
-          currentReceiptBase64 = canvas.toDataURL('image/png');
+          currentReceiptBase64 = canvas.toDataURL('image/jpeg', 0.8);
           document.getElementById('receiptImg').src = currentReceiptBase64;
-          runOCR();
+
+          if (useGemini) {
+            scanWithGemini();
+          } else {
+            runOCR();
+          }
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
+    }
+
+    function toggleGemini() {
+      var toggle = document.getElementById('geminiToggle');
+      var slider = document.getElementById('geminiSlider');
+      var info = document.getElementById('geminiInfo');
+      if (toggle.checked) {
+        slider.style.background = 'white';
+        slider.style.transform = 'translateX(20px)';
+        slider.parentElement.querySelector('span').style.background = 'var(--cyan)';
+        info.textContent = '✅ Smart Scan ON — uses Google Gemini AI for accurate reading';
+        info.style.color = 'var(--cyan)';
+      } else {
+        slider.style.background = 'var(--dim)';
+        slider.style.transform = 'translateX(0)';
+        slider.parentElement.querySelector('span').style.background = 'var(--border)';
+        info.textContent = 'Uses Google Gemini AI for accurate receipt reading (free). Toggle on for smart scanning.';
+        info.style.color = 'var(--dim)';
+      }
+      localStorage.setItem('tq_use_gemini', toggle.checked ? '1' : '0');
+    }
+
+    // Restore toggle state
+    (function() {
+      var saved = localStorage.getItem('tq_use_gemini');
+      if (saved === '1') {
+        document.getElementById('geminiToggle').checked = true;
+        // Trigger visual update after DOM ready
+        setTimeout(function() { toggleGemini(); }, 100);
+      }
+    })();
+
+    function scanWithGemini() {
+      var settings = JSON.parse(localStorage.getItem('tq_scan_settings') || '{}');
+      var apiKey = settings.geminiKey || 'AIzaSyAJc1rCl2zWcTQos4w1jqzAWFP1bf5Elb0';
+
+      setStatus('scanning', '<div class="scan-spinner"></div> AI is reading your receipt...');
+
+      var base64Data = currentReceiptBase64.split(',')[1];
+      var mimeType = currentReceiptBase64.split(';')[0].split(':')[1];
+
+      var prompt = 'Analyze this receipt image. Extract these fields and return ONLY valid JSON (no markdown, no explanation):\n\n{"merchant":"business name from receipt","amount":"total amount as a number like 42.50","date":"date from receipt in YYYY-MM-DD format","category":"one of: fuel, food, lodging, perdiem, production, misc","items":"brief list of what was purchased"}\n\nRules:\n- amount: the GRAND TOTAL including tax\n- date: if no date visible, use today\n- category: fuel=gas stations, food=restaurants/grocery, lodging=hotels, perdiem=cash, production=gear/equipment, misc=other\n- merchant: exact business name from receipt';
+
+      var payload = JSON.stringify({
+        contents: [{
+          parts: [
+            { text: prompt },
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: base64Data
+              }
+            }
+          ]
+        }],
+        generationConfig: {
+          maxOutputTokens: 300,
+          temperature: 0.1
+        }
+      });
+
+      var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
+
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload
+      })
+      .then(function(r) {
+        if (!r.ok) return r.text().then(function(t) { throw new Error(r.status + ': ' + t.substring(0, 200)); });
+        return r.json();
+      })
+      .then(function(data) {
+        // Extract text from Gemini response
+        var text = '';
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+          text = data.candidates[0].content.parts[0].text || '';
+        }
+        if (!text) throw new Error('Empty response from Gemini');
+
+        console.log('Gemini response:', text);
+
+        // Parse JSON from response
+        var jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+        var parsed = JSON.parse(jsonStr);
+
+        document.getElementById('scanMerchant').value = parsed.merchant || '';
+        document.getElementById('scanAmount').value = parsed.amount || '';
+        document.getElementById('scanDate').value = parsed.date || new Date().toISOString().split('T')[0];
+        document.getElementById('scanNotes').value = parsed.items || '';
+
+        var detectedCat = parsed.category || 'misc';
+        scanSelectedCat = detectedCat;
+        document.querySelectorAll('#scanCatGrid .cat-option').forEach(function(c) {
+          c.classList.toggle('selected', c.dataset.cat === detectedCat);
+        });
+
+        document.getElementById('scanResult').style.display = 'block';
+        setStatus('success', '✅ AI scanned — ' + (parsed.merchant || 'Receipt') + ' • $' + (parsed.amount || '?'));
+      })
+      .catch(function(err) {
+        console.error('Gemini error:', err);
+        setStatus('error', '⚠️ AI scan failed: ' + err.message.substring(0, 100) + '. Falling back to OCR...');
+        // Auto-fallback to Tesseract
+        document.getElementById('ocrProgress').style.display = 'block';
+        document.getElementById('ocrFill').style.width = '0%';
+        runOCR();
+      });
     }
 
     function runOCR() {
