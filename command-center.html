@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>VANA Tour — Command Center</title>
+  <script>
+    (function() {
+      var user = localStorage.getItem('tourhq_current_user');
+      if (!user) { window.location.href = 'landing.html'; }
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050508; --bg-card: #0c0c14; --bg-elevated: #12121c;
+      --border: #1a1a2a; --text: #f0f0f5; --dim: #6a6a8a;
+      --muted: #444460; --accent: #d90429; --cyan: #00f0ff;
+      --success: #00ff88; --warning: #ffaa00; --purple: #a855f7;
+      --pink: #ff2d78;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none; z-index: 0;
+    }
+    @keyframes gridMove {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(60px); }
+    }
+
+    .container {
+      max-width: 960px; margin: 0 auto; padding: 1rem;
+      position: relative; z-index: 1;
+    }
+
+    /* Hero Header */
+    .hero {
+      text-align: center; padding: 2rem 1rem 1.5rem;
+      position: relative;
+    }
+    .hero::after {
+      content: ''; position: absolute; bottom: 0; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    }
+    .logo-container {
+      margin-bottom: 1rem; position: relative; display: inline-block;
+    }
+    .logo-container img {
+      height: 60px; filter: drop-shadow(0 0 20px rgba(0,240,255,0.3));
+      animation: logoPulse 3s ease-in-out infinite;
+    }
+    @keyframes logoPulse {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(0,240,255,0.3)); }
+      50% { filter: drop-shadow(0 0 40px rgba(0,240,255,0.6)); }
+    }
+    .hero-title {
+      font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--cyan), var(--pink), var(--cyan));
+      background-size: 200% 200%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientShift 4s ease-in-out infinite;
+    }
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .hero-sub {
+      font-size: 0.75rem; color: var(--dim); letter-spacing: 0.15em;
+      text-transform: uppercase; margin-top: 0.25rem;
+    }
+    .hero-status {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      margin-top: 0.75rem; padding: 0.35rem 1rem;
+      background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2);
+      border-radius: 100px; font-size: 0.7rem; font-weight: 600;
+      color: var(--success);
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success);
+      animation: statusPulse 2s ease-in-out infinite;
+    }
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,255,136,0.4); }
+      50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(0,255,136,0); }
+    }
+
+    /* Section headers */
+    .section-label {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.15em; color: var(--dim);
+      padding: 1.5rem 0 0.75rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    /* Grid layout */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem; }
+
+    @media (max-width: 640px) {
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Glass cards */
+    .glass {
+      background: rgba(12,12,20,0.8);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.25rem;
+      backdrop-filter: blur(20px);
+      position: relative; overflow: hidden;
+    }
+    .glass::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,240,255,0.3), transparent);
+    }
+    .glass.accent::before {
+      background: linear-gradient(90deg, transparent, rgba(217,4,41,0.3), transparent);
+    }
+
+    /* Big numbers */
+    .big-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem; font-weight: 700; line-height: 1;
+    }
+    .big-num.cyan { color: var(--cyan); }
+    .big-num.green { color: var(--success); }
+    .big-num.red { color: var(--accent); }
+    .big-num.yellow { color: var(--warning); }
+    .big-num.purple { color: var(--purple); }
+    .big-label {
+      font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--dim); margin-top: 0.35rem;
+    }
+    .big-sub {
+      font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Neon progress bars */
+    .progress-wrap {
+      background: rgba(255,255,255,0.03); border-radius: 8px;
+      height: 10px; overflow: hidden; margin-top: 0.75rem;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 8px;
+      transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .progress-fill.cyan {
+      background: linear-gradient(90deg, var(--cyan), #00d4ff);
+      box-shadow: 0 0 12px rgba(0,240,255,0.4);
+    }
+    .progress-fill.green {
+      background: linear-gradient(90deg, var(--success), #00cc6a);
+      box-shadow: 0 0 12px rgba(0,255,136,0.4);
+    }
+    .progress-fill.red {
+      background: linear-gradient(90deg, var(--accent), #ff3366);
+      box-shadow: 0 0 12px rgba(217,4,41,0.4);
+    }
+    .progress-fill.yellow {
+      background: linear-gradient(90deg, var(--warning), #ff8800);
+      box-shadow: 0 0 12px rgba(255,170,0,0.4);
+    }
+    .progress-fill.purple {
+      background: linear-gradient(90deg, var(--purple), #c084fc);
+      box-shadow: 0 0 12px rgba(168,85,247,0.4);
+    }
+    .progress-fill::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+      animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .progress-label {
+      display: flex; justify-content: space-between; margin-top: 0.4rem;
+      font-size: 0.65rem; color: var(--dim);
+    }
+    .progress-pct {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--cyan); font-weight: 700;
+    }
+
+    /* Stat ring */
+    .ring-container {
+      position: relative; width: 100px; height: 100px; margin: 0 auto;
+    }
+    .ring-svg { transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 6; }
+    .ring-fill {
+      fill: none; stroke-width: 6; stroke-linecap: round;
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ring-fill.cyan { stroke: var(--cyan); filter: drop-shadow(0 0 6px rgba(0,240,255,0.5)); }
+    .ring-fill.green { stroke: var(--success); filter: drop-shadow(0 0 6px rgba(0,255,136,0.5)); }
+    .ring-fill.red { stroke: var(--accent); filter: drop-shadow(0 0 6px rgba(217,4,41,0.5)); }
+    .ring-center {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .ring-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.4rem; font-weight: 700;
+    }
+    .ring-label {
+      font-size: 0.55rem; color: var(--dim); text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Upcoming list */
+    .upcoming-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .upcoming-item:last-child { border-bottom: none; }
+    .upcoming-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem; color: var(--dim);
+      width: 40px; text-align: center; flex-shrink: 0;
+    }
+    .upcoming-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .upcoming-dot.show { background: var(--accent); box-shadow: 0 0 8px rgba(217,4,41,0.5); }
+    .upcoming-dot.travel { background: var(--success); box-shadow: 0 0 8px rgba(0,255,136,0.3); }
+    .upcoming-info { flex: 1; }
+    .upcoming-venue { font-size: 0.8rem; font-weight: 600; }
+    .upcoming-city { font-size: 0.65rem; color: var(--dim); }
+    .upcoming-miles {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem; color: var(--cyan); text-align: right;
+    }
+
+    /* Expense categories */
+    .cat-bar {
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .cat-icon { font-size: 0.9rem; width: 24px; text-align: center; }
+    .cat-info { flex: 1; }
+    .cat-name { font-size: 0.7rem; font-weight: 500; }
+    .cat-progress {
+      height: 4px; background: rgba(255,255,255,0.05);
+      border-radius: 2px; overflow: hidden; margin-top: 3px;
+    }
+    .cat-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+    .cat-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; font-weight: 600; text-align: right;
+      width: 55px; flex-shrink: 0;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center; padding: 2rem 1rem;
+      font-size: 0.6rem; color: var(--muted);
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .footer a { color: var(--cyan); text-decoration: none; }
+
+    /* Refresh button */
+    .refresh-btn {
+      position: fixed; top: 1rem; right: 1rem;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--bg-card); border: 1px solid var(--border);
+      color: var(--cyan); font-size: 1.2rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; transition: all 0.3s;
+    }
+    .refresh-btn:hover { border-color: var(--cyan); box-shadow: 0 0 20px rgba(0,240,255,0.2); }
+    .refresh-btn.spinning { animation: spin 1s linear; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Animated counter */
+    .counter { transition: all 0.5s ease; }
+
+    /* Live feed */
+    .feed-item {
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      padding: 0.5rem 0; font-size: 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem; color: var(--muted); width: 35px;
+      flex-shrink: 0; padding-top: 1px;
+    }
+    .feed-text { flex: 1; color: var(--dim); }
+    .feed-text strong { color: var(--text); font-weight: 600; }
+    .feed-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--cyan); flex-shrink: 0; margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <button class="refresh-btn" onclick="refreshData()" title="Refresh">⟳</button>
+
+  <div class="container">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="logo-container">
+        <img src="vana-logo.webp" alt="VANA" onerror="this.style.display='none'">
+      </div>
+      <div class="hero-title">TOUR COMMAND CENTER</div>
+      <div class="hero-sub">VANA Lady in Red Tour 2026</div>
+      <div class="hero-status">
+        <div class="status-dot"></div>
+        <span id="liveStatus">ON TOUR</span>
+      </div>
+    </div>
+
+    <!-- Tour Progress -->
+    <div class="section-label">⚡ Tour Progress</div>
+    <div class="grid-4" id="progressStats">
+      <div class="glass">
+        <div class="big-num cyan" id="daysCompleted">0</div>
+        <div class="big-label">Days Done</div>
+      </div>
+      <div class="glass">
+        <div class="big-num" id="daysRemaining" style="color: var(--pink);">46</div>
+        <div class="big-label">Days Left</div>
+      </div>
+      <div class="glass">
+        <div class="big-num purple" id="showsPlayed">0</div>
+        <div class="big-label">Shows</div>
+      </div>
+      <div class="glass">
+        <div class="big-num cyan" id="milesDriven">0</div>
+        <div class="big-label">Miles</div>
+      </div>
+    </div>
+    <div class="glass" style="margin-top: 0.75rem;">
+      <div style="font-size: 0.7rem; font-weight: 600; color: var(--dim); margin-bottom: 0.5rem;">TOUR PROGRESS</div>
+      <div class="progress-wrap" style="height: 14px; border-radius: 7px;">
+        <div class="progress-fill cyan" id="tourProgress" style="width: 0%;"></div>
+      </div>
+      <div class="progress-label">
+        <span id="tourStart">Apr 17</span>
+        <span class="progress-pct" id="tourPct">0%</span>
+        <span id="tourEnd">Jun 1</span>
+      </div>
+    </div>
+
+    <!-- Financial Overview -->
+    <div class="section-label">💰 Financial Overview</div>
+    <div class="grid-2">
+      <div class="glass">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div class="big-num green" id="totalRevenue">$0</div>
+            <div class="big-label">Total Revenue</div>
+            <div class="big-sub">settlements + merch</div>
+          </div>
+          <div class="ring-container" style="width: 70px; height: 70px;">
+            <svg class="ring-svg" width="70" height="70" viewBox="0 0 70 70">
+              <circle class="ring-bg" cx="35" cy="35" r="28"/>
+              <circle class="ring-fill green" id="revenueRing" cx="35" cy="35" r="28"
+                stroke-dasharray="175.93" stroke-dashoffset="175.93"/>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-num" style="font-size: 0.9rem; color: var(--success);" id="revenuePct">0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="glass accent">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div class="big-num red" id="totalExpenses">$0</div>
+            <div class="big-label">Total Spent</div>
+            <div class="big-sub">fuel, food, lodging, etc</div>
+          </div>
+          <div class="ring-container" style="width: 70px; height: 70px;">
+            <svg class="ring-svg" width="70" height="70" viewBox="0 0 70 70">
+              <circle class="ring-bg" cx="35" cy="35" r="28"/>
+              <circle class="ring-fill red" id="expenseRing" cx="35" cy="35" r="28"
+                stroke-dasharray="175.93" stroke-dashoffset="175.93"/>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-num" style="font-size: 0.9rem; color: var(--accent);" id="expensePct">0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top: 0.75rem;">
+      <div class="glass">
+        <div class="big-num" id="netProfit" style="color: var(--success);">$0</div>
+        <div class="big-label">Net Profit/Loss</div>
+        <div class="big-sub" id="profitSub">revenue minus expenses</div>
+      </div>
+      <div class="glass">
+        <div class="big-num cyan" id="dailyBurn">$0</div>
+        <div class="big-label">Daily Burn Rate</div>
+        <div class="big-sub" id="burnSub">avg spend per day</div>
+      </div>
+    </div>
+
+    <!-- Budget Breakdown -->
+    <div class="section-label">📊 Budget vs Actual</div>
+    <div class="glass">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div>
+          <div class="big-num cyan" id="budgetRemaining" style="font-size: 1.5rem;">$0</div>
+          <div class="big-label" style="margin-top: 0;">remaining of <span id="budgetTotal">$0</span></div>
+        </div>
+        <div style="text-align: right;">
+          <div class="big-num" id="budgetPct" style="font-size: 1.5rem; color: var(--success);">0%</div>
+          <div class="big-label" style="margin-top: 0;">under budget</div>
+        </div>
+      </div>
+      <div class="progress-wrap" style="height: 12px;">
+        <div class="progress-fill green" id="budgetBar" style="width: 0%;"></div>
+      </div>
+      <div class="progress-label">
+        <span>$0</span>
+        <span class="progress-pct" id="budgetBarPct">0%</span>
+        <span id="budgetBarTotal">$0</span>
+      </div>
+
+      <!-- Category breakdown -->
+      <div style="margin-top: 1rem;">
+        <div class="cat-bar" id="cat-fuel">
+          <div class="cat-icon">⛽</div>
+          <div class="cat-info">
+            <div class="cat-name">Fuel & Transport</div>
+            <div class="cat-progress"><div class="cat-fill" style="width: 0%; background: var(--warning);"></div></div>
+          </div>
+          <div class="cat-amount" style="color: var(--warning);">$0</div>
+        </div>
+        <div class="cat-bar" id="cat-food">
+          <div class="cat-icon">🍔</div>
+          <div class="cat-info">
+            <div class="cat-name">Food & Dining</div>
+            <div class="cat-progress"><div class="cat-fill" style="width: 0%; background: var(--success);"></div></div>
+          </div>
+          <div class="cat-amount" style="color: var(--success);">$0</div>
+        </div>
+        <div class="cat-bar" id="cat-lodging">
+          <div class="cat-icon">🏨</div>
+          <div class="cat-info">
+            <div class="cat-name">Hotels & Lodging</div>
+            <div class="cat-progress"><div class="cat-fill" style="width: 0%; background: var(--cyan);"></div></div>
+          </div>
+          <div class="cat-amount" style="color: var(--cyan);">$0</div>
+        </div>
+        <div class="cat-bar" id="cat-merch">
+          <div class="cat-icon">👕</div>
+          <div class="cat-info">
+            <div class="cat-name">Merch Revenue</div>
+            <div class="cat-progress"><div class="cat-fill" style="width: 100%; background: var(--purple);"></div></div>
+          </div>
+          <div class="cat-amount" style="color: var(--purple);">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming Shows -->
+    <div class="section-label">🗺️ Upcoming Route</div>
+    <div class="glass" id="upcomingShows">
+      <div style="text-align: center; color: var(--dim); padding: 1rem;">Loading route data...</div>
+    </div>
+
+    <!-- Live Activity Feed -->
+    <div class="section-label">📡 Activity Feed</div>
+    <div class="glass" id="activityFeed">
+      <div class="feed-item">
+        <div class="feed-dot"></div>
+        <div class="feed-text">System initialized — pulling data from all modules</div>
+        <div class="feed-time">now</div>
+      </div>
+    </div>
+
+    <!-- Merch Summary -->
+    <div class="section-label">👕 Merch Performance</div>
+    <div class="grid-3">
+      <div class="glass">
+        <div class="big-num purple" id="merchRevenue" style="font-size: 1.3rem;">$0</div>
+        <div class="big-label">Revenue</div>
+      </div>
+      <div class="glass">
+        <div class="big-num cyan" id="merchSold" style="font-size: 1.3rem;">0</div>
+        <div class="big-label">Items Sold</div>
+      </div>
+      <div class="glass">
+        <div class="big-num green" id="merchProfit" style="font-size: 1.3rem;">$0</div>
+        <div class="big-label">Net Profit</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      VANA TOUR HQ COMMAND CENTER<br>
+      <span style="color: var(--cyan);">●</span> LIVE — DATA REFRESHES ON LOAD
+    </div>
+  </div>
+
+  <script>
+    function formatCurrency(n) {
+      n = parseFloat(n) || 0;
+      if (n >= 1000) return '$' + n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return '$' + n.toFixed(0);
+    }
+
+    function animateValue(el, end, prefix, suffix) {
+      prefix = prefix || ''; suffix = suffix || '';
+      var start = 0;
+      var duration = 1200;
+      var startTime = null;
+
+      function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        var progress = Math.min((timestamp - startTime) / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+        var current = Math.round(start + (end - start) * eased);
+        el.textContent = prefix + current.toLocaleString() + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function setRing(ringEl, pct) {
+      var circumference = 175.93; // 2 * PI * 28
+      var offset = circumference - (Math.min(pct, 100) / 100 * circumference);
+      ringEl.style.strokeDashoffset = offset;
+    }
+
+    function loadAllData() {
+      // ===== TOUR PROGRESS =====
+      var routing = [];
+      fetch('data/routing_data.json')
+        .then(function(r) { return r.text(); })
+        .then(function(text) {
+          // Handle BOM
+          var clean = text.replace(/^\uFEFF/, '');
+          var data = JSON.parse(clean);
+          routing = data.routing || [];
+
+          var today = new Date().toISOString().split('T')[0];
+          var totalDays = routing.length;
+          var pastDays = routing.filter(function(d) { return d.date < today; });
+          var futureDays = routing.filter(function(d) { return d.date >= today; });
+          var showsPlayed = pastDays.filter(function(d) { return d.type === 'SHOW'; }).length;
+          var totalShows = routing.filter(function(d) { return d.type === 'SHOW'; }).length;
+
+          // Miles driven so far
+          var milesDriven = 0;
+          pastDays.forEach(function(d) {
+            var dist = d.next_distance || d.distance || '0';
+            var miles = parseInt(dist) || 0;
+            milesDriven += miles;
+          });
+
+          var pctComplete = totalDays > 0 ? Math.round((pastDays.length / totalDays) * 100) : 0;
+
+          // Animate values
+          animateValue(document.getElementById('daysCompleted'), pastDays.length);
+          animateValue(document.getElementById('daysRemaining'), futureDays.length);
+          animateValue(document.getElementById('showsPlayed'), showsPlayed);
+          animateValue(document.getElementById('milesDriven'), milesDriven);
+
+          // Tour progress bar
+          setTimeout(function() {
+            document.getElementById('tourProgress').style.width = pctComplete + '%';
+            document.getElementById('tourPct').textContent = pctComplete + '%';
+          }, 300);
+
+          // Dates
+          if (routing.length > 0) {
+            var startDate = new Date(routing[0].date + 'T12:00:00');
+            var endDate = new Date(routing[routing.length - 1].date + 'T12:00:00');
+            document.getElementById('tourStart').textContent = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById('tourEnd').textContent = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          }
+
+          // Live status
+          if (pctComplete >= 100) {
+            document.getElementById('liveStatus').textContent = 'TOUR COMPLETE';
+          } else if (pctComplete > 0) {
+            document.getElementById('liveStatus').textContent = 'ON TOUR — DAY ' + pastDays.length + ' OF ' + totalDays;
+          }
+
+          // Upcoming shows
+          var upcoming = futureDays.filter(function(d) { return d.type === 'SHOW'; }).slice(0, 6);
+          var upcomingHtml = '';
+          upcoming.forEach(function(day) {
+            var d = new Date(day.date + 'T12:00:00');
+            var dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
+            var dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            var dist = day.next_distance || '';
+            upcomingHtml += '<div class="upcoming-item">' +
+              '<div class="upcoming-date">' + dateLabel + '</div>' +
+              '<div class="upcoming-dot show"></div>' +
+              '<div class="upcoming-info">' +
+              '<div class="upcoming-venue">' + (day.venue || day.city) + '</div>' +
+              '<div class="upcoming-city">' + day.city + ' • ' + dayLabel + '</div>' +
+              '</div>' +
+              '<div class="upcoming-miles">' + dist + '</div>' +
+              '</div>';
+          });
+          document.getElementById('upcomingShows').innerHTML = upcomingHtml || '<div style="text-align:center; color:var(--dim); padding:1rem;">Tour complete! 🎉</div>';
+
+          // Feed
+          addFeedItem('Tour data loaded — ' + totalDays + ' days, ' + totalShows + ' shows');
+        })
+        .catch(function(e) {
+          console.error('Routing error:', e);
+        });
+
+      // ===== FINANCIALS =====
+      var expenses = JSON.parse(localStorage.getItem('tourhq_expenses') || '[]');
+      var budget = JSON.parse(localStorage.getItem('tourhq_budget') || '{}');
+      var merchSales = JSON.parse(localStorage.getItem('tourhq_merch_sales') || '[]');
+      var merchInventory = JSON.parse(localStorage.getItem('tourhq_merch_inventory') || '[]');
+
+      // Total expenses
+      var totalExpenses = 0;
+      var catSpends = { fuel: 0, food: 0, lodging: 0, perdiem: 0, production: 0, misc: 0 };
+      expenses.forEach(function(e) {
+        totalExpenses += e.amount || 0;
+        if (catSpends.hasOwnProperty(e.category)) catSpends[e.category] += e.amount || 0;
+        else catSpends.misc += e.amount || 0;
+      });
+
+      // Merch revenue
+      var merchRevenue = 0, merchItemsSold = 0, merchNet = 0;
+      merchSales.forEach(function(s) {
+        merchRevenue += s.gross || 0;
+        merchItemsSold += s.qty || 0;
+        merchNet += s.net || 0;
+      });
+
+      var totalRevenue = merchRevenue; // Add settlement revenue when available
+      var netProfit = totalRevenue - totalExpenses;
+
+      // Budget
+      var totalBudget = budget.totalBudget || 10000;
+      var budgetRemaining = totalBudget - totalExpenses;
+      var budgetUsedPct = totalBudget > 0 ? Math.round((totalExpenses / totalBudget) * 100) : 0;
+
+      // Daily burn
+      var daysElapsed = 10; // default
+      try {
+        var meta = JSON.parse(localStorage.getItem('tourhq_routing_meta') || '{}');
+        if (meta.startDate) {
+          var start = new Date(meta.startDate + 'T00:00:00');
+          var now = new Date(); now.setHours(0,0,0,0);
+          daysElapsed = Math.max(1, Math.ceil((now - start) / (1000*60*60*24)));
+        }
+      } catch(e) {}
+      var dailyBurn = daysElapsed > 0 ? totalExpenses / daysElapsed : 0;
+
+      // Animate financial numbers
+      animateValue(document.getElementById('totalExpenses'), Math.round(totalExpenses), '$');
+      animateValue(document.getElementById('totalRevenue'), Math.round(totalRevenue), '$');
+      animateValue(document.getElementById('netProfit'), Math.round(netProfit), netProfit >= 0 ? '$' : '-$');
+      document.getElementById('netProfit').style.color = netProfit >= 0 ? 'var(--success)' : 'var(--accent)';
+      animateValue(document.getElementById('dailyBurn'), Math.round(dailyBurn), '$');
+      animateValue(document.getElementById('budgetRemaining'), Math.round(budgetRemaining), budgetRemaining >= 0 ? '$' : '-$');
+      document.getElementById('budgetRemaining').style.color = budgetRemaining >= 0 ? 'var(--cyan)' : 'var(--accent)';
+      document.getElementById('budgetTotal').textContent = formatCurrency(totalBudget);
+      document.getElementById('budgetBarTotal').textContent = formatCurrency(totalBudget);
+
+      // Budget bar
+      setTimeout(function() {
+        document.getElementById('budgetBar').style.width = Math.min(budgetUsedPct, 100) + '%';
+        document.getElementById('budgetBar').className = 'progress-fill ' + (budgetUsedPct > 90 ? 'red' : budgetUsedPct > 70 ? 'yellow' : 'green');
+        document.getElementById('budgetBarPct').textContent = budgetUsedPct + '%';
+        document.getElementById('budgetPct').textContent = budgetUsedPct + '%';
+      }, 500);
+
+      // Rings
+      setTimeout(function() {
+        setRing(document.getElementById('revenueRing'), 50); // Placeholder
+        setRing(document.getElementById('expenseRing'), budgetUsedPct);
+        document.getElementById('expensePct').textContent = budgetUsedPct + '%';
+        document.getElementById('revenuePct').textContent = totalRevenue > 0 ? '$' + Math.round(totalRevenue/1000) + 'k' : '$0';
+      }, 800);
+
+      // Category bars
+      var catBudgets = budget.categoryBudgets || {};
+      var catConfig = {
+        fuel: { el: 'cat-fuel', budget: catBudgets.fuel || 2500 },
+        food: { el: 'cat-food', budget: catBudgets.food || 2000 },
+        lodging: { el: 'cat-lodging', budget: catBudgets.lodging || 3000 }
+      };
+      for (var cat in catConfig) {
+        var spent = catSpends[cat] || 0;
+        var bgt = catConfig[cat].budget;
+        var pct = bgt > 0 ? (spent / bgt) * 100 : 0;
+        var el = document.getElementById(catConfig[cat].el);
+        if (el) {
+          el.querySelector('.cat-fill').style.width = Math.min(pct, 100) + '%';
+          el.querySelector('.cat-amount').textContent = formatCurrency(spent);
+        }
+      }
+      // Merch row
+      var merchEl = document.getElementById('cat-merch');
+      if (merchEl) {
+        merchEl.querySelector('.cat-amount').textContent = '+' + formatCurrency(merchRevenue);
+        merchEl.querySelector('.cat-amount').style.color = 'var(--success)';
+      }
+
+      // Merch stats
+      animateValue(document.getElementById('merchRevenue'), Math.round(merchRevenue), '$');
+      animateValue(document.getElementById('merchSold'), merchItemsSold);
+      animateValue(document.getElementById('merchProfit'), Math.round(merchNet), '$');
+
+      // Feed
+      if (expenses.length > 0) addFeedItem(expenses.length + ' expenses tracked — ' + formatCurrency(totalExpenses) + ' spent');
+      if (merchSales.length > 0) addFeedItem(merchItemsSold + ' merch items sold — ' + formatCurrency(merchRevenue) + ' revenue');
+      if (budget.totalBudget) addFeedItem('Budget set at ' + formatCurrency(totalBudget) + ' — ' + (100 - budgetUsedPct) + '% remaining');
+    }
+
+    function addFeedItem(text) {
+      var feed = document.getElementById('activityFeed');
+      var item = document.createElement('div');
+      item.className = 'feed-item';
+      item.innerHTML = '<div class="feed-dot"></div><div class="feed-text">' + text + '</div><div class="feed-time">now</div>';
+      feed.insertBefore(item, feed.firstChild);
+    }
+
+    function refreshData() {
+      var btn = document.querySelector('.refresh-btn');
+      btn.classList.add('spinning');
+      setTimeout(function() { btn.classList.remove('spinning'); }, 1000);
+      document.getElementById('activityFeed').innerHTML = '';
+      loadAllData();
+    }
+
+    // Auto-refresh every 60 seconds
+    loadAllData();
+    setInterval(refreshData, 60000);
+  </script>
+</body>
+</html>
