@@ -299,9 +299,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Toggle switch styles */
-    #geminiToggle:checked + span { background: var(--cyan); }
-    #geminiToggle:checked ~ #geminiSlider { transform: translateX(20px); background: white; }
+
 
     .progress-bar-ocr {
       height: 6px; background: var(--bg-elevated); border-radius: 3px;
@@ -516,6 +514,7 @@
     var selectedCat = 'fuel';
     var scanSelectedCat = 'misc';
     var currentReceiptBase64 = null;
+    var currentReceiptBase64_Gemini = null;
 
     var catMeta = {
       fuel: { icon: '⛽', color: '#f59e0b', name: 'Fuel & Transport' },
@@ -640,7 +639,7 @@
       document.getElementById('receiptPreview').style.display = 'block';
       document.getElementById('scanResult').style.display = 'none';
 
-      var useGemini = document.getElementById('geminiToggle').checked;
+      var useGemini = (scanMode === 'gemini');
 
       if (useGemini) {
         document.getElementById('ocrProgress').style.display = 'none';
@@ -653,18 +652,31 @@
       var reader = new FileReader();
       reader.onload = function(e) {
         img.onload = function() {
-          var canvas = document.createElement('canvas');
-          var MAX = useGemini ? 1024 : 1500;
-          var w = img.width, h = img.height;
-          if (w > MAX || h > MAX) {
-            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-            else { w = Math.round(w * MAX / h); h = MAX; }
+          // Store full-res image for OCR fallback
+          var canvasFull = document.createElement('canvas');
+          var MAX_FULL = 1500;
+          var wf = img.width, hf = img.height;
+          if (wf > MAX_FULL || hf > MAX_FULL) {
+            if (wf > hf) { hf = Math.round(hf * MAX_FULL / wf); wf = MAX_FULL; }
+            else { wf = Math.round(wf * MAX_FULL / hf); hf = MAX_FULL; }
           }
-          canvas.width = w; canvas.height = h;
-          var ctx = canvas.getContext('2d');
-          if (!useGemini) ctx.filter = 'contrast(1.3) brightness(1.1)';
-          ctx.drawImage(img, 0, 0, w, h);
-          currentReceiptBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          canvasFull.width = wf; canvasFull.height = hf;
+          var ctxFull = canvasFull.getContext('2d');
+          ctxFull.filter = 'contrast(1.3) brightness(1.1)';
+          ctxFull.drawImage(img, 0, 0, wf, hf);
+          currentReceiptBase64 = canvasFull.toDataURL('image/jpeg', 0.85);
+
+          // Smaller version for Gemini (saves bandwidth)
+          var canvasSmall = document.createElement('canvas');
+          var MAX_SMALL = 800;
+          var ws = img.width, hs = img.height;
+          if (ws > MAX_SMALL || hs > MAX_SMALL) {
+            if (ws > hs) { hs = Math.round(hs * MAX_SMALL / ws); ws = MAX_SMALL; }
+            else { ws = Math.round(ws * MAX_SMALL / hs); hs = MAX_SMALL; }
+          }
+          canvasSmall.width = ws; canvasSmall.height = hs;
+          canvasSmall.getContext('2d').drawImage(img, 0, 0, ws, hs);
+          currentReceiptBase64_Gemini = canvasSmall.toDataURL('image/jpeg', 0.7);
           document.getElementById('receiptImg').src = currentReceiptBase64;
 
           if (useGemini) {
@@ -678,34 +690,41 @@
       reader.readAsDataURL(file);
     }
 
-    function toggleGemini() {
-      var toggle = document.getElementById('geminiToggle');
-      var slider = document.getElementById('geminiSlider');
-      var info = document.getElementById('geminiInfo');
-      if (toggle.checked) {
-        slider.style.background = 'white';
-        slider.style.transform = 'translateX(20px)';
-        slider.parentElement.querySelector('span').style.background = 'var(--cyan)';
-        info.textContent = '✅ Smart Scan ON — uses Google Gemini AI for accurate reading';
+    var scanMode = 'gemini'; // default to smart scan
+
+    function setScanMode(mode) {
+      scanMode = mode;
+      var ocrBtn = document.getElementById('modeOcr');
+      var gemBtn = document.getElementById('modeGemini');
+      var info = document.getElementById('modeInfo');
+
+      if (mode === 'gemini') {
+        gemBtn.style.borderColor = 'var(--cyan)';
+        gemBtn.style.color = 'var(--cyan)';
+        gemBtn.style.background = 'rgba(34,211,238,0.1)';
+        ocrBtn.style.borderColor = 'var(--border)';
+        ocrBtn.style.color = 'var(--dim)';
+        ocrBtn.style.background = 'var(--bg-elevated)';
+        info.textContent = '🧠 Smart Scan — uses Google Gemini AI for accurate reading';
         info.style.color = 'var(--cyan)';
       } else {
-        slider.style.background = 'var(--dim)';
-        slider.style.transform = 'translateX(0)';
-        slider.parentElement.querySelector('span').style.background = 'var(--border)';
-        info.textContent = 'Uses Google Gemini AI for accurate receipt reading (free). Toggle on for smart scanning.';
+        ocrBtn.style.borderColor = 'var(--cyan)';
+        ocrBtn.style.color = 'var(--cyan)';
+        ocrBtn.style.background = 'rgba(34,211,238,0.1)';
+        gemBtn.style.borderColor = 'var(--border)';
+        gemBtn.style.color = 'var(--dim)';
+        gemBtn.style.background = 'var(--bg-elevated)';
+        info.textContent = '📝 Basic OCR — text recognition, no API needed';
         info.style.color = 'var(--dim)';
       }
-      localStorage.setItem('tq_use_gemini', toggle.checked ? '1' : '0');
+      localStorage.setItem('tq_scan_mode', mode);
     }
 
-    // Restore toggle state
+    // Restore mode
     (function() {
-      var saved = localStorage.getItem('tq_use_gemini');
-      if (saved === '1') {
-        document.getElementById('geminiToggle').checked = true;
-        // Trigger visual update after DOM ready
-        setTimeout(function() { toggleGemini(); }, 100);
-      }
+      var saved = localStorage.getItem('tq_scan_mode');
+      if (saved) scanMode = saved;
+      setScanMode(scanMode);
     })();
 
     function scanWithGemini() {
@@ -714,8 +733,9 @@
 
       setStatus('scanning', '<div class="scan-spinner"></div> AI is reading your receipt...');
 
-      var base64Data = currentReceiptBase64.split(',')[1];
-      var mimeType = currentReceiptBase64.split(';')[0].split(':')[1];
+      var geminiImg = currentReceiptBase64_Gemini || currentReceiptBase64;
+      var base64Data = geminiImg.split(',')[1];
+      var mimeType = geminiImg.split(';')[0].split(':')[1];
 
       var prompt = 'Analyze this receipt image. Extract these fields and return ONLY valid JSON (no markdown, no explanation):\n\n{"merchant":"business name from receipt","amount":"total amount as a number like 42.50","date":"date from receipt in YYYY-MM-DD format","category":"one of: fuel, food, lodging, perdiem, production, misc","items":"brief list of what was purchased"}\n\nRules:\n- amount: the GRAND TOTAL including tax\n- date: if no date visible, use today\n- category: fuel=gas stations, food=restaurants/grocery, lodging=hotels, perdiem=cash, production=gear/equipment, misc=other\n- merchant: exact business name from receipt';
 
@@ -778,11 +798,24 @@
       })
       .catch(function(err) {
         console.error('Gemini error:', err);
-        setStatus('error', '⚠️ AI scan failed: ' + err.message.substring(0, 100) + '. Falling back to OCR...');
-        // Auto-fallback to Tesseract
-        document.getElementById('ocrProgress').style.display = 'block';
-        document.getElementById('ocrFill').style.width = '0%';
-        runOCR();
+        console.error('Error name:', err.name);
+        console.error('Error message:', err.message);
+
+        // Show specific error
+        var errMsg = err.message || 'Unknown error';
+        if (errMsg.includes('Failed to fetch') || errMsg.includes('Load failed') || errMsg.includes('NetworkError') || errMsg.includes('Network request failed')) {
+          errMsg = 'Network blocked by browser. Falling back to OCR...';
+        }
+
+        setStatus('error', '⚠️ ' + errMsg.substring(0, 120));
+
+        // Wait a moment then fallback to Tesseract
+        setTimeout(function() {
+          setStatus('scanning', '<div class="scan-spinner"></div> Trying OCR fallback...');
+          document.getElementById('ocrProgress').style.display = 'block';
+          document.getElementById('ocrFill').style.width = '0%';
+          runOCR();
+        }, 1000);
       });
     }
 
