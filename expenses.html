@@ -694,41 +694,108 @@
     }
 
     function parseReceiptText(text) {
-      var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
-      var fullText = lines.join(' ');
+      // Clean OCR text
+      var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 0; });
+      var fullText = lines.join('\n');
+      var fullLower = fullText.toLowerCase();
 
-      // Extract total amount — look for patterns like TOTAL, GRAND TOTAL, etc.
+      // Normalize common OCR mistakes
+      var normalized = fullText
+        .replace(/[Oo](?=\d)/g, '0')  // O -> 0 near digits
+        .replace(/(?<=\d)[Oo]/g, '0')
+        .replace(/[Il](?=[.,]\d{2}\b)/g, '1') // I/l -> 1 before .XX
+        .replace(/[Ss](?=\d)/g, '5')  // S -> 5 near digits
+        .replace(/(?<=\d)[Ss]/g, '5')
+        .replace(/\s+/g, ' ');
+
+      var normalizedLines = normalized.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+
+      // ===== EXTRACT TOTAL AMOUNT =====
       var amount = null;
-      var totalPatterns = [
-        /(?:grand\s*)?total[:\s]*\$?\s*([\d]+\.\d{2})/i,
-        /(?:amount\s*due|amount\s*owed|balance\s*due)[:\s]*\$?\s*([\d]+\.\d{2})/i,
-        /(?:subtotal|sub\s*total)[:\s]*\$?\s*([\d]+\.\d{2})/i
+      var confidence = 0;
+
+      // Strategy 1: Look for explicit TOTAL labels
+      var totalLabels = [
+        { pattern: /(?:grand\s+)?total[:\s]*\$?\s*(\d+[.,]\d{2})/i, conf: 90 },
+        { pattern: /total\s*(?:due|owed|amount|purchase)[:\s]*\$?\s*(\d+[.,]\d{2})/i, conf: 95 },
+        { pattern: /amount\s*(?:due|owed)[:\s]*\$?\s*(\d+[.,]\d{2})/i, conf: 90 },
+        { pattern: /balance\s*(?:due|owed)[:\s]*\$?\s*(\d+[.,]\d{2})/i, conf: 85 },
+        { pattern: /(?:visa|mastercard|amex|debit|credit|card)[:\s]*\$?\s*(\d+[.,]\d{2})/i, conf: 80 },
+        { pattern: /(?:sale|charge)[:\s]*\$?\s*(\d+[.,]\d{2})/i, conf: 70 },
+        { pattern: /subtotal[:\s]*\$?\s*(\d+[.,]\d{2})/i, conf: 60 }
       ];
-      for (var i = 0; i < totalPatterns.length; i++) {
-        var match = fullText.match(totalPatterns[i]);
-        if (match) { amount = parseFloat(match[1]); break; }
-      }
-      // Fallback: find the largest dollar amount (likely the total)
-      if (!amount) {
-        var allAmounts = fullText.match(/\d+\.\d{2}/g);
-        if (allAmounts) {
-          allAmounts = allAmounts.map(parseFloat).filter(function(n) { return n > 0 && n < 100000; });
-          if (allAmounts.length > 0) amount = Math.max.apply(null, allAmounts);
+
+      for (var i = 0; i < totalLabels.length; i++) {
+        var match = normalized.match(totalLabels[i].pattern);
+        if (match) {
+          var val = parseFloat(match[1].replace(',', '.'));
+          if (val > 0 && val < 100000 && val > (amount || 0)) {
+            amount = val;
+            confidence = totalLabels[i].conf;
+          }
         }
       }
 
-      // Extract date
+      // Strategy 2: Look for amounts in lines near "total" keyword
+      if (!amount || confidence < 70) {
+        for (var j = 0; j < normalizedLines.length; j++) {
+          if (/total/i.test(normalizedLines[j])) {
+            // Check this line and next 2 lines
+            var context = normalizedLines.slice(j, j + 3).join(' ');
+            var ctxAmounts = context.match(/\d+\.\d{2}/g);
+            if (ctxAmounts) {
+              var ctxNums = ctxAmounts.map(parseFloat).filter(function(n) { return n > 0.5 && n < 100000; });
+              if (ctxNums.length > 0) {
+                var maxCtx = Math.max.apply(null, ctxNums);
+                if (maxCtx > (amount || 0)) {
+                  amount = maxCtx;
+                  confidence = 85;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Strategy 3: Find all dollar amounts, pick the largest reasonable one
+      if (!amount) {
+        var allAmounts = normalized.match(/\d+\.\d{2}/g);
+        if (allAmounts) {
+          var nums = allAmounts.map(parseFloat).filter(function(n) { return n >= 1 && n < 100000; });
+          // Remove amounts that look like item prices (filter out if there's a much larger one)
+          if (nums.length > 1) {
+            nums.sort(function(a, b) { return b - a; });
+            // If the largest is > 3x the second largest, it's probably the total
+            if (nums[0] > nums[1] * 2) {
+              amount = nums[0];
+              confidence = 60;
+            } else {
+              // Take the largest
+              amount = nums[0];
+              confidence = 40;
+            }
+          } else if (nums.length === 1) {
+            amount = nums[0];
+            confidence = 50;
+          }
+        }
+      }
+
+      // ===== EXTRACT DATE =====
       var date = null;
       var datePatterns = [
-        /(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/,
-        /(\w{3,9})\s+(\d{1,2}),?\s*(\d{4})/
+        { pattern: /(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/, fmt: 'mdy' },
+        { pattern: /(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/, fmt: 'ymd' },
+        { pattern: /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2}),?\s*(\d{4})/i, fmt: 'mdy_text' },
+        { pattern: /(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*,?\s*(\d{4})/i, fmt: 'dmy_text' }
       ];
-      for (var j = 0; j < datePatterns.length; j++) {
-        var dm = fullText.match(datePatterns[j]);
+
+      for (var dp = 0; dp < datePatterns.length; dp++) {
+        var dm = fullText.match(datePatterns[dp].pattern);
         if (dm) {
           try {
             var d = new Date(dm[0]);
-            if (!isNaN(d.getTime()) && d.getFullYear() > 2020 && d.getFullYear() < 2030) {
+            if (!isNaN(d.getTime()) && d.getFullYear() > 2023 && d.getFullYear() < 2028) {
               date = d.toISOString().split('T')[0];
               break;
             }
@@ -736,33 +803,62 @@
         }
       }
 
-      // Extract merchant — usually the first non-empty line or two
+      // ===== EXTRACT MERCHANT =====
       var merchant = '';
-      // Skip common header noise
-      var skipWords = ['receipt', 'invoice', 'welcome', 'thank you', 'tel:', 'phone:', 'www.', 'http'];
-      for (var k = 0; k < Math.min(lines.length, 6); k++) {
-        var line = lines[k].toLowerCase();
-        var isSkip = skipWords.some(function(w) { return line.indexOf(w) !== -1; });
-        if (!isSkip && lines[k].length > 2 && lines[k].length < 40 && !/^\d/.test(lines[k])) {
-          merchant = lines[k];
-          break;
+      var noisePatterns = [
+        /^\d+$/,  // pure numbers
+        /^(receipt|invoice|order|ticket|statement)/i,
+        /^(tel|phone|fax|www|http|@)/i,
+        /^(thank|welcome|visit|store\s*#)/i,
+        /^(cashier|server|clerk|register)/i,
+        /^(\d{1,3}\s+(st|nd|rd|th)\s+(st|ave|blvd|rd|dr|ln|way))/i,
+        /^(open|close|date|time):/i
+      ];
+
+      // First non-noise line that looks like a name
+      for (var ml = 0; ml < Math.min(lines.length, 8); ml++) {
+        var line = lines[ml];
+        var isNoise = noisePatterns.some(function(p) { return p.test(line); });
+        if (!isNoise && line.length >= 3 && line.length <= 40 && /[a-zA-Z]/.test(line)) {
+          // Check if it looks like a business name (has letters, not just numbers/symbols)
+          var letterRatio = (line.match(/[a-zA-Z]/g) || []).length / line.length;
+          if (letterRatio > 0.5) {
+            merchant = line;
+            break;
+          }
         }
       }
-      if (!merchant && lines.length > 0) merchant = lines[0].substring(0, 30);
+      if (!merchant) merchant = 'Receipt';
 
-      // Guess category from keywords
+      // ===== GUESS CATEGORY =====
       var category = 'misc';
-      var lower = fullText.toLowerCase();
-      if (/gas|fuel|shell|exxon|bp|chevron|valero|speedway|circle k|pilot|love.s|flying j/i.test(lower)) category = 'fuel';
-      else if (/restaurant|cafe|diner|pizza|burger|taco|subway|mcdonald|wendy|chipotle|starbucks|coffee|grill|kitchen|bar\b|pub\b|eat/i.test(lower)) category = 'food';
-      else if (/hotel|motel|inn\b|suites|marriott|hilton|hyatt|holiday|best western|airbnb|lodging/i.test(lower)) category = 'lodging';
-      else if (/walmart|target|cvs|walgreens|grocery|supermarket|costco/i.test(lower)) category = 'food';
+      var catKeywords = {
+        fuel: /gas|fuel|shell|exxon|bp |chevron|valero|speedway|circle.?k|pilot|love.s|flying.?j|arco|sinclair|phillips|murphy|quiktrip|sheetz|wawa|qt |kum|go.?mart|76 |conoco|citgo|sunoco|marathon/i,
+        food: /restaurant|cafe|coffee|pizza|burger|taco|subway|mcdonald|wendy|chipotle|starbucks|dunkin|grill|kitchen|bar |pub |eat|diner|buffet|panera|chick.?fil|popeyes|kfc|domino|papa.?john|wendy|sonic|arbys|dairy.?queen|ihop|applebees|olive.?garden|chili.s|red.?lobster|outback|texas.?road|cracker|bob.evans|waffle|whataburger|five.?guys|shake.?shack|in.n.out/i,
+        lodging: /hotel|motel|inn |suites|marriott|hilton|hyatt|holiday|best.?western|airbnb|booking|vrbo|la.?quinta|comfort|days.?inn|ramada|super.?8|red.?roof|choice.?hotels|ihg|wyndham|embassy|courtyard|residence|hampton|homewood|home2|tru.?by|hilton|aloft|element|four.?points|sheraton|westin|renaissance|doubletree/i,
+        production: /guitar|amp |cable|mics|strings|drum|pedal|interface|monitor|headphone|adapter|battery|charger|gear|equipment|music|instrument|guitar.center|sam.ash|sweetwater|musicians.friend|reverb/i,
+        perdiem: /atm|cash.?advance|withdrawal|per.?diem/i
+      };
 
-      // Fill in the form
+      for (var cat in catKeywords) {
+        if (catKeywords[cat].test(fullText)) { category = cat; break; }
+      }
+
+      // Also check for grocery/retail stores
+      if (category === 'misc') {
+        if (/walmart|target|cvs|walgreens|kroger|safeway|publix|aldi|trader.?joe|whole.?food|costco|sam.s.?club|heb|meijer|food.?lion|piggly|winn.dixie|giant|stop.?shop|wegmans|fresh.market/i.test(fullText)) {
+          category = 'food';
+        }
+      }
+
+      // ===== FILL FORM =====
       document.getElementById('scanMerchant').value = merchant;
-      document.getElementById('scanAmount').value = amount || '';
+      document.getElementById('scanAmount').value = amount ? amount.toFixed(2) : '';
       document.getElementById('scanDate').value = date || new Date().toISOString().split('T')[0];
-      document.getElementById('scanNotes').value = lines.slice(0, 5).join(' | ');
+
+      // Store raw OCR text in notes for reference
+      var rawPreview = lines.slice(0, 6).join(' | ');
+      document.getElementById('scanNotes').value = rawPreview;
 
       scanSelectedCat = category;
       document.querySelectorAll('#scanCatGrid .cat-option').forEach(function(c) {
@@ -771,15 +867,21 @@
 
       document.getElementById('scanResult').style.display = 'block';
 
-      var statusMsg = '✅ Text recognized — ';
+      // Status message
       var parts = [];
-      if (merchant) parts.push(merchant);
+      if (merchant && merchant !== 'Receipt') parts.push(merchant);
       if (amount) parts.push(formatCurrency(amount));
       if (date) parts.push(date);
-      if (parts.length === 0) parts.push('review and fill in manually');
-      statusMsg += parts.join(' • ');
+      if (confidence < 50) {
+        parts.push('⚠️ Low confidence — please verify');
+      }
+      var statusMsg = parts.length > 0 ? '✅ ' + parts.join(' • ') : '⚠️ Could not read clearly — fill in manually';
+      document.getElementById('scanStatus').innerHTML = '<div class="scan-status ' + (confidence >= 50 ? 'success' : 'error') + '">' + statusMsg + '</div>';
 
-      document.getElementById('scanStatus').innerHTML = '<div class="scan-status success">' + statusMsg + '</div>';
+      // Auto-focus the amount field if empty (most important field)
+      if (!amount) {
+        setTimeout(function() { document.getElementById('scanAmount').focus(); }, 300);
+      }
     }
 
     function saveScannedExpense() {
